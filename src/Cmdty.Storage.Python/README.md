@@ -119,7 +119,7 @@ print('Extrinsic NPV: \t{0:,.0f}'.format(three_factor_results.extrinsic_npv))
 Prints the following.
 
 ```
-Full NPV:	    78,175
+Full NPV:	78,175
 Intrinsic NPV: 	40,976
 Extrinsic NPV: 	37,199
 ```
