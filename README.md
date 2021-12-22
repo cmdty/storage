@@ -177,9 +177,9 @@ print('Extrinsic NPV: \t{0:,.0f}'.format(three_factor_results.extrinsic_npv))
 ```
 Prints the following.
 ```
-Full NPV:	    69,496
-Intrinsic NPV: 	38,446
-Extrinsic NPV: 	31,049
+Full NPV:	      78,175
+Intrinsic NPV: 	40,976
+Extrinsic NPV: 	37,199
 ```
 
 ### Inspecting Valuation Results
