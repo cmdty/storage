@@ -42,7 +42,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/cmdty/storage',
     packages=setuptools.find_packages(),
-    keywords = 'commodities trading curves oil gas power quantitative finance',
+    keywords = 'commodities trading storage oil gas power quantitative finance',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: C#',
@@ -57,7 +57,7 @@ setuptools.setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'pythonnet==2.5.1',
+        'pythonnet==2.5.2',
         'pandas>=0.24.2'
         ],
     package_data={'cmdty_storage' : [
