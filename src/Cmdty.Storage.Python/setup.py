@@ -58,7 +58,7 @@ setuptools.setup(
     ],
     install_requires=[
         'pythonnet==2.5.2',
-        'pandas>=0.24.2'
+        'pandas>=1.0.0'
         ],
     package_data={'cmdty_storage' : [
                         'lib/*.dll',
