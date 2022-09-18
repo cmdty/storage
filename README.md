@@ -541,6 +541,18 @@ this is currently [in the pipeline](https://github.com/pythonnet/pythonnet/issue
 a .NET dependency with a different version to a dependency of the cmdty-storage package 
  this can cause strange errors.
 
+## Debugging C# Code From a Jupyter Notebook
+This section contains the procedure to follow in order to debug the calculations in the C# 
+code, as invoked from Python running in a Jupyter notebook. The following steps are a prerequisite
+to the procedures described below.
+* Install the following software for building the C#:
+    * Visual Studio 2022.
+    * The .NET Core SDK version, as described in the section [Build Prerequisites](#build-prerequisites).
+* Clone the storage repo onto your machine.
+
+The below descriptions have been used from a Windows desktop. As Visual Studio is available for
+Apple computers a similar procedure might work with Apple hardware, but has never been tested.
+
 ### Debugging a Released PyPI Package
 This section describes how to debug the execution of the cmdty-storage package installed from PyPI.
 * Do a git checkout to the git tag associated with the version of the cmdty-storage package you are 
