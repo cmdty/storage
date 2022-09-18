@@ -37,7 +37,10 @@ Multi-Factor Least Squares Monte Carlo energy storage valuation model.
         * [Running the Build](#running-the-build-1)
         * [Build Artifacts](#build-artifacts-1)
 * [Why the Strange Tech Stack?](#why-the-strange-tech-stack)
-* [License](#license)
+* [Debugging C# Code From a Jupyter Notebook](#debugging-c-code-from-a-jupyter-notebook)
+    * [Debugging a Released PyPI Package](#debugging-a-released-pypi-package)
+    * [Debugging Code With Custom Modifications](#debugging-code-with-custom-modifications)
+    * [License](#license)
 
 ## Overview
 A collection of models for the valuation and optimisation of commodity storage, either virtual or physical. The models can be used for any commodity, although are most suitable for natural gas storage valuation and optimisation.
@@ -537,6 +540,35 @@ this is currently [in the pipeline](https://github.com/pythonnet/pythonnet/issue
 * If a version of the [curves](https://pypi.org/project/curves/) package is installed which has
 a .NET dependency with a different version to a dependency of the cmdty-storage package 
  this can cause strange errors.
+
+### Debugging a Released PyPI Package
+This section describes how to debug the execution of the cmdty-storage package installed from PyPI.
+* Do a git checkout to the git tag associated with the version of the cmdty-storage package you are 
+running in Jupyter. The git tags for each release are found on GitHub [here](https://github.com/cmdty/storage/tags).
+* In the cloned repo open Cmdty.Storage.sln in Visual Studio and build in Debug configuration.
+* Set breakpoints in the C# code. To investigate the Least Squares Monte Carlo valuation, a good place
+for a breakpoin is at the start of the Calculate method of the class LsmcStorageValuation, as found in
+[LsmcStorageValuation.cs](./src/Cmdty.Storage/LsmcValuation/LsmcStorageValuation.cs).
+* It is likely that there are many running processes for the python.exe interpretter. It is
+necessary to identify the PID (Process ID) of the exact python.exe process which is being used
+by Jupyter. One way to do this uses [Sysinternals Process Explorer](https://learn.microsoft.com/en-us/sysinternals/downloads/process-explorer):
+    * Launch Process Explorer and ensure PID is one of the displayed columns.
+    * Order the displayed processes by process name and locate the section which contains the
+    python.exe processes.
+    * Run the Jupyter notebook and observe the specific python.exe process for which the CPU usage 
+    increases, taking a note of the PID. In the image below the PID is found to be 33568.
+    ![Identifying PID](./assets/debug_identify_python_process.png)
+* In the Visual Studio menu bar select Debug > Attach to Process. In the resulting dialogue box
+search the processes using the noted PID. Select this process and press the Attach button.
+* Execute the Jupyter notebook. The C# code should break at the placed breakpoints.
+
+### Debugging Code With Custom Modifications
+This section describes the more advanced scenario of running and debugging Cmdty.Storage
+code which has been modified, and so is different to that used to created released PyPI packages.
+The process of debugging the C# code with custom modifications is identical to that described
+above, except that a [pip local project install](https://pip.pypa.io/en/stable/topics/local-project-installs/) is required. This should be done in the Anaconda Prompt using the
+path of the directory src\Cmdty.Storage.Python\ within the cloned cmdty-storage repo as the path in
+the pip install command.
 
 ## License
 
