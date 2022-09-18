@@ -467,7 +467,7 @@ This section describes how to run a scripted build on a cloned repo. Visual Stud
 #### Build Prerequisites
 The following are required on the host machine in order for the build to run.
 * The .NET Core SDK. Check the [global.json file](global.json) for the version necessary, taking into account [the matching rules used](https://docs.microsoft.com/en-us/dotnet/core/tools/global-json#matching-rules).
-* The Python interpretter, accessible by being in a file location in the PATH environment variable. Version 3.6 is used, although other 3.x versions might work.
+* The Python interpretter, accessible by being in a file location in the PATH environment variable. See [Python Version Compatibility](#python-version-compatibility) for details of which Python version should work.
 * The following Python packages installed:
     * virtualenv.
     * setuptools.
