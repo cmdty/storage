@@ -32,7 +32,7 @@ Multi-Factor Least Squares Monte Carlo energy storage valuation model.
         * [Build Prerequisites](#build-prerequisites)
         * [Running the Build](#running-the-build)
         * [Build Artifacts](#build-artifacts)
-    * [Building on Linux or macOS](#building-on-linux-or-macOS)
+    * [Building on Linux or macOS](#building-on-linux-or-macos)
         * [Build Prerequisites](#build-prerequisites-1)
         * [Running the Build](#running-the-build-1)
         * [Build Artifacts](#build-artifacts-1)
@@ -40,7 +40,7 @@ Multi-Factor Least Squares Monte Carlo energy storage valuation model.
 * [Debugging C# Code From a Jupyter Notebook](#debugging-c-code-from-a-jupyter-notebook)
     * [Debugging a Released PyPI Package](#debugging-a-released-pypi-package)
     * [Debugging Code With Custom Modifications](#debugging-code-with-custom-modifications)
-    * [License](#license)
+* [License](#license)
 
 ## Overview
 A collection of models for the valuation and optimisation of commodity storage, either virtual or physical. The models can be used for any commodity, although are most suitable for natural gas storage valuation and optimisation.
