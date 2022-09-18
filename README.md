@@ -19,6 +19,7 @@ Multi-Factor Least Squares Monte Carlo energy storage valuation model.
     * [Storage Optimisation Using LSMC](#storage-optimisation-using-lsmc)
     * [Inspecting Valuation Results](#inspecting-valuation-results)
     * [Example Python GUI](#example-python-gui)
+    * [Python Version Compatibility](#python-version-compatibility)
 * [Using the C# API](#using-the-c-api)
     * [Creating the Storage Object](#creating-the-storage-object-1)
         * [Storage with Constant Parameters](#storage-with-constant-parameters-1)
@@ -222,6 +223,13 @@ An example GUI notebook created using Jupyter Widgets can be found
 
 ![Demo GUI](./assets/gui_demo.gif)
 
+### Python Version Compatibility
+The cmdty-storage package is compatible with the Python interpreter up to **version 3.8** and some patch versions of Python 3.9.
+
+Limitations on the Python version which the cmdty-storage package can be used
+are largely driven by the [pythonnet](https://github.com/pythonnet/pythonnet) package dependency. The latest version of cmdty-storage (1.0.0) depends on
+pythonnet version 2.5.2, which itself works with Python up to version 3.8.
+Hence this is also the maximum version with which cmdty-storage works.
 
 ## Using the C# API
 
