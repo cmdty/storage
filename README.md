@@ -548,6 +548,7 @@ to the procedures described below.
 * Install the following software for building the C#:
     * Visual Studio 2022.
     * The .NET Core SDK version, as described in the section [Build Prerequisites](#build-prerequisites).
+* In Visual Studio uncheck the box for the debugging option "Enable Just My Code" in Tools > Options > Debugging > General.
 * Clone the storage repo onto your machine.
 
 The below descriptions have been used from a Windows desktop. As Visual Studio is available for
