@@ -48,15 +48,16 @@ namespace Cmdty.Storage
         public IReadOnlyList<double> PvBySim { get; }
         public TimeSeries<T, TriggerPriceVolumeProfiles> TriggerPriceVolumeProfiles { get; }
         public TimeSeries<T, TriggerPrices> TriggerPrices { get; }
-        //public TimeSeries<T, Panel<int, double>> RegressionCoefficients { get; } // TODO create matrix type and use instead of Panel
-        //public TimeSeries<T, IReadOnlyList<double>> InventoryGrids { get; }
-        // TODO add spot simulation Markov factors
+        public IReadOnlyList<Panel<T, double>> RegressionMarkovFactors { get; }
+        public IReadOnlyList<Panel<T, double>> ValuationMarkovFactors { get; }
 
         public LsmcStorageValuationResults(double npv, DoubleTimeSeries<T> deltas, TimeSeries<T, StorageProfile> expectedStorageProfile, 
             Panel<T, double> regressionSpotPriceSim, Panel<T, double> valuationSpotPriceSim,
             Panel<T, double> inventoryBySim, Panel<T, double> injectWithdrawVolumeBySim, Panel<T, double> cmdtyConsumedBySim, 
             Panel<T, double> inventoryLossBySim, Panel<T, double> netVolumeBySim, TimeSeries<T, TriggerPrices> triggerPrices,
-            TimeSeries<T, TriggerPriceVolumeProfiles> triggerPriceVolumeProfiles, Panel<T, double> pvByPeriodAndSim, IEnumerable<double> pvBySim)
+            TimeSeries<T, TriggerPriceVolumeProfiles> triggerPriceVolumeProfiles, Panel<T, double> pvByPeriodAndSim, 
+            IEnumerable<double> pvBySim, IEnumerable<Panel<T, double>> regressionMarkovFactors, 
+            IEnumerable<Panel<T, double>> valuationMarkovFactors)
         {
             Npv = npv;
             Deltas = deltas;
@@ -72,6 +73,8 @@ namespace Cmdty.Storage
             TriggerPriceVolumeProfiles = triggerPriceVolumeProfiles;
             PvByPeriodAndSim = pvByPeriodAndSim;
             PvBySim = pvBySim.ToArray();
+            RegressionMarkovFactors = regressionMarkovFactors.ToArray();
+            ValuationMarkovFactors = valuationMarkovFactors.ToArray();
         }
 
         public static LsmcStorageValuationResults<T> CreateExpiredResults()
@@ -81,8 +84,8 @@ namespace Cmdty.Storage
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),
                 Panel<T, double>.CreateEmpty(), TimeSeries <T, TriggerPrices >.Empty,
-                        TimeSeries<T, TriggerPriceVolumeProfiles>.Empty, Panel<T, double>.CreateEmpty(), 
-                    new double[0]);
+                TimeSeries<T, TriggerPriceVolumeProfiles>.Empty, Panel<T, double>.CreateEmpty(), 
+                    new double[0], new Panel<T, double>[0], new Panel<T, double>[0]);
         }
 
         public static LsmcStorageValuationResults<T> CreateEndPeriodResults(double npv)
@@ -93,7 +96,7 @@ namespace Cmdty.Storage
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),
                 Panel<T, double>.CreateEmpty(), TimeSeries<T, TriggerPrices>.Empty, 
                 TimeSeries<T, TriggerPriceVolumeProfiles>.Empty, Panel<T, double>.CreateEmpty(),
-                new double[0]);
+                new double[0], new Panel<T, double>[0], new Panel<T, double>[0]);
         }
 
     }

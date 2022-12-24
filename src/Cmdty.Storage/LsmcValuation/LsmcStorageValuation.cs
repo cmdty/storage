@@ -599,8 +599,13 @@ namespace Cmdty.Storage
             var triggerPriceVolumeProfiles = new TimeSeries<T, TriggerPriceVolumeProfiles>(periodsForResultsTimeSeries.First(), triggerVolumeProfilesArray);
             var triggerPrices = new TimeSeries<T, TriggerPrices>(periodsForResultsTimeSeries.First(), triggerPricesArray);
 
+            // TODO make the returning of factors and spot prices optional so client can save memory
             var regressionSpotPricePanel = Panel.UseRawDataArray(regressionSpotSims.SpotPrices, regressionSpotSims.SimulatedPeriods, numSims);
             var valuationSpotPricePanel = Panel.UseRawDataArray(valuationSpotSims.SpotPrices, valuationSpotSims.SimulatedPeriods, numSims);
+
+            // TODO in future refactor ISpotSimResults should make use of Panel type, making this code not necessary
+            Panel<T, double>[] regressionMarkovFactors = ExtractMarkovFactorsToPanel(regressionSpotSims);
+            Panel<T, double>[] valuationMarkovFactors = ExtractMarkovFactorsToPanel(valuationSpotSims);
             lsmcParams.OnProgressUpdate?.Invoke(1.0); // Progress with approximately 1.0 should have occurred already, but might have been a bit off because of floating-point error.
 
             stopwatches.All.Stop();
@@ -613,7 +618,26 @@ namespace Cmdty.Storage
 
             return new LsmcStorageValuationResults<T>(forwardNpv, deltasSeries, storageProfileSeries, regressionSpotPricePanel,
                 valuationSpotPricePanel, inventoryBySim, injectWithdrawVolumeBySim, cmdtyConsumedBySim, inventoryLossBySim, netVolumeBySim, 
-                triggerPrices, triggerPriceVolumeProfiles, pvByPeriodAndSim, pvBySim);
+                triggerPrices, triggerPriceVolumeProfiles, pvByPeriodAndSim, pvBySim, regressionMarkovFactors, valuationMarkovFactors);
+        }
+
+        private Panel<T, double>[] ExtractMarkovFactorsToPanel<T>(ISpotSimResults<T> spotSims) where T : ITimePeriod<T>
+        {
+            var markovFactorPanelArray = new Panel<T, double>[spotSims.NumFactors];
+            for (int factorIndex = 0; factorIndex < markovFactorPanelArray.Length; factorIndex++) // Loop through different factors
+            {
+                var markovFactorSims = new Panel<T, double>(spotSims.SimulatedPeriods, spotSims.NumSims);
+                for (int simulatedPeriodIndex = 0; simulatedPeriodIndex < spotSims.SimulatedPeriods.Count; simulatedPeriodIndex++)
+                {
+                    ReadOnlySpan<double> simulatedMarkovFactors = 
+                        spotSims.MarkovFactorsForStepIndex(simulatedPeriodIndex, factorIndex).Span;
+                    Span<double> panelRowSpan = markovFactorSims[simulatedPeriodIndex];
+                    for (int i = 0; i < panelRowSpan.Length; i++)
+                        panelRowSpan[i] = simulatedMarkovFactors[i];
+                }
+                markovFactorPanelArray[factorIndex] = markovFactorSims;
+            }
+            return markovFactorPanelArray;
         }
 
         private static double CalcTriggerPrice<T>(ICmdtyStorage<T> storage, double expectedInventory, double triggerVolume, double inventoryLoss,
