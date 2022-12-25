@@ -100,10 +100,10 @@ class CmdtyStorage:
             if ratchet_interp == RatchetInterp.LINEAR:
                 net_cs.CmdtyStorageBuilderExtensions.WithTimeAndInventoryVaryingInjectWithdrawRatesPiecewiseLinear[time_period_type](builder, net_constraints)
             elif ratchet_interp == RatchetInterp.STEP:
-                net_cs.CmdtyStorageBuilderExtensions.WithStepRatchets[time_period_type](builder, net_constraints)
                 if terminal_storage_npv is None:
-                    logger.warning('When ratchet_interp is RatchetInterp.STEP it is advisable to specify '
-                                   'terminal_storage_npv otherwise exceptions are likely to occur during valuation.')
+                    raise ValueError('When ratchet_interp is RatchetInterp.STEP terminal_storage_npv should be '
+                                     'specified')
+                net_cs.CmdtyStorageBuilderExtensions.WithStepRatchets[time_period_type](builder, net_constraints)
         else:
             utils.raise_if_not_none(ratchet_interp, "ratchet_interp should not be provided if ratchets parameter is not provided.")
             utils.raise_if_none(min_inventory, "min_inventory parameter should be provided if ratchets parameter is not provided.")
