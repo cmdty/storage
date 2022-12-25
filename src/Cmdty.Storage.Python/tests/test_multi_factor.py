@@ -31,6 +31,7 @@ import itertools
 from tests import utils
 
 
+# README: PROPER UNIT TESTS ARE IN THE C# CODE.
 # TODO regression with antithetic
 class TestSpotPriceSim(unittest.TestCase):
     def test_regression(self):
@@ -237,6 +238,13 @@ class TestMultiFactorValue(unittest.TestCase):
         self.assertEqual((123, num_sims), multi_factor_val.sim_cmdty_consumed.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_inventory_loss.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_net_volume.shape)
+        # Test factors
+        self.assertEqual(len(factors), len(multi_factor_val.sim_factors_regress))
+        for sim_factor_regress in multi_factor_val.sim_factors_regress:
+            self.assertEqual((123, num_sims), sim_factor_regress.shape)
+        self.assertEqual(len(factors), len(multi_factor_val.sim_factors_valuation))
+        for sim_factor_valuation in multi_factor_val.sim_factors_valuation:
+            self.assertEqual((123, num_sims), sim_factor_valuation.shape)
 
     def test_three_factor_seasonal_regression(self):
         storage_start = '2019-12-01'
@@ -309,6 +317,13 @@ class TestMultiFactorValue(unittest.TestCase):
         self.assertEqual((123, num_sims), multi_factor_val.sim_cmdty_consumed.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_inventory_loss.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_net_volume.shape)
+        # Test factors
+        self.assertEqual(3, len(multi_factor_val.sim_factors_regress))
+        for sim_factor_regress in multi_factor_val.sim_factors_regress:
+            self.assertEqual((123, num_sims), sim_factor_regress.shape)
+        self.assertEqual(3, len(multi_factor_val.sim_factors_valuation))
+        for sim_factor_valuation in multi_factor_val.sim_factors_valuation:
+            self.assertEqual((123, num_sims), sim_factor_valuation.shape)
 
 
 if __name__ == '__main__':

@@ -307,6 +307,8 @@ class MultiFactorValuationResults(tp.NamedTuple):
     intrinsic_profile: pd.DataFrame
     sim_spot_regress: pd.DataFrame
     sim_spot_valuation: pd.DataFrame
+    sim_factors_regress: tp.Tuple[pd.DataFrame]
+    sim_factors_valuation: tp.Tuple[pd.DataFrame]
     sim_inventory: pd.DataFrame
     sim_inject_withdraw: pd.DataFrame
     sim_cmdty_consumed: pd.DataFrame
@@ -447,12 +449,21 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     sim_inventory_loss = utils.net_panel_to_data_frame(net_val_results.InventoryLossBySim, cmdty_storage.freq)
     sim_net_volume = utils.net_panel_to_data_frame(net_val_results.NetVolumeBySim, cmdty_storage.freq)
     sim_pv = utils.net_panel_to_data_frame(net_val_results.PvByPeriodAndSim, cmdty_storage.freq)
+    sim_factors_regress = _net_panel_enumerable_to_data_frame_tuple(net_val_results.RegressionMarkovFactors,
+                                                                    cmdty_storage.freq)
+    sim_factors_valuation = _net_panel_enumerable_to_data_frame_tuple(net_val_results.ValuationMarkovFactors,
+                                                                      cmdty_storage.freq)
 
     return MultiFactorValuationResults(net_val_results.Npv, deltas, expected_profile,
                                        intrinsic_result.npv, intrinsic_result.profile, sim_spot_regress,
-                                       sim_spot_valuation, sim_inventory, sim_inject_withdraw,
+                                       sim_spot_valuation, sim_factors_regress, sim_factors_valuation,
+                                       sim_inventory, sim_inject_withdraw,
                                        sim_cmdty_consumed, sim_inventory_loss, sim_net_volume, sim_pv,
                                        trigger_prices, trigger_profiles)
+
+
+def _net_panel_enumerable_to_data_frame_tuple(net_panel_enumerable, freq):
+    return tuple(utils.net_panel_to_data_frame(net_panel, freq) for net_panel in net_panel_enumerable)
 
 
 def _trigger_prices_to_data_frame(freq, net_trigger_prices) -> pd.DataFrame:
