@@ -17,14 +17,6 @@ steps:
       packageType: 'sdk'
       useGlobalJson: true
 
-  - task: SonarCloudPrepare@1
-    inputs:
-      SonarCloud: 'SonarCloud'
-      organization: 'cmdty'
-      scannerMode: 'MSBuild'
-      projectKey: 'storage'
-      projectName: 'storage'
-
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.6'
@@ -47,8 +39,6 @@ steps:
       arguments: '-Verbosity Diagnostic -PrereleaseNumber=$(Build.BuildNumber)'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-  - task: SonarCloudAnalyze@1
 
   - task: PublishTestResults@2
     displayName: Publish Python test results
