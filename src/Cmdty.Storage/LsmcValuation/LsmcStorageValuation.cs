@@ -29,6 +29,7 @@ using System.Globalization;
 using System.Linq;
 using Cmdty.Core.Common;
 using Cmdty.Core.Simulation;
+using Cmdty.Storage.PythonHelpers;
 using Cmdty.TimePeriodValueTypes;
 using Cmdty.TimeSeries;
 using MathNet.Numerics.LinearAlgebra;
@@ -600,8 +601,9 @@ namespace Cmdty.Storage
             var triggerPrices = new TimeSeries<T, TriggerPrices>(periodsForResultsTimeSeries.First(), triggerPricesArray);
 
             // TODO make the returning of factors and spot prices optional so client can save memory
-            var regressionSpotPricePanel = Panel.UseRawDataArray(regressionSpotSims.SpotPrices, regressionSpotSims.SimulatedPeriods, numSims);
-            var valuationSpotPricePanel = Panel.UseRawDataArray(valuationSpotSims.SpotPrices, valuationSpotSims.SimulatedPeriods, numSims);
+
+            Panel<T, double> regressionSpotPricePanel = ExtractSpotSims(regressionSpotSims);
+            Panel<T, double> valuationSpotPricePanel = ExtractSpotSims(valuationSpotSims);
 
             // TODO in future refactor ISpotSimResults should make use of Panel type, making this code not necessary
             Panel<T, double>[] regressionMarkovFactors = ExtractMarkovFactorsToPanel(regressionSpotSims);
@@ -621,8 +623,22 @@ namespace Cmdty.Storage
                 triggerPrices, triggerPriceVolumeProfiles, pvByPeriodAndSim, pvBySim, regressionMarkovFactors, valuationMarkovFactors);
         }
 
+        private Panel<T, double> ExtractSpotSims<T>(ISpotSimResults<T> spotSimResults)
+            where T : ITimePeriod<T>
+        {
+            // TODO this code is horrific and caused by ISpotSimResults leaky abstraction. Refactor once ISpotSimResults in sorted.
+            if (spotSimResults is SpotSimResultsFromPanels<T> spotSimResultsFromPanels)
+                return spotSimResultsFromPanels.SpotPriceSims;
+            else
+                return Panel.UseRawDataArray(spotSimResults.SpotPrices, spotSimResults.SimulatedPeriods, spotSimResults.NumSims);
+        }
+
         private Panel<T, double>[] ExtractMarkovFactorsToPanel<T>(ISpotSimResults<T> spotSims) where T : ITimePeriod<T>
         {
+            // TODO see comment above about ISpotSimResults being leaky
+            if (spotSims is SpotSimResultsFromPanels<T> spotSimResultsFromPanels)
+                return spotSimResultsFromPanels.FactorSims.ToArray();
+
             var markovFactorPanelArray = new Panel<T, double>[spotSims.NumFactors];
             for (int factorIndex = 0; factorIndex < markovFactorPanelArray.Length; factorIndex++) // Loop through different factors
             {
