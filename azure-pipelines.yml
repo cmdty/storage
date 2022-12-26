@@ -19,8 +19,8 @@ steps:
 
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.6'
-    displayName: "Use Python 3.6"
+      versionSpec: '3.7'
+    displayName: "Use Python 3.7"
 
   - script: |
         pip install virtualenv
