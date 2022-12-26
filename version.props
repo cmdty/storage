@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionPrefix>1.2.0</VersionPrefix>
     <PythonPreReleaseTextPart>a</PythonPreReleaseTextPart>
     <PythonVersion Condition="'$(PrereleaseNumber)' == ''">$(VersionPrefix)</PythonVersion>
     <PythonVersion Condition="'$(PrereleaseNumber)' != ''">$(VersionPrefix)$(PythonPreReleaseTextPart)$(PrereleaseNumber)</PythonVersion>

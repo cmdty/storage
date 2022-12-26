@@ -227,12 +227,13 @@ An example GUI notebook created using Jupyter Widgets can be found
 ![Demo GUI](./assets/gui_demo.gif)
 
 ### Python Version Compatibility
-The cmdty-storage package is compatible with the Python interpreter up to **version 3.8** and some patch versions of Python 3.9.
+The cmdty-storage package should be compatible with the Python interpreter up to **version 3.11**.
 
 Limitations on the Python version which the cmdty-storage package can be used
-are largely driven by the [pythonnet](https://github.com/pythonnet/pythonnet) package dependency. The latest version of cmdty-storage (1.0.0) depends on
-pythonnet version 2.5.2, which itself works with Python up to version 3.8.
+are largely driven by the [pythonnet](https://github.com/pythonnet/pythonnet) package dependency. The latest version of curves (1.2.0) depends on
+pythonnet version 3.0.1, which itself works with Python up to version 3.11.
 Hence this is also the maximum version with which cmdty-storage works.
+
 
 ## Using the C# API
 
@@ -488,7 +489,6 @@ The following results of the build will be saved into the artifacts directory (w
 * The NuGet package: Cmdty.Storage.[version].nupkg
 * The Python package files:
     * cmdty_storage-[version]-py3-none-any.whl
-    * cmdty_storage-[version].tar.gz
 * 32-bit and 64-bit versions of the Excel add-in:
     * Cmdty.Storage-x86.xll
     * Cmdty.Storage-x64.xll

@@ -48,7 +48,12 @@ setuptools.setup(
         'Programming Language :: C#',
         'Intended Audience :: Developers',
         'Intended Audience :: Financial and Insurance Industry',
-        'Programming Language :: Python :: 3', # TODO specific Python versions?
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'License :: OSI Approved :: MIT License',
         'Operating System :: Microsoft :: Windows',
         'Topic :: Office/Business :: Financial',
@@ -57,9 +62,10 @@ setuptools.setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'pythonnet==2.5.2',
+        'pythonnet==3.0.1',
         'pandas>=1.0.0'
         ],
+    python_requires='>=3.7, <3.12',
     package_data={'cmdty_storage' : [
                         'lib/*.dll',
                         'lib/*.pdb',
