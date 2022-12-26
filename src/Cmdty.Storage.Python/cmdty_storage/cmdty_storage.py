@@ -243,7 +243,7 @@ class CmdtyStorage:
     def injection_cost(self, period, inventory, injected_volume) -> float:
         net_time_period = self._net_time_period(period)
         net_inject_costs = self._net_storage.InjectionCost(net_time_period, inventory, injected_volume)
-        if net_inject_costs.Length > 0:
+        if net_inject_costs.Count > 0:
             return net_inject_costs[0].Amount
         return 0.0
 
@@ -254,7 +254,7 @@ class CmdtyStorage:
     def withdrawal_cost(self, period, inventory, withdrawn_volume) -> float:
         net_time_period = self._net_time_period(period)
         net_withdrawal_costs = self._net_storage.WithdrawalCost(net_time_period, inventory, withdrawn_volume)
-        if net_withdrawal_costs.Length > 0:
+        if net_withdrawal_costs.Count > 0:
             return net_withdrawal_costs[0].Amount
         return 0.0
 
@@ -272,7 +272,7 @@ class CmdtyStorage:
     def inventory_cost(self, period, inventory) -> float:
         net_time_period = self._net_time_period(period)
         net_inventory_cost = self._net_storage.CmdtyInventoryCost(net_time_period, inventory)
-        if len(net_inventory_cost) > 0:
+        if net_inventory_cost.Count > 0:
             return net_inventory_cost[0].Amount
         return 0.0
 
