@@ -295,10 +295,6 @@ class TestMultiFactorValue(unittest.TestCase):
         factors = [(0.0, long_term_vol),
                    (mean_reversion, spot_volatility)]
         factor_corrs = 0.64
-        progresses = []
-
-        def on_progress(progress): progresses.append(progress)
-
         # Simulation parameter
         num_sims = 500
         seed = 11
@@ -311,8 +307,7 @@ class TestMultiFactorValue(unittest.TestCase):
                                               factors, factor_corrs, num_sims,
                                               basis_funcs, discount_deltas,
                                               seed=seed,
-                                              fwd_sim_seed=fwd_sim_seed,
-                                              on_progress_update=on_progress)
+                                              fwd_sim_seed=fwd_sim_seed)
         value_from_sims_result = value_from_sims(cmdty_storage, val_date, inventory, forward_curve,
                                                  interest_rate_curve, twentieth_of_next_month,
                                                  multi_factor_val.sim_spot_regress,
