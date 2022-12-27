@@ -74,7 +74,8 @@ class TestIntrinsicValue(unittest.TestCase):
 
         # TODO test with proper interest rate curve
         flat_interest_rate = 0.03
-        interest_rate_curve = pd.Series(index=pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'))
+        interest_rate_curve = pd.Series(index=pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'),
+                                        dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
 
         # Trinomial Tree parameters
@@ -132,7 +133,8 @@ class TestIntrinsicValue(unittest.TestCase):
                                                             storage_end], freq='D')
         # TODO test with proper interest rate curve
         flat_interest_rate = 0.03
-        interest_rate_curve = pd.Series(index=pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'))
+        interest_rate_curve = pd.Series(index=pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'),
+                                        dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
         # Trinomial Tree parameters
         mean_reversion = 14.5
@@ -173,11 +175,11 @@ class TestIntrinsicValue(unittest.TestCase):
                                                             storage_end], freq='D')
 
         flat_interest_rate = 0.00
-        interest_rate_curve = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'))
+        interest_rate_curve = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
         # Trinomial Tree parameters
         mean_reversion = 14.5
-        spot_volatility = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'))
+        spot_volatility = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
         spot_volatility[:] = 1.15
         time_step = 1.0 / 365.0
         twentieth_of_next_month = lambda period: period.asfreq('M').asfreq('D', 'end') + 20

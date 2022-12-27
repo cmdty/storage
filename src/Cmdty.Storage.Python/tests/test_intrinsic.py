@@ -71,7 +71,8 @@ class TestIntrinsicValue(unittest.TestCase):
         
         # TODO test with proper interest rate curve
         flat_interest_rate = 0.03
-        interest_rate_curve = pd.Series(index = pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'))
+        interest_rate_curve = pd.Series(index = pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'),
+                                        dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
 
         twentieth_of_next_month = lambda period: period.asfreq('M').asfreq('D', 'end') + 20
@@ -90,7 +91,8 @@ class TestIntrinsicValue(unittest.TestCase):
         forward_curve = utils.create_piecewise_flat_series([58.89, 61.41, 70.89, 70.89], [storage_start, date(2019, 9, 12), date(2019, 9, 18), storage_end], freq='D')
         
         flat_interest_rate = 0.03
-        interest_rate_curve = pd.Series(index = pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'))
+        interest_rate_curve = pd.Series(index = pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'),
+                                        dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
 
         twentieth_of_next_month = lambda period: period.asfreq('M').asfreq('D', 'end') + 20
@@ -112,7 +114,8 @@ class TestIntrinsicValue(unittest.TestCase):
         forward_curve = utils.create_piecewise_flat_series([58.89, 61.41, 70.89, 70.89], [storage_start, date(2019, 9, 12), date(2019, 9, 18), storage_end], freq='D')
         
         flat_interest_rate = 0.03
-        interest_rate_curve = pd.Series(index = pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'))
+        interest_rate_curve = pd.Series(index = pd.period_range(val_date, storage_end + timedelta(days=60), freq='D'),
+                                        dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
 
         twentieth_of_next_month = lambda period: period.asfreq('M').asfreq('D', 'end') + 20

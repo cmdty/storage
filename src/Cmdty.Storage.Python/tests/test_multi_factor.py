@@ -190,17 +190,18 @@ class TestMultiFactorValue(unittest.TestCase):
                                                             storage_end], freq='D')
 
         flat_interest_rate = 0.03
-        interest_rate_curve = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'))
+        interest_rate_curve = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'),
+                                        dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
 
         # Multi-Factor parameters
         mean_reversion = 16.2
-        spot_volatility = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'))
+        spot_volatility = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
         spot_volatility[:] = 1.15
 
         def twentieth_of_next_month(period): return period.asfreq('M').asfreq('D', 'end') + 20
 
-        long_term_vol = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'))
+        long_term_vol = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
         long_term_vol[:] = 0.14
 
         factors = [(0.0, long_term_vol),
@@ -271,7 +272,7 @@ class TestMultiFactorValue(unittest.TestCase):
                                                             storage_end], freq='D')
 
         flat_interest_rate = 0.03
-        interest_rate_curve = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'))
+        interest_rate_curve = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
         interest_rate_curve[:] = flat_interest_rate
 
         # Multi-Factor parameters
