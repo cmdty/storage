@@ -385,6 +385,25 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
                                   val_date, discount_deltas, extra_decisions)
 
 
+def value_from_sims(cmdty_storage: CmdtyStorage,
+                   val_date: utils.TimePeriodSpecType,
+                   inventory: float,
+                   fwd_curve: pd.Series,
+                   interest_rates: pd.Series,
+                   settlement_rule: tp.Callable[[pd.Period], date],
+                   spot_price_sims: pd.DataFrame,
+                   markov_factor_sims: tp.Iterable[pd.DataFrame],
+                   basis_funcs: str,
+                   discount_deltas: bool,
+                   extra_decisions: tp.Optional[int] = None,
+                   num_inventory_grid_points: int = 100,
+                   numerical_tolerance: float = 1E-12,
+                   on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
+                   ) -> MultiFactorValuationResults:
+
+    return
+
+
 def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, net_multi_factor_params,
                            num_inventory_grid_points, num_sims, numerical_tolerance, on_progress_update,
                            basis_funcs, seed, fwd_sim_seed, settlement_rule, time_period_type,
