@@ -256,13 +256,13 @@ seconds_per_year = 60 * 60 * 24 * days_per_year
 
 
 def create_3_factor_season_params(
-          freq: str,
-          spot_mean_reversion: float,
-          spot_vol: float,
-          long_term_vol: float,
-          seasonal_vol: float,
-          start: utils.ForwardPointType,
-          end: utils.ForwardPointType) -> tp.Tuple[tp.Iterable[tp.Tuple[float, utils.CurveType]], np.ndarray]:
+        freq: str,
+        spot_mean_reversion: float,
+        spot_vol: float,
+        long_term_vol: float,
+        seasonal_vol: float,
+        start: utils.ForwardPointType,
+        end: utils.ForwardPointType) -> tp.Tuple[tp.Iterable[tp.Tuple[float, utils.CurveType]], np.ndarray]:
     factor_corrs = np.array([
         [1.0, 0.0, 0.0],
         [0.0, 1.0, 0.0],
@@ -354,6 +354,7 @@ def three_factor_seasonal_value(cmdty_storage: CmdtyStorage,
     def add_multi_factor_sim(net_lsmc_params_builder):
         net_lsmc_params_builder.SimulateWithMultiFactorModelAndMersenneTwister(net_multi_factor_params, num_sims, seed,
                                                                                fwd_sim_seed)
+
     return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_multi_factor_sim,
                                   num_inventory_grid_points, numerical_tolerance, on_progress_update,
                                   basis_func_transformed, settlement_rule, time_period_type,
@@ -385,6 +386,7 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
     def add_multi_factor_sim(net_lsmc_params_builder):
         net_lsmc_params_builder.SimulateWithMultiFactorModelAndMersenneTwister(net_multi_factor_params, num_sims,
                                                                                seed, fwd_sim_seed)
+
     return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_multi_factor_sim,
                                   num_inventory_grid_points, numerical_tolerance, on_progress_update,
                                   basis_funcs, settlement_rule, time_period_type,
@@ -392,29 +394,25 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
 
 
 def value_from_sims(cmdty_storage: CmdtyStorage,
-                   val_date: utils.TimePeriodSpecType,
-                   inventory: float,
-                   fwd_curve: pd.Series,
-                   interest_rates: pd.Series,
-                   settlement_rule: tp.Callable[[pd.Period], date],
+                    val_date: utils.TimePeriodSpecType,
+                    inventory: float,
+                    fwd_curve: pd.Series,
+                    interest_rates: pd.Series,
+                    settlement_rule: tp.Callable[[pd.Period], date],
                     sim_spot_regress: pd.DataFrame,
                     sim_spot_valuation: pd.DataFrame,
                     sim_factors_regress: tp.Tuple[pd.DataFrame],
                     sim_factors_valuation: tp.Tuple[pd.DataFrame],
                     basis_funcs: str,
-                   discount_deltas: bool,
-                   extra_decisions: tp.Optional[int] = None,
-                   num_inventory_grid_points: int = 100,
-                   numerical_tolerance: float = 1E-12,
-                   on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
-                   ) -> MultiFactorValuationResults:
+                    discount_deltas: bool,
+                    extra_decisions: tp.Optional[int] = None,
+                    num_inventory_grid_points: int = 100,
+                    numerical_tolerance: float = 1E-12,
+                    on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
+                    ) -> MultiFactorValuationResults:
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
-    net_spot_regress = None
-    net_sim_factors_regress = None
-    net_sim_results_regress = None
-    net_spot_valuation = None
-    net_sim_factors_valuation = None
-    net_sim_results_valuation = None
+    net_sim_results_regress = _create_net_spot_sim_results(sim_spot_regress, sim_factors_regress)
+    net_sim_results_valuation = _create_net_spot_sim_results(sim_spot_valuation, sim_factors_valuation)
 
     def add_sim_results(net_lsmc_params_builder):
         net_lsmc_params_builder.UseSpotSimResults(net_sim_results_regress, net_sim_results_valuation)
@@ -423,6 +421,12 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
                                   num_inventory_grid_points, numerical_tolerance, on_progress_update,
                                   basis_funcs, settlement_rule, time_period_type,
                                   val_date, discount_deltas, extra_decisions)
+
+
+def _create_net_spot_sim_results(sim_spot, sim_factors, time_period_type):
+    net_sim_spot = utils.data_frame_to_net_double_panel(sim_spot, time_period_type)
+    net_sim_factors = [utils.data_frame_to_net_double_panel(sim_factor, time_period_type) for sim_factor in sim_factors]
+    return net_cs.PythonHelpers.SpotSimResultsFromPanels[time_period_type](net_sim_spot, net_sim_factors)
 
 
 def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_sim_to_val_params,
