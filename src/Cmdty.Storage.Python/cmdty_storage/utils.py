@@ -39,6 +39,9 @@ import Cmdty.TimeSeries as ts
 clr.AddReference(str(Path('cmdty_storage/lib/Cmdty.Storage')))
 import Cmdty.Storage as net_cs
 
+clr.AddReference(str(Path('cmdty_storage/lib/Cmdty.Core.Common')))
+import Cmdty.Core.Common as net_cc
+
 from datetime import date, datetime
 import dateutil
 import typing as tp
@@ -88,6 +91,12 @@ def series_to_time_series(series, time_period_type, net_data_type, data_selector
         net_values[i] = data_selector(series.values[i])
 
     return ts.TimeSeries[time_period_type, net_data_type](net_indices, net_values)
+
+
+def data_frame_to_net_double_panel(panel: pd.DataFrame, time_period_type):
+    """Converts an instance of pandas DataFrame to a Cmdty.Core.Panel<T, double>."""
+    # TODO complete this
+    return
 
 
 def net_time_series_to_pandas_series(net_time_series, freq):

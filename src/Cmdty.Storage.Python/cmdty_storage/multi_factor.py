@@ -379,8 +379,6 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
                        on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
                        ) -> MultiFactorValuationResults:
     factor_corrs = _validate_multi_factor_params(factors, factor_corrs)
-    if cmdty_storage.freq != fwd_curve.index.freqstr:
-        raise ValueError("cmdty_storage and forward_curve have different frequencies.")
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
     net_multi_factor_params = _create_net_multi_factor_params(factor_corrs, factors, time_period_type)
 
@@ -399,23 +397,40 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
                    fwd_curve: pd.Series,
                    interest_rates: pd.Series,
                    settlement_rule: tp.Callable[[pd.Period], date],
-                   spot_price_sims: pd.DataFrame,
-                   markov_factor_sims: tp.Iterable[pd.DataFrame],
-                   basis_funcs: str,
+                    sim_spot_regress: pd.DataFrame,
+                    sim_spot_valuation: pd.DataFrame,
+                    sim_factors_regress: tp.Tuple[pd.DataFrame],
+                    sim_factors_valuation: tp.Tuple[pd.DataFrame],
+                    basis_funcs: str,
                    discount_deltas: bool,
                    extra_decisions: tp.Optional[int] = None,
                    num_inventory_grid_points: int = 100,
                    numerical_tolerance: float = 1E-12,
                    on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
                    ) -> MultiFactorValuationResults:
+    time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
+    net_spot_regress = None
+    net_sim_factors_regress = None
+    net_sim_results_regress = None
+    net_spot_valuation = None
+    net_sim_factors_valuation = None
+    net_sim_results_valuation = None
 
-    return
+    def add_sim_results(net_lsmc_params_builder):
+        net_lsmc_params_builder.UseSpotSimResults(net_sim_results_regress, net_sim_results_valuation)
+
+    return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_sim_results,
+                                  num_inventory_grid_points, numerical_tolerance, on_progress_update,
+                                  basis_funcs, settlement_rule, time_period_type,
+                                  val_date, discount_deltas, extra_decisions)
 
 
 def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_sim_to_val_params,
                            num_inventory_grid_points, numerical_tolerance, on_progress_update,
                            basis_funcs, settlement_rule, time_period_type,
                            val_date, discount_deltas, extra_decisions):
+    if cmdty_storage.freq != fwd_curve.index.freqstr:
+        raise ValueError("cmdty_storage and forward_curve have different frequencies.")
     # Convert inputs to .NET types
     net_forward_curve = utils.series_to_double_time_series(fwd_curve, time_period_type)
     net_current_period = utils.from_datetime_like(val_date, time_period_type)
