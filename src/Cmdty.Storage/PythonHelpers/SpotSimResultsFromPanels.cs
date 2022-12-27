@@ -44,8 +44,13 @@ namespace Cmdty.Storage.PythonHelpers
         public SpotSimResultsFromPanels(Panel<T, double> spotPriceSims, 
                 IEnumerable<Panel<T, double>> factorSims)
         {
+            if (spotPriceSims is null)
+                throw new ArgumentNullException(nameof(spotPriceSims));
             if (factorSims is null)
                 throw new ArgumentNullException(nameof(factorSims));
+            if (spotPriceSims.NumCols == 0)
+                throw new ArgumentException($"{nameof(spotPriceSims)}.{nameof(spotPriceSims.NumCols)} (number of simulations), " +
+                    $"cannot equal zero.");
             _factorSims = factorSims.ToArray();
 
             for (int i = 0; i < _factorSims.Length; i++)

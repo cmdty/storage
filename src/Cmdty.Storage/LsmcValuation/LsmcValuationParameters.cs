@@ -191,6 +191,41 @@ namespace Cmdty.Storage
                 return SimulateWithMultiFactorModel(regressionSimNormalGenerator, valuationSimNormalGenerator, modelParameters, numSims);
             }
 
+            public Builder UseSpotSimResults(ISpotSimResults<T> regressionSpotSim, ISpotSimResults<T> valuationSpotSim)
+            {
+                if (regressionSpotSim is null)
+                    throw new ArgumentNullException(nameof(regressionSpotSim));
+                if (valuationSpotSim is null)
+                    throw new ArgumentNullException(nameof(valuationSpotSim));
+
+                RegressionSpotSimsGenerator = (T currentPeriod, T storageStart, T storageEnd, TimeSeries<T, double> forwardCurve) =>
+                {
+                    CheckSpotSim(regressionSpotSim, currentPeriod, storageStart, storageEnd, nameof(regressionSpotSim));
+                    return regressionSpotSim;
+                };
+                ValuationSpotSimsGenerator = (T currentPeriod, T storageStart, T storageEnd, TimeSeries<T, double> forwardCurve) =>
+                {
+                    CheckSpotSim(valuationSpotSim, currentPeriod, storageStart, storageEnd, nameof(valuationSpotSim));
+                    return valuationSpotSim;
+                };
+                return this;
+            }
+
+            // This can all be removed when ISpotSimResults<T> is refactored or removed
+            private void CheckSpotSim(ISpotSimResults<T> spotSim, T currentPeriod, T storageStart, 
+                T storageEnd, string spotSimArgument)
+            {
+                if (currentPeriod.CompareTo(storageEnd) >= 0)
+                    return; // Don't need to check as simulations not needed
+
+                var simulatedPeriods = new HashSet<T>(spotSim.SimulatedPeriods);
+                T simStart = new[] { currentPeriod.Offset(1), storageStart }.Max();
+
+                foreach (T simulatedPeriod in simStart.EnumerateTo(storageEnd))
+                    if (!simulatedPeriods.Contains(simulatedPeriod))
+                        throw new ArgumentException(spotSimArgument + $" does not contain simulations for period {simulatedPeriod}.");
+            }
+
             public Builder Clone()
             {
                 return new Builder
