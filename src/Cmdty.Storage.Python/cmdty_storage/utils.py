@@ -93,10 +93,15 @@ def series_to_time_series(series, time_period_type, net_data_type, data_selector
     return ts.TimeSeries[time_period_type, net_data_type](net_indices, net_values)
 
 
-def data_frame_to_net_double_panel(panel: pd.DataFrame, time_period_type):
-    """Converts an instance of pandas DataFrame to a Cmdty.Core.Panel<T, double>."""
-    # TODO complete this
-    return
+def data_frame_to_net_double_panel(data_frame: pd.DataFrame, time_period_type):
+    """Converts an instance of pandas DataFrame to a Cmdty.Core.Common.Panel<T, double>."""
+    num_periods = len(data_frame.index)
+    num_cols = len(data_frame.columns)
+    net_indices = dotnet.Array.CreateInstance(time_period_type, num_periods)
+    for i in range(num_periods):
+        net_indices[i] = from_datetime_like(data_frame.index[i], time_period_type)
+    net_values = as_net_array(data_frame.values)
+    return net_cc.Panel[time_period_type, dotnet.Double](net_values, net_indices, num_cols)
 
 
 def net_time_series_to_pandas_series(net_time_series, freq):
@@ -230,7 +235,7 @@ def as_net_array(np_array: np.ndarray):
     try:
         net_array = dotnet.Array.CreateInstance(_MAP_NP_NET[dtype], *net_dims)
     except KeyError:
-        raise NotImplementedError("asNetArray does not yet support dtype {}".format(dtype))
+        raise NotImplementedError("as_net_array does not yet support dtype {}".format(dtype))
 
     try:  # Memmove
         dest_handle = dotnet.Runtime.InteropServices.GCHandle.Alloc(net_array,
