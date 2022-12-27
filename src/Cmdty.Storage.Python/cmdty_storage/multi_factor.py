@@ -350,9 +350,13 @@ def three_factor_seasonal_value(cmdty_storage: CmdtyStorage,
         cmdty_storage.net_storage.EndPeriod)
     # Transform factors x_st -> x0, x_lt -> x1, x_sw -> x2
     basis_func_transformed = basis_funcs.replace('x_st', 'x0').replace('x_lt', 'x1').replace('x_sw', 'x2')
-    return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, net_multi_factor_params,
-                                  num_inventory_grid_points, num_sims, numerical_tolerance, on_progress_update,
-                                  basis_func_transformed, seed, fwd_sim_seed, settlement_rule, time_period_type,
+
+    def add_multi_factor_sim(net_lsmc_params_builder):
+        net_lsmc_params_builder.SimulateWithMultiFactorModelAndMersenneTwister(net_multi_factor_params, num_sims, seed,
+                                                                               fwd_sim_seed)
+    return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_multi_factor_sim,
+                                  num_inventory_grid_points, numerical_tolerance, on_progress_update,
+                                  basis_func_transformed, settlement_rule, time_period_type,
                                   val_date, discount_deltas, extra_decisions)
 
 
@@ -379,9 +383,13 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
         raise ValueError("cmdty_storage and forward_curve have different frequencies.")
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
     net_multi_factor_params = _create_net_multi_factor_params(factor_corrs, factors, time_period_type)
-    return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, net_multi_factor_params,
-                                  num_inventory_grid_points, num_sims, numerical_tolerance, on_progress_update,
-                                  basis_funcs, seed, fwd_sim_seed, settlement_rule, time_period_type,
+
+    def add_multi_factor_sim(net_lsmc_params_builder):
+        net_lsmc_params_builder.SimulateWithMultiFactorModelAndMersenneTwister(net_multi_factor_params, num_sims,
+                                                                               seed, fwd_sim_seed)
+    return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_multi_factor_sim,
+                                  num_inventory_grid_points, numerical_tolerance, on_progress_update,
+                                  basis_funcs, settlement_rule, time_period_type,
                                   val_date, discount_deltas, extra_decisions)
 
 
@@ -404,9 +412,9 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
     return
 
 
-def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, net_multi_factor_params,
-                           num_inventory_grid_points, num_sims, numerical_tolerance, on_progress_update,
-                           basis_funcs, seed, fwd_sim_seed, settlement_rule, time_period_type,
+def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_sim_to_val_params,
+                           num_inventory_grid_points, numerical_tolerance, on_progress_update,
+                           basis_funcs, settlement_rule, time_period_type,
                            val_date, discount_deltas, extra_decisions):
     # Convert inputs to .NET types
     net_forward_curve = utils.series_to_double_time_series(fwd_curve, time_period_type)
@@ -449,8 +457,8 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     net_lsmc_params_builder.DiscountDeltas = discount_deltas
     if extra_decisions is not None:
         net_lsmc_params_builder.ExtraDecisions = extra_decisions
-    net_lsmc_params_builder.SimulateWithMultiFactorModelAndMersenneTwister(net_multi_factor_params, num_sims, seed,
-                                                                           fwd_sim_seed)
+    add_sim_to_val_params(net_lsmc_params_builder)
+
     net_lsmc_params = net_lsmc_params_builder.Build()
     net_val_results = lsmc.Calculate[time_period_type](net_lsmc_params)
     logger.info('Calculation of LSMC value complete.')
