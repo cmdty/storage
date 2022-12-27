@@ -411,8 +411,8 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
                     on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
                     ) -> MultiFactorValuationResults:
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
-    net_sim_results_regress = _create_net_spot_sim_results(sim_spot_regress, sim_factors_regress)
-    net_sim_results_valuation = _create_net_spot_sim_results(sim_spot_valuation, sim_factors_valuation)
+    net_sim_results_regress = _create_net_spot_sim_results(sim_spot_regress, sim_factors_regress, time_period_type)
+    net_sim_results_valuation = _create_net_spot_sim_results(sim_spot_valuation, sim_factors_valuation, time_period_type)
 
     def add_sim_results(net_lsmc_params_builder):
         net_lsmc_params_builder.UseSpotSimResults(net_sim_results_regress, net_sim_results_valuation)

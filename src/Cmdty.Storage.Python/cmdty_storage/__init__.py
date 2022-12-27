@@ -26,7 +26,7 @@ from cmdty_storage.cmdty_storage import CmdtyStorage, RatchetInterp
 from cmdty_storage.intrinsic import intrinsic_value
 from cmdty_storage.trinomial import trinomial_value, trinomial_deltas
 from cmdty_storage.multi_factor import MultiFactorSpotSim, MultiFactorModel, three_factor_seasonal_value, \
-    multi_factor_value
+    multi_factor_value, value_from_sims
 from cmdty_storage.utils import FREQ_TO_PERIOD_TYPE, numerics_provider
 import logging
 

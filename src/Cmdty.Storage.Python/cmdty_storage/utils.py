@@ -100,7 +100,7 @@ def data_frame_to_net_double_panel(data_frame: pd.DataFrame, time_period_type):
     net_indices = dotnet.Array.CreateInstance(time_period_type, num_periods)
     for i in range(num_periods):
         net_indices[i] = from_datetime_like(data_frame.index[i], time_period_type)
-    net_values = as_net_array(data_frame.values)
+    net_values = as_net_array(data_frame.values.flatten(order='C'))
     return net_cc.Panel[time_period_type, dotnet.Double](net_values, net_indices, num_cols)
 
 
@@ -207,23 +207,11 @@ def as_net_array(np_array: np.ndarray):
     """
     Given a `numpy.ndarray` returns a CLR `System.Array`.  See _MAP_NP_NET for
     the mapping of Numpy dtypes to CLR types.
-
-    Note: `complex64` and `complex128` arrays are converted to `float32`
-    and `float64` arrays respectively with shape [m,n,...] -> [m,n,...,2]
     """
     dims = np_array.shape
     dtype = np_array.dtype
-    # For complex arrays, we must make a view of the array as its corresponding
-    # float type.
-    if dtype == np.complex64:
-        dtype = np.dtype('float32')
-        dims.append(2)
-        np_array = np_array.view(np.float32).reshape(dims)
-    elif dtype == np.complex128:
-        dtype = np.dtype('float64')
-        dims.append(2)
-        np_array = np_array.view(np.float64).reshape(dims)
-
+    if dtype not in _MAP_NP_NET:
+        raise NotImplementedError("as_net_array does not yet support dtype {}".format(dtype))
     net_dims = dotnet.Array.CreateInstance(dotnet.Int32, np_array.ndim)
     for idx in range(np_array.ndim):
         net_dims[idx] = dotnet.Int32(dims[idx])
@@ -232,10 +220,7 @@ def as_net_array(np_array: np.ndarray):
         np_array = np_array.copy(order='C')
     assert np_array.flags.c_contiguous
 
-    try:
-        net_array = dotnet.Array.CreateInstance(_MAP_NP_NET[dtype], *net_dims)
-    except KeyError:
-        raise NotImplementedError("as_net_array does not yet support dtype {}".format(dtype))
+    net_array = dotnet.Array.CreateInstance(_MAP_NP_NET[dtype], *net_dims)
 
     try:  # Memmove
         dest_handle = dotnet.Runtime.InteropServices.GCHandle.Alloc(net_array,

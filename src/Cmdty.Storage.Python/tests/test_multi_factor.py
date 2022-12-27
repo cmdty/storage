@@ -25,7 +25,7 @@ import unittest
 import pandas as pd
 import numpy as np
 from cmdty_storage import multi_factor as mf, CmdtyStorage, three_factor_seasonal_value, \
-                            multi_factor_value
+                            multi_factor_value, value_from_sims
 from datetime import date
 import itertools
 from tests import utils
@@ -245,6 +245,96 @@ class TestMultiFactorValue(unittest.TestCase):
             self.assertEqual((123, num_sims), sim_factor_regress.shape)
         self.assertEqual(len(factors), len(multi_factor_val.sim_factors_valuation))
         for sim_factor_valuation in multi_factor_val.sim_factors_valuation:
+            self.assertEqual((123, num_sims), sim_factor_valuation.shape)
+
+    def test_value_from_sims_using_sims_from_multi_factor_value(self):
+        """Test which first runs multi_factor_value, then passes the simulated spot
+        prices and factors from the result into the value_from_sims function.
+        Tests that the result from value_from_sims is identical to that from
+        multi_factor_value."""
+        storage_start = '2019-12-01'
+        storage_end = '2020-04-01'
+        constant_injection_rate = 700.0
+        constant_withdrawal_rate = 700.0
+        constant_injection_cost = 1.23
+        constant_withdrawal_cost = 0.98
+        min_inventory = 0.0
+        max_inventory = 100000.0
+
+        cmdty_storage = CmdtyStorage('D', storage_start, storage_end, constant_injection_cost,
+                                     constant_withdrawal_cost, min_inventory=min_inventory,
+                                     max_inventory=max_inventory,
+                                     max_injection_rate=constant_injection_rate,
+                                     max_withdrawal_rate=constant_withdrawal_rate)
+        inventory = 0.0
+        val_date = '2019-08-29'
+        low_price = 23.87
+        high_price = 150.32
+        date_switch_high_price = '2020-03-12'
+        forward_curve = utils.create_piecewise_flat_series([low_price, high_price, high_price],
+                                                           [val_date, date_switch_high_price,
+                                                            storage_end], freq='D')
+
+        flat_interest_rate = 0.03
+        interest_rate_curve = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'),
+                                        dtype='float64')
+        interest_rate_curve[:] = flat_interest_rate
+
+        # Multi-Factor parameters
+        mean_reversion = 16.2
+        spot_volatility = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
+        spot_volatility[:] = 1.15
+
+        def twentieth_of_next_month(period): return period.asfreq('M').asfreq('D', 'end') + 20
+
+        long_term_vol = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
+        long_term_vol[:] = 0.14
+
+        factors = [(0.0, long_term_vol),
+                   (mean_reversion, spot_volatility)]
+        factor_corrs = 0.64
+        progresses = []
+
+        def on_progress(progress): progresses.append(progress)
+
+        # Simulation parameter
+        num_sims = 500
+        seed = 11
+        fwd_sim_seed = seed # Temporarily set to pass regression tests
+        basis_funcs = '1 + x0 + x0**2 + x1 + x1*x1'
+        discount_deltas = False
+
+        multi_factor_val = multi_factor_value(cmdty_storage, val_date, inventory, forward_curve,
+                                              interest_rate_curve, twentieth_of_next_month,
+                                              factors, factor_corrs, num_sims,
+                                              basis_funcs, discount_deltas,
+                                              seed=seed,
+                                              fwd_sim_seed=fwd_sim_seed,
+                                              on_progress_update=on_progress)
+        value_from_sims_result = value_from_sims(cmdty_storage, val_date, inventory, forward_curve,
+                                     interest_rate_curve, twentieth_of_next_month, multi_factor_val.sim_spot_regress,
+                                     multi_factor_val.sim_spot_valuation, multi_factor_val.sim_factors_regress,
+                                     multi_factor_val.sim_factors_valuation, basis_funcs, discount_deltas)
+        self.assertAlmostEqual(value_from_sims_result.npv, 1780380.7581833513, places=6)
+        self.assertEqual(123, len(value_from_sims_result.deltas)) # TODO look into why deltas is longer the intrinsic profile
+        self.assertEqual(123, len(value_from_sims_result.expected_profile))
+        self.assertEqual(progresses[-1], 1.0)
+        self.assertEqual(245, len(progresses))
+        self.assertEqual(1703773.0757192627, value_from_sims_result.intrinsic_npv)
+        self.assertEqual(123, len(value_from_sims_result.intrinsic_profile))
+        self.assertEqual((123, num_sims), value_from_sims_result.sim_spot_regress.shape)
+        self.assertEqual((123, num_sims), value_from_sims_result.sim_spot_valuation.shape)
+        self.assertEqual((123, num_sims), value_from_sims_result.sim_inventory.shape)
+        self.assertEqual((123, num_sims), value_from_sims_result.sim_inject_withdraw.shape)
+        self.assertEqual((123, num_sims), value_from_sims_result.sim_cmdty_consumed.shape)
+        self.assertEqual((123, num_sims), value_from_sims_result.sim_inventory_loss.shape)
+        self.assertEqual((123, num_sims), value_from_sims_result.sim_net_volume.shape)
+        # Test factors
+        self.assertEqual(len(factors), len(value_from_sims_result.sim_factors_regress))
+        for sim_factor_regress in value_from_sims_result.sim_factors_regress:
+            self.assertEqual((123, num_sims), sim_factor_regress.shape)
+        self.assertEqual(len(factors), len(value_from_sims_result.sim_factors_valuation))
+        for sim_factor_valuation in value_from_sims_result.sim_factors_valuation:
             self.assertEqual((123, num_sims), sim_factor_valuation.shape)
 
     def test_three_factor_seasonal_regression(self):
