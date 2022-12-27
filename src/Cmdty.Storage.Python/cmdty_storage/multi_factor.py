@@ -31,6 +31,9 @@ import Cmdty.Core.Simulation as net_sim
 import Cmdty.Storage as net_cs
 import Cmdty.Core.Simulation.MultiFactor as net_mf
 
+clr.AddReference(str(pl.Path('cmdty_storage/lib/Cmdty.Core.Common')))
+import Cmdty.Core.Common as net_cc
+
 import pandas as pd
 import numpy as np
 from datetime import datetime, date
@@ -425,7 +428,10 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
 
 def _create_net_spot_sim_results(sim_spot, sim_factors, time_period_type):
     net_sim_spot = utils.data_frame_to_net_double_panel(sim_spot, time_period_type)
-    net_sim_factors = [utils.data_frame_to_net_double_panel(sim_factor, time_period_type) for sim_factor in sim_factors]
+    net_sim_factors = dotnet_cols_gen.List[net_cc.Panel[time_period_type, dotnet.Double]]()
+    for sim_factor in sim_factors:
+        net_sim_panel = utils.data_frame_to_net_double_panel(sim_factor, time_period_type)
+        net_sim_factors.Add(net_sim_panel)
     return net_cs.PythonHelpers.SpotSimResultsFromPanels[time_period_type](net_sim_spot, net_sim_factors)
 
 

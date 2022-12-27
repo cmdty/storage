@@ -33,7 +33,7 @@ using System.Linq;
 namespace Cmdty.Storage.PythonHelpers
 {
     // TODO move out of PythonHelpers namespace?
-    internal class SpotSimResultsFromPanels<T> : ISpotSimResults<T>
+    public sealed class SpotSimResultsFromPanels<T> : ISpotSimResults<T>
         where T : ITimePeriod<T>
     {
         public Panel<T, double> SpotPriceSims { get; }
