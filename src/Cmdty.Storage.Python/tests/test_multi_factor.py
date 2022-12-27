@@ -25,7 +25,7 @@ import unittest
 import pandas as pd
 import numpy as np
 from cmdty_storage import multi_factor as mf, CmdtyStorage, three_factor_seasonal_value, \
-                            multi_factor_value, value_from_sims
+    multi_factor_value, value_from_sims
 from datetime import date
 import itertools
 from tests import utils
@@ -199,7 +199,8 @@ class TestMultiFactorValue(unittest.TestCase):
         spot_volatility = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
         spot_volatility[:] = 1.15
 
-        def twentieth_of_next_month(period): return period.asfreq('M').asfreq('D', 'end') + 20
+        def twentieth_of_next_month(period):
+            return period.asfreq('M').asfreq('D', 'end') + 20
 
         long_term_vol = pd.Series(index=pd.period_range(val_date, '2020-06-01', freq='D'), dtype='float64')
         long_term_vol[:] = 0.14
@@ -209,12 +210,13 @@ class TestMultiFactorValue(unittest.TestCase):
         factor_corrs = 0.64
         progresses = []
 
-        def on_progress(progress): progresses.append(progress)
+        def on_progress(progress):
+            progresses.append(progress)
 
         # Simulation parameter
         num_sims = 500
         seed = 11
-        fwd_sim_seed = seed # Temporarily set to pass regression tests
+        fwd_sim_seed = seed  # Temporarily set to pass regression tests
         basis_funcs = '1 + x0 + x0**2 + x1 + x1*x1'
         discount_deltas = False
 
@@ -226,7 +228,7 @@ class TestMultiFactorValue(unittest.TestCase):
                                               fwd_sim_seed=fwd_sim_seed,
                                               on_progress_update=on_progress)
         self.assertAlmostEqual(multi_factor_val.npv, 1780380.7581833513, places=6)
-        self.assertEqual(123, len(multi_factor_val.deltas)) # TODO look into why deltas is longer the intrinsic profile
+        self.assertEqual(123, len(multi_factor_val.deltas))  # TODO look into why deltas is longer the intrinsic profile
         self.assertEqual(123, len(multi_factor_val.expected_profile))
         self.assertEqual(progresses[-1], 1.0)
         self.assertEqual(245, len(progresses))
@@ -300,7 +302,7 @@ class TestMultiFactorValue(unittest.TestCase):
         # Simulation parameter
         num_sims = 500
         seed = 11
-        fwd_sim_seed = seed # Temporarily set to pass regression tests
+        fwd_sim_seed = seed  # Temporarily set to pass regression tests
         basis_funcs = '1 + x0 + x0**2 + x1 + x1*x1'
         discount_deltas = False
 
@@ -312,30 +314,15 @@ class TestMultiFactorValue(unittest.TestCase):
                                               fwd_sim_seed=fwd_sim_seed,
                                               on_progress_update=on_progress)
         value_from_sims_result = value_from_sims(cmdty_storage, val_date, inventory, forward_curve,
-                                     interest_rate_curve, twentieth_of_next_month, multi_factor_val.sim_spot_regress,
-                                     multi_factor_val.sim_spot_valuation, multi_factor_val.sim_factors_regress,
-                                     multi_factor_val.sim_factors_valuation, basis_funcs, discount_deltas)
-        self.assertAlmostEqual(value_from_sims_result.npv, 1780380.7581833513, places=6)
-        self.assertEqual(123, len(value_from_sims_result.deltas)) # TODO look into why deltas is longer the intrinsic profile
-        self.assertEqual(123, len(value_from_sims_result.expected_profile))
-        self.assertEqual(progresses[-1], 1.0)
-        self.assertEqual(245, len(progresses))
-        self.assertEqual(1703773.0757192627, value_from_sims_result.intrinsic_npv)
-        self.assertEqual(123, len(value_from_sims_result.intrinsic_profile))
-        self.assertEqual((123, num_sims), value_from_sims_result.sim_spot_regress.shape)
-        self.assertEqual((123, num_sims), value_from_sims_result.sim_spot_valuation.shape)
-        self.assertEqual((123, num_sims), value_from_sims_result.sim_inventory.shape)
-        self.assertEqual((123, num_sims), value_from_sims_result.sim_inject_withdraw.shape)
-        self.assertEqual((123, num_sims), value_from_sims_result.sim_cmdty_consumed.shape)
-        self.assertEqual((123, num_sims), value_from_sims_result.sim_inventory_loss.shape)
-        self.assertEqual((123, num_sims), value_from_sims_result.sim_net_volume.shape)
-        # Test factors
-        self.assertEqual(len(factors), len(value_from_sims_result.sim_factors_regress))
-        for sim_factor_regress in value_from_sims_result.sim_factors_regress:
-            self.assertEqual((123, num_sims), sim_factor_regress.shape)
-        self.assertEqual(len(factors), len(value_from_sims_result.sim_factors_valuation))
-        for sim_factor_valuation in value_from_sims_result.sim_factors_valuation:
-            self.assertEqual((123, num_sims), sim_factor_valuation.shape)
+                                                 interest_rate_curve, twentieth_of_next_month,
+                                                 multi_factor_val.sim_spot_regress,
+                                                 multi_factor_val.sim_spot_valuation,
+                                                 multi_factor_val.sim_factors_regress,
+                                                 multi_factor_val.sim_factors_valuation, basis_funcs, discount_deltas)
+        self.assertEqual(multi_factor_val.npv, value_from_sims_result.npv)
+        self.assertTrue(multi_factor_val.deltas.equals(value_from_sims_result.deltas))
+        self.assertTrue(multi_factor_val.expected_profile.equals(value_from_sims_result.expected_profile))
+        self.assertEqual(multi_factor_val.intrinsic_npv, value_from_sims_result.intrinsic_npv)
 
     def test_three_factor_seasonal_regression(self):
         storage_start = '2019-12-01'
@@ -371,16 +358,18 @@ class TestMultiFactorValue(unittest.TestCase):
         seasonal_volatility = 0.18
         long_term_vol = 0.14
 
-        def twentieth_of_next_month(period): return period.asfreq('M').asfreq('D', 'end') + 20
+        def twentieth_of_next_month(period):
+            return period.asfreq('M').asfreq('D', 'end') + 20
 
         progresses = []
 
-        def on_progress(progress): progresses.append(progress)
+        def on_progress(progress):
+            progresses.append(progress)
 
         # Simulation parameter
         num_sims = 500
         seed = 11
-        fwd_sim_seed = seed # Temporarily set to pass regression tests
+        fwd_sim_seed = seed  # Temporarily set to pass regression tests
         basis_funcs = '1 + x_st + x_sw + x_lt + x_st**2 + x_sw**2 + x_lt**2'
         discount_deltas = False
 
