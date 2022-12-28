@@ -3,9 +3,8 @@ Storage valuation and optimisation model implemented using the Longstaff Schwart
 Monte Carlo technique.
 [A multi-factor model](https://github.com/cmdty/core/blob/master/docs/multifactor_price_process/multifactor_price_process.pdf) 
 is used to for the commodity price dynamics. This allows for a complex 
-volatility and correlations structure between forward rates as well as calibration to option 
-implied volatilities.
-
+volatility and correlations structure between forward rates as well as calibration to option implied volatilities. Users can also provide their
+own spot price simulations to the model, should another model of price dynamics be desired.
 
 The models can be used for any commodity, although are most suitable for natural gas 
 storage valuation and optimisation.
@@ -123,8 +122,10 @@ Full NPV:	78,175
 Intrinsic NPV: 	40,976
 Extrinsic NPV: 	37,199
 ```
-For comprehensive documentation of invoking the LSMC model, using both the three-factor price model,
-and a more general multi-factor model, see the notebook [multifactor_storage.ipynb](https://github.com/cmdty/storage/blob/master/samples/python/multifactor_storage.ipynb).
+For comprehensive documentation of invoking the LSMC model, using both the 
+three-factor price model, a more general multi-factor model, or using 
+externally provided simulations, see the notebook 
+[multifactor_storage.ipynb](https://github.com/cmdty/storage/blob/master/samples/python/multifactor_storage.ipynb).
 
 ### Inspecting Valuation Results
 The object returned from the calling `three_factor_seasonal_value` has many properties containing useful information. The code below give examples of a
