@@ -312,8 +312,9 @@ class TestMultiFactorValue(unittest.TestCase):
                                                  interest_rate_curve, twentieth_of_next_month,
                                                  multi_factor_val.sim_spot_regress,
                                                  multi_factor_val.sim_spot_valuation,
+                                                 basis_funcs, discount_deltas,
                                                  multi_factor_val.sim_factors_regress,
-                                                 multi_factor_val.sim_factors_valuation, basis_funcs, discount_deltas)
+                                                 multi_factor_val.sim_factors_valuation, )
         self.assertEqual(multi_factor_val.npv, value_from_sims_result.npv)
         self.assertTrue(multi_factor_val.deltas.equals(value_from_sims_result.deltas))
         self.assertTrue(multi_factor_val.expected_profile.equals(value_from_sims_result.expected_profile))
