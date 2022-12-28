@@ -58,7 +58,8 @@ Calculations take into account many of the complex features of physical storage 
 Currently the following models are implemented in this repository:
 * Intrinsic valuation, i.e. optimal value assuming the commodity price remains static.
 * One-factor trinomial tree, with seasonal spot volatility.
-* Least-Squares Monte Carlo with a multi-factor price process.
+* Least-Squares Monte Carlo with a a multi-factor price process 
+including the flexibility for callers to provide own price simulations.
 
 ## Getting Started
 
@@ -135,8 +136,9 @@ storage_with_ratchets = CmdtyStorage(
 
 ### Storage Optimisation Using LSMC
 The following is an example of valuing the storage using LSMC and a [three-factor seasonal model](https://github.com/cmdty/core/blob/master/docs/three_factor_seasonal_model/three_factor_seasonal_model.pdf) of price dynamics.
-For comprehensive documentation of invoking the LSMC model, using both the three-factor price 
-model, and a more general multi-factor model, see the notebook [multifactor_storage.ipynb](./samples/python/multifactor_storage.ipynb).
+For comprehensive documentation of invoking the LSMC model, using the three-factor price 
+model, a more general multi-factor model, or externally generated price 
+simulations, see the notebook [multifactor_storage.ipynb](./samples/python/multifactor_storage.ipynb).
 
 ```python
 from cmdty_storage import three_factor_seasonal_value
