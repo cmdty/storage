@@ -6,7 +6,7 @@
 ### 1.1.0
 * Update pythonnet dependency from 2.5.1 to 3.0.1 to allow compatibility with Python up to version 3.11.
 
-### 1.2.0 (NOT YET RELEASED)
+### 1.2.0
 * Addition of `value_from sims` function which allows users to provide their
 own price simulation data.
 * Markovian factors included in returned type for both C# and Python.
