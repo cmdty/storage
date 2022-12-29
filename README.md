@@ -58,7 +58,7 @@ Calculations take into account many of the complex features of physical storage 
 Currently the following models are implemented in this repository:
 * Intrinsic valuation, i.e. optimal value assuming the commodity price remains static.
 * One-factor trinomial tree, with seasonal spot volatility.
-* Least-Squares Monte Carlo with a a multi-factor price process 
+* Least-Squares Monte Carlo with a multi-factor price process 
 including the flexibility for callers to provide own price simulations.
 
 ## Getting Started
