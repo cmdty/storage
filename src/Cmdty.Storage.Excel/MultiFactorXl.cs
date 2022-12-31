@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
 using ExcelDna.Integration;
@@ -34,9 +35,6 @@ namespace Cmdty.Storage.Excel
 {
     public static class MultiFactorXl
     {
-        private static readonly Dictionary<string, ExcelCalcWrapper> _calcWrappers = new Dictionary<string, ExcelCalcWrapper>();
-        private static readonly Dictionary<string, CmdtyStorage<Day>> _storageObjects = new Dictionary<string, CmdtyStorage<Day>>();
-
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(CreateStorage),
             Description = "Creates and caches an object representing a storage facility.",
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
@@ -54,15 +52,18 @@ namespace Cmdty.Storage.Excel
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
-                double numericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalToleranceIn, 1E-10, "Numerical_tolerance");
-                CmdtyStorage<Day> storage = StorageExcelHelper.CreateCmdtyStorageFromExcelInputs<Day>(storageStart,
-                    storageEnd, ratchets, ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection,
-                    withdrawalCostRate, cmdtyConsumedOnWithdrawal, numericalTolerance);
-                _storageObjects[name] = storage;
-                return name;
+                return ObjectHandler.Instance.GetHandle(name, new object[] {storageStart, storageEnd, ratchets,
+                    ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection, withdrawalCostRate,
+                    cmdtyConsumedOnWithdrawal, numericalToleranceIn}, () =>
+                    {
+                        double numericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalToleranceIn, 1E-10, "Numerical_tolerance");
+                        CmdtyStorage<Day> storage = StorageExcelHelper.CreateCmdtyStorageFromExcelInputs<Day>(storageStart,
+                            storageEnd, ratchets, ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection,
+                            withdrawalCostRate, cmdtyConsumedOnWithdrawal, numericalTolerance);
+                        return storage;
+                    });
             });
         }
-
 
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageValueThreeFactor),
             Description = "Calculates the NPV, Deltas, Trigger prices and other metadata using a 3-factor seasonal model of price dynamics.",
@@ -90,55 +91,61 @@ namespace Cmdty.Storage.Excel
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
-                _calcWrappers[name] = ExcelCalcWrapper.CreateCancellable((cancellationToken, onProgress) =>
+                var args = new object[] {storageHandle, valuationDate, currentInventory, forwardCurve,
+                                interestRateCurve, spotVol, spotMeanReversion, longTermVol, seasonalVol,
+                                discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn, fwdSimSeedIn,
+                                numGlobalGridPointsIn, numericalTolerance, extraDecisions };
+
+                return ObjectHandler.Instance.GetHandle(name, args, () =>
                 {
-                    // TODO provide alternative method for interpolating interest rates
-                    Func<Day, double> interpolatedInterestRates =
-                        StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
-
-                    Func<Day, Day, double> discountFunc = StorageHelper.CreateAct65ContCompDiscounter(interpolatedInterestRates);
-                    Day valDate = Day.FromDateTime(valuationDate);
-                    Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
-
-                    CmdtyStorage<Day> storage = _storageObjects[storageHandle];
-                    int numGlobalGridPoints = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numGlobalGridPointsIn, ExcelArg.NumGridPoints.Default,
-                                                                    ExcelArg.NumGridPoints.Name);
-                    
-                    string basisFunctionsText = basisFunctionsIn.Replace("x_st", "x0").Replace("x_lt", "x1").Replace("x_sw", "x2");
-                    
-                    var lsmcParamsBuilder = new LsmcValuationParameters<Day>.Builder
+                    return ExcelCalcWrapper.CreateCancellable((cancellationToken, onProgress) =>
                     {
-                        Storage = storage, 
-                        CurrentPeriod = valDate, 
-                        Inventory = currentInventory,
-                        ForwardCurve = StorageExcelHelper.CreateDoubleTimeSeries<Day>(forwardCurve, ExcelArg.ForwardCurve.Name),
-                        DiscountFactors = discountFunc,
+                        CmdtyStorage<Day> storage = ObjectHandler.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
                         
-                        DiscountDeltas = discountDeltas,
-                        BasisFunctions = BasisFunctionsBuilder.Parse(basisFunctionsText),
+                        // TODO provide alternative method for interpolating interest rates
+                        Func<Day, double> interpolatedInterestRates =
+                            StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
 
-                        ExtraDecisions = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(extraDecisions, 0, ExcelArg.ExtraDecisions.Name),
-                        CancellationToken = cancellationToken,
-                        OnProgressUpdate = onProgress,
-                        GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(storage, numGlobalGridPoints),
-                        NumericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalTolerance, LsmcValuationParameters<Day>.Builder.DefaultNumericalTolerance, ExcelArg.NumericalTolerance.Description),
-                        SettleDateRule = settleDateRule
-                    };
+                        Func<Day, Day, double> discountFunc = StorageHelper.CreateAct65ContCompDiscounter(interpolatedInterestRates);
+                        Day valDate = Day.FromDateTime(valuationDate);
+                        Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
 
-                    // TODO test that this works with expired storage
-                    Day endDate = new[] {valDate, storage.EndPeriod}.Max();
-                    var threeFactorParams =
-                        MultiFactorParameters.For3FactorSeasonal(spotMeanReversion, spotVol, longTermVol, seasonalVol, valDate, endDate);
+                        int numGlobalGridPoints = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numGlobalGridPointsIn, ExcelArg.NumGridPoints.Default,
+                                                                        ExcelArg.NumGridPoints.Name);
 
-                    // TODO better error messages if seedIn and fwdSimSeedIn cannot be cast
-                    int? seed = StorageExcelHelper.IsExcelEmptyOrMissing(seedIn) ? (int?)null : (int)(double)seedIn;
-                    int? fwdSimSeed = StorageExcelHelper.IsExcelEmptyOrMissing(fwdSimSeedIn) ? (int?)null : (int)(double)fwdSimSeedIn;
-                    
-                    lsmcParamsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(threeFactorParams, numSims,seed, fwdSimSeed);
+                        string basisFunctionsText = basisFunctionsIn.Replace("x_st", "x0").Replace("x_lt", "x1").Replace("x_sw", "x2");
 
-                    return LsmcStorageValuation.WithNoLogger.Calculate(lsmcParamsBuilder.Build());
+                        var lsmcParamsBuilder = new LsmcValuationParameters<Day>.Builder
+                        {
+                            Storage = storage,
+                            CurrentPeriod = valDate,
+                            Inventory = currentInventory,
+                            ForwardCurve = StorageExcelHelper.CreateDoubleTimeSeries<Day>(forwardCurve, ExcelArg.ForwardCurve.Name),
+                            DiscountFactors = discountFunc,
+                            DiscountDeltas = discountDeltas,
+                            BasisFunctions = BasisFunctionsBuilder.Parse(basisFunctionsText),
+                            ExtraDecisions = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(extraDecisions, 0, ExcelArg.ExtraDecisions.Name),
+                            CancellationToken = cancellationToken,
+                            OnProgressUpdate = onProgress,
+                            GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(storage, numGlobalGridPoints),
+                            NumericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalTolerance, LsmcValuationParameters<Day>.Builder.DefaultNumericalTolerance, ExcelArg.NumericalTolerance.Description),
+                            SettleDateRule = settleDateRule
+                        };
+
+                        // TODO test that this works with expired storage
+                        Day endDate = new[] { valDate, storage.EndPeriod }.Max();
+                        var threeFactorParams =
+                            MultiFactorParameters.For3FactorSeasonal(spotMeanReversion, spotVol, longTermVol, seasonalVol, valDate, endDate);
+
+                        // TODO better error messages if seedIn and fwdSimSeedIn cannot be cast
+                        int? seed = StorageExcelHelper.IsExcelEmptyOrMissing(seedIn) ? (int?)null : (int)(double)seedIn;
+                        int? fwdSimSeed = StorageExcelHelper.IsExcelEmptyOrMissing(fwdSimSeedIn) ? (int?)null : (int)(double)fwdSimSeedIn;
+
+                        lsmcParamsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(threeFactorParams, numSims, seed, fwdSimSeed);
+
+                        return LsmcStorageValuation.WithNoLogger.Calculate(lsmcParamsBuilder.Build());
+                    });
                 });
-                return name;
             });
         }
 
@@ -152,7 +159,7 @@ namespace Cmdty.Storage.Excel
                 const string functionName = nameof(SubscribeProgress);
                 return ExcelAsyncUtil.Observe(functionName, name, () =>
                 {
-                    ExcelCalcWrapper wrapper = _calcWrappers[name];
+                    ExcelCalcWrapper wrapper = ObjectHandler.Instance.GetObject<ExcelCalcWrapper>(name);
                     var excelObserver = new CalcWrapperProgressObservable(wrapper);
                     return excelObserver;
                 });
@@ -169,7 +176,7 @@ namespace Cmdty.Storage.Excel
                 const string functionName = nameof(SubscribeStatus);
                 return ExcelAsyncUtil.Observe(functionName, name, () =>
                 {
-                    ExcelCalcWrapper wrapper = _calcWrappers[name];
+                    ExcelCalcWrapper wrapper = ObjectHandler.Instance.GetObject<ExcelCalcWrapper>(name);
                     var excelObserver = new CalcWrapperStatusObservable(wrapper);
                     return excelObserver;
                 });
@@ -186,7 +193,7 @@ namespace Cmdty.Storage.Excel
                 const string functionName = nameof(SubscribeResultProperty);
                 return ExcelAsyncUtil.Observe(functionName, new [] { objectHandle, propertyName, returnedWhilstWaiting}, () =>
                 {
-                    ExcelCalcWrapper wrapper = _calcWrappers[objectHandle];
+                    ExcelCalcWrapper wrapper = ObjectHandler.Instance.GetObject<ExcelCalcWrapper>(objectHandle);
                     var excelObservable = new CalcWrapperResultPropertyObservable(wrapper, propertyName, returnedWhilstWaiting);
                     return excelObservable;
                 });
