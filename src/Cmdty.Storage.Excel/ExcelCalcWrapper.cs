@@ -36,7 +36,8 @@ namespace Cmdty.Storage.Excel
         Success,
         Cancelled
     }
-    public sealed class ExcelCalcWrapper
+
+    public sealed class ExcelCalcWrapper : IDisposable
     {
         public event Action<double> OnProgressUpdate;
         public double Progress { get; private set; }
@@ -45,6 +46,7 @@ namespace Cmdty.Storage.Excel
         public bool CancellationSupported { get; }
         public CalcStatus Status { get; private set; }
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private bool _isDisposed;
 
         private ExcelCalcWrapper(Task<object> calcTask, Type resultType, CancellationTokenSource cancellationTokenSource)
         {
@@ -78,7 +80,6 @@ namespace Cmdty.Storage.Excel
         public void Cancel()
             => _cancellationTokenSource.Cancel();
         
-
         private void UpdateStatus(Task task)
         {
             switch (task.Status)
@@ -97,6 +98,14 @@ namespace Cmdty.Storage.Excel
             }
         }
 
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource.Dispose();
+                _isDisposed = true;
+            }
+        }
     }
-
 }
