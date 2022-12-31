@@ -24,9 +24,7 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
 using ExcelDna.Integration;
@@ -197,6 +195,31 @@ namespace Cmdty.Storage.Excel
                     var excelObservable = new CalcWrapperResultPropertyObservable(wrapper, propertyName, returnedWhilstWaiting);
                     return excelObservable;
                 });
+            });
+        }
+
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(NumberOfRunningCalculations),
+            Description = "Returns the number of calculations which are currently running.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = true, 
+            IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+        public static object NumberOfRunningCalculations()
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                int runningCalcCount = 0;
+                string[] objectHandles = ObjectHandler.Instance.ObjectCache.Keys.ToArray();
+                foreach (string objectHandle in objectHandles)
+                {
+                    object cachedObject;
+                    if (ObjectHandler.Instance.TryGetObject(objectHandle, out cachedObject))
+                    {
+                        ExcelCalcWrapper calcWrapper = cachedObject as ExcelCalcWrapper;
+                        if (calcWrapper != null)
+                            if (calcWrapper.Status == CalcStatus.Running)
+                                runningCalcCount++;
+                    }
+                }
+                return runningCalcCount;
             });
         }
 

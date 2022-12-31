@@ -1,6 +1,7 @@
 ﻿using ExcelDna.Integration;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 
 namespace Cmdty.Storage.Excel
 {
@@ -11,6 +12,8 @@ namespace Cmdty.Storage.Excel
         static ObjectHandler()
         {
         }
+
+        public IReadOnlyDictionary<string, object> ObjectCache { get { return _objects; } }
 
         Dictionary<string, object> _objects = new Dictionary<string, object>();
         long _handleIndex = 1;
