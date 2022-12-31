@@ -25,60 +25,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
-using Cmdty.TimeSeries;
 using ExcelDna.Integration;
 
 namespace Cmdty.Storage.Excel
 {
-    //public class MultiFactorCalcWrapper : ExcelCalcWrapper
-    //{
-    //    public MultiFactorCalcWrapper()
-    //    {
-    //        CancellationToken cancelToken = _cancellationTokenSource.Token;
-    //        Status = CalcStatus.Running;
-    //        CalcTask = Task.Run(() =>
-    //        {
-    //            TimeSpan timeSpan = TimeSpan.FromSeconds(1);
-    //            UpdateProgress(0.0);
-    //            cancelToken.ThrowIfCancellationRequested();
-    //            Thread.Sleep(timeSpan);
-    //            UpdateProgress(0.2);
-    //            cancelToken.ThrowIfCancellationRequested();
-    //            Thread.Sleep(timeSpan);
-    //            UpdateProgress(0.4);
-    //            cancelToken.ThrowIfCancellationRequested();
-    //            Thread.Sleep(timeSpan);
-    //            UpdateProgress(0.6);
-    //            cancelToken.ThrowIfCancellationRequested();
-    //            Thread.Sleep(timeSpan);
-    //            UpdateProgress(0.8);
-    //            //throw new Exception("My exception");
-    //            cancelToken.ThrowIfCancellationRequested();
-    //            Thread.Sleep(timeSpan);
-    //            UpdateProgress(0.9);
-    //            cancelToken.ThrowIfCancellationRequested();
-    //            Thread.Sleep(timeSpan);
-    //            cancelToken.ThrowIfCancellationRequested();
-    //            UpdateProgress(1.0);
-    //            return (object)12345.6789;
-    //        }, cancelToken);
-
-    //        CalcTask.ContinueWith(UpdateStatus);
-            
-    //    }
-
-    //    public new bool CancellationSupported() => true;
-
-    //}
-
     public static class MultiFactorXl
     {
         private static readonly Dictionary<string, ExcelCalcWrapper> _calcWrappers = new Dictionary<string, ExcelCalcWrapper>();
@@ -249,108 +202,4 @@ namespace Cmdty.Storage.Excel
         //}
 
     }
-
-    sealed class CalcWrapperResultPropertyObservable : CalcWrapperObservableBase
-    {
-        private readonly object _returnedWhilstWaiting;
-        private static readonly object[] GetterParams = new object[0];
-        private readonly MethodInfo _propertyGetter;
-        
-        public CalcWrapperResultPropertyObservable(ExcelCalcWrapper calcWrapper, string resultPropertyName, object returnedWhilstWaiting) : base(calcWrapper)
-        {
-            PropertyInfo[] properties = calcWrapper.ResultType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty);
-            PropertyInfo propertyInfo = properties.FirstOrDefault(info => info.Name.Equals(resultPropertyName, StringComparison.OrdinalIgnoreCase));
-
-            if (propertyInfo == null)
-                throw new ArgumentException($"Result type {calcWrapper.ResultType.Name} has not public instance property called {resultPropertyName}."); // TODO test and maybe rework
-            _propertyGetter = propertyInfo.GetMethod;
-
-            _returnedWhilstWaiting = returnedWhilstWaiting;
-            calcWrapper.CalcTask.ContinueWith(task =>
-                {
-                    if (task.Status == TaskStatus.RanToCompletion)
-                        PropertyValueUpdate();
-                });
-        }
-
-        private static object GetPropertyValueToReturn(MethodInfo propertyGetter, object resultObject)
-        {
-            object propertyValue = propertyGetter.Invoke(resultObject, GetterParams);
-            return StorageExcelHelper.TransformForExcelReturn(propertyValue);
-        }
-
-        protected override void OnSubscribe()
-        {
-            if (_calcWrapper.Status == CalcStatus.Success) // Has already completed
-                PropertyValueUpdate();
-            else
-                _observer?.OnNext(_returnedWhilstWaiting);
-        }
-
-        private void PropertyValueUpdate()
-        {
-            object propertyValue = GetPropertyValueToReturn(_propertyGetter, _calcWrapper.CalcTask.Result); 
-            _observer?.OnNext(propertyValue);
-        }
-
-    }
-
-    sealed class CalcWrapperStatusObservable : CalcWrapperObservableBase
-    {
-        public CalcWrapperStatusObservable(ExcelCalcWrapper calcWrapper) : base(calcWrapper)    
-            => calcWrapper.CalcTask.ContinueWith(task => TaskStatusUpdate(_calcWrapper.Status));
-        
-        private void TaskStatusUpdate(CalcStatus calcStatus) => _observer?.OnNext(calcStatus.ToString("G"));
-        
-        protected override void OnSubscribe() => TaskStatusUpdate(_calcWrapper.Status); // TODO could be synchronizations issues, might need to lock
-    }
-
-    sealed class CalcWrapperProgressObservable : CalcWrapperObservableBase
-    {
-        public CalcWrapperProgressObservable(ExcelCalcWrapper calcWrapper) : base(calcWrapper)
-                    => _calcWrapper.OnProgressUpdate += ProgressUpdate;
-        
-        internal void ProgressUpdate(double progress) => _observer?.OnNext(progress);
-
-        protected override void OnSubscribe() => _observer.OnNext(_calcWrapper.Progress);
-
-        protected override void OnDispose()
-        {
-            _calcWrapper.OnProgressUpdate -= ProgressUpdate;
-            base.OnDispose();
-        }
-    }
-
-    abstract class CalcWrapperObservableBase : IExcelObservable, IDisposable
-    {
-        protected readonly ExcelCalcWrapper _calcWrapper;
-        protected IExcelObserver _observer;
-
-        protected CalcWrapperObservableBase(ExcelCalcWrapper calcWrapper)
-        {
-            _calcWrapper = calcWrapper;
-            _calcWrapper.CalcTask.ContinueWith(task =>
-            {
-                if (task.IsFaulted) // TODO what about cancelled
-                    _observer?.OnError(task.Exception.InnerException);
-                else 
-                    _observer?.OnCompleted();
-            });
-        }
-
-        public IDisposable Subscribe(IExcelObserver excelObserver)
-        {
-            _observer = excelObserver;
-            OnSubscribe();
-            return this;
-        }
-
-        protected abstract void OnSubscribe();
-        
-        protected virtual void OnDispose() => _observer = null;
-
-        public void Dispose() => OnDispose();
-
-    }
-
 }
