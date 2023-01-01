@@ -121,10 +121,13 @@ namespace Cmdty.Storage.Excel
             double cmdtyConsumedOnInjection,
             double withdrawalCostRate,
             double cmdtyConsumedOnWithdrawal, 
-            string terminalInventoryIn,
+            string terminalInventory,
             double numericalTolerance)
             where T : ITimePeriod<T>
         {
+            if (ratchetInterpolationIn == "Step" && terminalInventory == "Empty")
+                throw new ArgumentException($"If argument {ExcelArg.RatchetInterpolation.Name} equals 'Step' then " +
+                    $"argument {ExcelArg.TerminalInventoryConstraint.Name} cannot equal 'Empty'.");
 
             T storageStart = TimePeriodFactory.FromDateTime<T>(storageStartDateTime);
             T storageEnd = TimePeriodFactory.FromDateTime<T>(storageEndDateTime);
@@ -184,13 +187,20 @@ namespace Cmdty.Storage.Excel
                     .WithNoInventoryCost();
 
             IBuildCmdtyStorage<T> buildCmdtyStorage;
-            switch (terminalInventoryIn)
+            switch (terminalInventory)
             {
                 case "Empty":
                     buildCmdtyStorage = addTerminalStorageState.MustBeEmptyAtEnd();
                     break;
+                case "ZeroValue":
+                    buildCmdtyStorage = addTerminalStorageState.WithTerminalInventoryNpv((cmdtyPrice, finalInventory) => 0.0);
+                    break;
+                case "SpotValue":
+                    buildCmdtyStorage = addTerminalStorageState.WithTerminalInventoryNpv(
+                                            (cmdtyPrice, finalInventory) => cmdtyPrice * finalInventory);
+                    break;
                 default:
-                    throw new ArgumentException($"{ExcelArg.TerminalInventoryConstraint.Name} value of '{terminalInventoryIn}' not valid." +
+                    throw new ArgumentException($"{ExcelArg.TerminalInventoryConstraint.Name} value of '{terminalInventory}' not valid." +
                         $" Must be either 'Empty', 'ZeroValue', or 'SpotValue'.");
             }
 
