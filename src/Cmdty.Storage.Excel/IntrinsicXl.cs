@@ -121,7 +121,7 @@ namespace Cmdty.Storage.Excel
 
             var storage = StorageExcelHelper.CreateCmdtyStorageFromExcelInputs<T>(storageStartDateTime,
                         storageEndDateTime, injectWithdrawConstraints, injectWithdrawInterpolation, injectionCostRate, cmdtyConsumedOnInjection,
-                        withdrawalCostRate, cmdtyConsumedOnWithdrawal, numericalTolerance);
+                        withdrawalCostRate, cmdtyConsumedOnWithdrawal, "Empty", numericalTolerance);
 
             T currentPeriod = TimePeriodFactory.FromDateTime<T>(valuationDateTime);
 

@@ -121,6 +121,7 @@ namespace Cmdty.Storage.Excel
             double cmdtyConsumedOnInjection,
             double withdrawalCostRate,
             double cmdtyConsumedOnWithdrawal, 
+            string terminalInventoryIn,
             double numericalTolerance)
             where T : ITimePeriod<T>
         {
@@ -172,7 +173,7 @@ namespace Cmdty.Storage.Excel
                 throw new ArgumentException($"Value of Inject_withdraw_interpolation '{ratchetInterpolationIn}' not recognised. Must be either 'PiecewiseLinear', 'Polynomial' or 'Step'.");
             }
 
-            CmdtyStorage<T> storage = CmdtyStorage<T>.Builder
+            IAddTerminalStorageState<T> addTerminalStorageState = CmdtyStorage<T>.Builder
                     .WithActiveTimePeriod(storageStart, storageEnd)
                     .WithTimeAndInventoryVaryingInjectWithdrawRates(injectWithdrawConstraints, interpolationType)
                     .WithPerUnitInjectionCost(injectionCostRate)
@@ -180,10 +181,20 @@ namespace Cmdty.Storage.Excel
                     .WithPerUnitWithdrawalCost(withdrawalCostRate)
                     .WithFixedPercentCmdtyConsumedOnWithdraw(cmdtyConsumedOnWithdrawal)
                     .WithNoCmdtyInventoryLoss()
-                    .WithNoInventoryCost()
-                    .MustBeEmptyAtEnd()
-                    .Build();
+                    .WithNoInventoryCost();
 
+            IBuildCmdtyStorage<T> buildCmdtyStorage;
+            switch (terminalInventoryIn)
+            {
+                case "Empty":
+                    buildCmdtyStorage = addTerminalStorageState.MustBeEmptyAtEnd();
+                    break;
+                default:
+                    throw new ArgumentException($"{ExcelArg.TerminalInventoryConstraint.Name} value of '{terminalInventoryIn}' not valid." +
+                        $" Must be either 'Empty', 'ZeroValue', or 'SpotValue'.");
+            }
+
+            CmdtyStorage<T> storage = buildCmdtyStorage.Build();
             return storage;
         }
 

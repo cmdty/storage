@@ -197,5 +197,11 @@ namespace Cmdty.Storage.Excel
             public const string Description = "Dates on which delivered volume is financially settled. Should consist of a two column range, with months in the first column (the delivery month), and dates in the second column (the settlement dates).";
         }
 
+        internal static class TerminalInventoryConstraint
+        {
+            public const string Name = "Terminal_inventory";
+            public const string Description = "Text which determines the constraint on, and value of, inventory on the end date of the storage. Must be either 'Empty', 'ZeroValue', or 'SpotValue'.";
+        }
+
     }
 }

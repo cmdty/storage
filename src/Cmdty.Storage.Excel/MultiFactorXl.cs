@@ -46,18 +46,19 @@ namespace Cmdty.Storage.Excel
             [ExcelArgument(Name = ExcelArg.CmdtyConsumedInject.Name, Description = ExcelArg.CmdtyConsumedInject.Description)] double cmdtyConsumedOnInjection,
             [ExcelArgument(Name = ExcelArg.WithdrawalCost.Name, Description = ExcelArg.WithdrawalCost.Description)] double withdrawalCostRate,
             [ExcelArgument(Name = ExcelArg.CmdtyConsumedWithdraw.Name, Description = ExcelArg.CmdtyConsumedWithdraw.Description)] double cmdtyConsumedOnWithdrawal,
+            [ExcelArgument(Name = ExcelArg.TerminalInventoryConstraint.Name, Description = ExcelArg.TerminalInventoryConstraint.Description)] string terminalInventory,
             [ExcelArgument(Name = ExcelArg.NumericalTolerance.Name, Description = ExcelArg.NumericalTolerance.Description)] object numericalToleranceIn)
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
                 return ObjectHandler.Instance.GetHandle(name, new object[] {storageStart, storageEnd, ratchets,
                     ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection, withdrawalCostRate,
-                    cmdtyConsumedOnWithdrawal, numericalToleranceIn}, () =>
+                    cmdtyConsumedOnWithdrawal, terminalInventory, numericalToleranceIn}, () =>
                     {
                         double numericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalToleranceIn, 1E-10, "Numerical_tolerance");
                         CmdtyStorage<Day> storage = StorageExcelHelper.CreateCmdtyStorageFromExcelInputs<Day>(storageStart,
                             storageEnd, ratchets, ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection,
-                            withdrawalCostRate, cmdtyConsumedOnWithdrawal, numericalTolerance);
+                            withdrawalCostRate, cmdtyConsumedOnWithdrawal, terminalInventory, numericalTolerance);
                         return storage;
                     });
             });
