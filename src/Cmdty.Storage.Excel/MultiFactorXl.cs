@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
@@ -178,7 +179,7 @@ namespace Cmdty.Storage.Excel
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
                 int runningCalcCount = 0;
-                string[] objectHandles = ObjectCache.Instance.Objects.Keys.ToArray();
+                ICollection<string> objectHandles = ObjectCache.Instance.Handles;
                 foreach (string objectHandle in objectHandles)
                 {
                     object cachedObject;
