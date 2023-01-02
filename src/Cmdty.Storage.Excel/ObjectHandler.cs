@@ -1,25 +1,22 @@
 ﻿using ExcelDna.Integration;
 using System;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 
 namespace Cmdty.Storage.Excel
 {
-    public class ObjectHandler
+    public sealed class ObjectCache
     {
-        public static ObjectHandler Instance { get; }= new ObjectHandler();
+        public static ObjectCache Instance { get; }= new ObjectCache();
 
-        static ObjectHandler()
+        static ObjectCache()
         {
         }
 
-        public IReadOnlyDictionary<string, object> ObjectCache { get { return _objects; } }
+        public IReadOnlyDictionary<string, object> Objects { get { return _objects; } }
 
         Dictionary<string, object> _objects = new Dictionary<string, object>();
         long _handleIndex = 1;
 
-        // The combination of handleType and parameters will be used to uniquely identify the RTD topic
-        // So createObject will only be called when a new handleType/parameters combination is used.
         public object GetHandle(string handleType, object[] parameters, Func<object> createObject)
         {
             return ExcelAsyncUtil.Observe(handleType, parameters, () =>
@@ -27,7 +24,7 @@ namespace Cmdty.Storage.Excel
                 object value = createObject();
                 string handle = handleType + ":" + _handleIndex++; // TODO use Interlocked.Increment?
                 _objects[handle] = value;
-                return new HandleObservable(this, handle);
+                return new ObjectHandleObservable(this, handle);
             });
         }
 
@@ -58,29 +55,29 @@ namespace Cmdty.Storage.Excel
                 }
             }
         }
-    }
 
-    class HandleObservable : IExcelObservable, IDisposable
-    {
-        ObjectHandler _handler;
-        string _handle;
-        IExcelObserver _observer;
-
-        public HandleObservable(ObjectHandler handler, string handle)
+        private sealed class ObjectHandleObservable : IExcelObservable, IDisposable
         {
-            _handler = handler;
-            _handle = handle;
-        }
+            ObjectCache _handler;
+            string _handle;
+            IExcelObserver _observer;
 
-        public IDisposable Subscribe(IExcelObserver observer)
-        {
-            // We know this will only be called once, so we take some adventurous shortcuts (like returning 'this')
-            _observer = observer;
-            _observer.OnNext(_handle);
-            return this;
-        }
+            public ObjectHandleObservable(ObjectCache handler, string handle)
+            {
+                _handler = handler;
+                _handle = handle;
+            }
 
-        public void Dispose() => _handler.Remove(_handle);
-        
+            public IDisposable Subscribe(IExcelObserver observer)
+            {
+                // We know this will only be called once, so we take some adventurous shortcuts (like returning 'this')
+                _observer = observer;
+                _observer.OnNext(_handle);
+                return this;
+            }
+
+            public void Dispose() => _handler.Remove(_handle);
+
+        }
     }
 }

@@ -51,7 +51,7 @@ namespace Cmdty.Storage.Excel
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
-                return ObjectHandler.Instance.GetHandle(name, new object[] {storageStart, storageEnd, ratchets,
+                return ObjectCache.Instance.GetHandle(name, new object[] {storageStart, storageEnd, ratchets,
                     ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection, withdrawalCostRate,
                     cmdtyConsumedOnWithdrawal, terminalInventory, numericalToleranceIn}, () =>
                     {
@@ -95,11 +95,11 @@ namespace Cmdty.Storage.Excel
                                 discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn, fwdSimSeedIn,
                                 numGlobalGridPointsIn, numericalTolerance, extraDecisions };
 
-                return ObjectHandler.Instance.GetHandle(name, args, () =>
+                return ObjectCache.Instance.GetHandle(name, args, () =>
                 {
                     return ExcelCalcWrapper.CreateCancellable((cancellationToken, onProgress) =>
                     {
-                        CmdtyStorage<Day> storage = ObjectHandler.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
+                        CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
                         
                         // TODO provide alternative method for interpolating interest rates
                         Func<Day, double> interpolatedInterestRates =
@@ -158,7 +158,7 @@ namespace Cmdty.Storage.Excel
                 const string functionName = nameof(SubscribeProgress);
                 return ExcelAsyncUtil.Observe(functionName, name, () =>
                 {
-                    ExcelCalcWrapper wrapper = ObjectHandler.Instance.GetObject<ExcelCalcWrapper>(name);
+                    ExcelCalcWrapper wrapper = ObjectCache.Instance.GetObject<ExcelCalcWrapper>(name);
                     var excelObserver = new CalcWrapperProgressObservable(wrapper);
                     return excelObserver;
                 });
@@ -175,7 +175,7 @@ namespace Cmdty.Storage.Excel
                 const string functionName = nameof(SubscribeStatus);
                 return ExcelAsyncUtil.Observe(functionName, name, () =>
                 {
-                    ExcelCalcWrapper wrapper = ObjectHandler.Instance.GetObject<ExcelCalcWrapper>(name);
+                    ExcelCalcWrapper wrapper = ObjectCache.Instance.GetObject<ExcelCalcWrapper>(name);
                     var excelObserver = new CalcWrapperStatusObservable(wrapper);
                     return excelObserver;
                 });
@@ -192,7 +192,7 @@ namespace Cmdty.Storage.Excel
                 const string functionName = nameof(SubscribeResultProperty);
                 return ExcelAsyncUtil.Observe(functionName, new [] { objectHandle, propertyName, returnedWhilstWaiting}, () =>
                 {
-                    ExcelCalcWrapper wrapper = ObjectHandler.Instance.GetObject<ExcelCalcWrapper>(objectHandle);
+                    ExcelCalcWrapper wrapper = ObjectCache.Instance.GetObject<ExcelCalcWrapper>(objectHandle);
                     var excelObservable = new CalcWrapperResultPropertyObservable(wrapper, propertyName, returnedWhilstWaiting);
                     return excelObservable;
                 });
@@ -208,11 +208,11 @@ namespace Cmdty.Storage.Excel
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
                 int runningCalcCount = 0;
-                string[] objectHandles = ObjectHandler.Instance.ObjectCache.Keys.ToArray();
+                string[] objectHandles = ObjectCache.Instance.Objects.Keys.ToArray();
                 foreach (string objectHandle in objectHandles)
                 {
                     object cachedObject;
-                    if (ObjectHandler.Instance.TryGetObject(objectHandle, out cachedObject))
+                    if (ObjectCache.Instance.TryGetObject(objectHandle, out cachedObject))
                     {
                         ExcelCalcWrapper calcWrapper = cachedObject as ExcelCalcWrapper;
                         if (calcWrapper != null)
