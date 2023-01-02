@@ -24,6 +24,7 @@
 #endregion
 
 using ExcelDna.Integration;
+using System.Windows.Forms;
 
 namespace Cmdty.Storage.Excel
 {
@@ -48,7 +49,9 @@ namespace Cmdty.Storage.Excel
                         }
                 }
             }
-
+            string message = numCalcsCancelled == 1 ? "1 calculation has been cancelled." :
+                numCalcsCancelled + " calculations have been cancelled.";
+            MessageBox.Show(message, "Cmdty.Storage", MessageBoxButtons.OK);
         }
 
     }
