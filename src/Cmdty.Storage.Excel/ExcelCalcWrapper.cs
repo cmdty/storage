@@ -63,7 +63,7 @@ namespace Cmdty.Storage.Excel
             var calcTaskWrapper = new ExcelCalcWrapper(null, resultType, cancellationTokenSource);
             void OnProgress(double progress) => UpdateProgress(calcTaskWrapper, progress);
             calcTaskWrapper.CalcTask = Task.Run(() => (object)calculation(cancellationTokenSource.Token, OnProgress), cancellationTokenSource.Token);
-            calcTaskWrapper.CalcTask.ContinueWith(task => calcTaskWrapper.UpdateStatus(task), cancellationTokenSource.Token);
+            calcTaskWrapper.CalcTask.ContinueWith(task => calcTaskWrapper.UpdateStatus(task)); // Don't pass cancellation token as want this to run even if cancelled
             return calcTaskWrapper;
         }
 
