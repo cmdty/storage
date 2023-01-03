@@ -44,5 +44,12 @@ namespace Cmdty.Storage.Excel
             });
         }
 
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(LinearAlgebraProvider),
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = true, IsVolatile = false, IsExceptionSafe = true)]
+        public static object LinearAlgebraProvider(object trigger)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() => StorageHelper.LinearAlgebraProvider());
+        }
+
     }
 }
