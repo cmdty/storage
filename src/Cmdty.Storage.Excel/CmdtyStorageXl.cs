@@ -49,7 +49,7 @@ namespace Cmdty.Storage.Excel
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
-                return ObjectCache.Instance.GetHandle(name, new object[] {storageStart, storageEnd, ratchets,
+                return ObjectCache.Instance.CacheObjectAndGetHandle(name, new object[] {storageStart, storageEnd, ratchets,
                     ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection, withdrawalCostRate,
                     cmdtyConsumedOnWithdrawal, terminalInventory, numericalToleranceIn}, () =>
                     {

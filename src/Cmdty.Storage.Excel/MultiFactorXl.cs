@@ -24,7 +24,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
@@ -39,7 +38,7 @@ namespace Cmdty.Storage.Excel
             Description = "Calculates the NPV, Deltas, Trigger prices and other metadata using a 3-factor seasonal model of price dynamics.",
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
         public static object StorageValueThreeFactor(
-            [ExcelArgument(Name = "Name", Description = "Name of cached object to create.")] string name,
+            [ExcelArgument(Name = ExcelArg.CachedObjectName.Name, Description = ExcelArg.CachedObjectName.Description)] string name,
             [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,
             [ExcelArgument(Name = ExcelArg.ValDate.Name, Description = ExcelArg.ValDate.Description)] DateTime valuationDate,
             [ExcelArgument(Name = ExcelArg.Inventory.Name, Description = ExcelArg.Inventory.Description)] double currentInventory,
@@ -66,7 +65,7 @@ namespace Cmdty.Storage.Excel
                                 discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn, fwdSimSeedIn,
                                 numGlobalGridPointsIn, numericalTolerance, extraDecisions };
 
-                return ObjectCache.Instance.GetHandle(name, args, () =>
+                return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
                 {
                     return ExcelCalcWrapper.CreateCancellable((cancellationToken, onProgress) =>
                     {
@@ -119,89 +118,6 @@ namespace Cmdty.Storage.Excel
             });
         }
 
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeProgress),
-            Description = "TODO.", // TODO
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe =true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
-        public static object SubscribeProgress(string name)
-        {
-            return StorageExcelHelper.ExecuteExcelFunction(() =>
-            {
-                const string functionName = nameof(SubscribeProgress);
-                return ExcelAsyncUtil.Observe(functionName, name, () =>
-                {
-                    ExcelCalcWrapper wrapper = ObjectCache.Instance.GetObject<ExcelCalcWrapper>(name);
-                    var excelObserver = new CalcWrapperProgressObservable(wrapper);
-                    return excelObserver;
-                });
-            });
-        }
-
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeStatus),
-            Description = "TODO.", // TODO
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
-        public static object SubscribeStatus(string name)
-        {
-            return StorageExcelHelper.ExecuteExcelFunction(() =>
-            {
-                const string functionName = nameof(SubscribeStatus);
-                return ExcelAsyncUtil.Observe(functionName, name, () =>
-                {
-                    ExcelCalcWrapper wrapper = ObjectCache.Instance.GetObject<ExcelCalcWrapper>(name);
-                    var excelObserver = new CalcWrapperStatusObservable(wrapper);
-                    return excelObserver;
-                });
-            });
-        }
-
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeResultProperty),
-            Description = "TODO.", // TODO
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
-        public static object SubscribeResultProperty(string objectHandle, string propertyName, object returnedWhilstWaiting)
-        {
-            return StorageExcelHelper.ExecuteExcelFunction(() =>
-            {
-                const string functionName = nameof(SubscribeResultProperty);
-                return ExcelAsyncUtil.Observe(functionName, new [] { objectHandle, propertyName, returnedWhilstWaiting}, () =>
-                {
-                    ExcelCalcWrapper wrapper = ObjectCache.Instance.GetObject<ExcelCalcWrapper>(objectHandle);
-                    var excelObservable = new CalcWrapperResultPropertyObservable(wrapper, propertyName, returnedWhilstWaiting);
-                    return excelObservable;
-                });
-            });
-        }
-
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(NumberOfRunningCalculations),
-            Description = "Returns the number of calculations which are currently running.",
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = true, 
-            IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
-        public static object NumberOfRunningCalculations()
-        {
-            return StorageExcelHelper.ExecuteExcelFunction(() =>
-            {
-                int runningCalcCount = 0;
-                ICollection<string> objectHandles = ObjectCache.Instance.Handles;
-                foreach (string objectHandle in objectHandles)
-                {
-                    object cachedObject;
-                    if (ObjectCache.Instance.TryGetObject(objectHandle, out cachedObject))
-                    {
-                        ExcelCalcWrapper calcWrapper = cachedObject as ExcelCalcWrapper;
-                        if (calcWrapper != null)
-                            if (calcWrapper.Status == CalcStatus.Running)
-                                runningCalcCount++;
-                    }
-                }
-                return runningCalcCount;
-            });
-        }
-
-        //[ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(GetError),
-        //    Description = "TODO.", // TODO
-        //    Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
-        //public static object GetError()
-        //{
-        //    return ExcelError.ExcelErrorGettingData;
-        //}
 
     }
 }

@@ -81,7 +81,7 @@ def net_intrinsic_calc(cmdty_storage, current_period, interest_rate_time_series,
     net_cs.IIntrinsicAddNumericalTolerance[time_period_type](intrinsic_calc).WithNumericalTolerance(numerical_tolerance)
     net_val_results = net_cs.IIntrinsicCalculate[time_period_type](intrinsic_calc).Calculate()
     data_frame = profile_to_data_frame(cmdty_storage.freq, net_val_results.StorageProfile)
-    results = IntrinsicValuationResults(net_val_results.NetPresentValue, data_frame)
+    results = IntrinsicValuationResults(net_val_results.Npv, data_frame)
     return results
 
 

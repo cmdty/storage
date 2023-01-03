@@ -109,7 +109,7 @@ namespace Cmdty.Storage.Test
 
             IntrinsicStorageValuationResults<Day> valuationResults = GenerateValuationResults(0.0, forwardCurve, currentPeriod);
 
-            Assert.Equal(0.0, valuationResults.NetPresentValue);
+            Assert.Equal(0.0, valuationResults.Npv);
         }
 
         [Fact]
@@ -133,7 +133,7 @@ namespace Cmdty.Storage.Test
             // Cycle cost = 2.0, so create curve with spread of 1.99
             var valuationResults = IntrinsicValuationZeroInventoryForwardCurveWithSpread(1.99);
 
-            Assert.Equal(0.0, valuationResults.NetPresentValue);
+            Assert.Equal(0.0, valuationResults.Npv);
         }
 
         [Fact]
@@ -179,7 +179,7 @@ namespace Cmdty.Storage.Test
             double totalVolumeInjectable = 7 * 45.5; // 7 with maximum withdrawal
             double expectedNpv = totalVolumeInjectable * 0.01; // Volume * (forward spread - 2.0 cycle cost)
 
-            Assert.Equal(expectedNpv, valuationResults.NetPresentValue, 10);
+            Assert.Equal(expectedNpv, valuationResults.Npv, 10);
         }
 
         [Fact]
@@ -190,7 +190,7 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> valuationResults = GenerateValuationResults(0.0,
                                                                         TimeSeries<Day, double>.Empty, currentPeriod);
 
-            Assert.Equal(0.0, valuationResults.NetPresentValue);
+            Assert.Equal(0.0, valuationResults.Npv);
         }
 
         [Fact]
@@ -212,7 +212,7 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> valuationResults = GenerateValuationResults(0.0,
                 TimeSeries<Day, double>.Empty, currentPeriod);
 
-            Assert.Equal(0.0, valuationResults.NetPresentValue);
+            Assert.Equal(0.0, valuationResults.Npv);
         }
 
         [Fact]
@@ -283,7 +283,7 @@ namespace Cmdty.Storage.Test
 
             double expectedNpv = terminalInventory * forwardPriceForEndDate - 999.0; // Arbitrary terminal function defined for storage
 
-            Assert.Equal(expectedNpv, valuationResults.NetPresentValue);
+            Assert.Equal(expectedNpv, valuationResults.Npv);
         }
 
         [Fact]

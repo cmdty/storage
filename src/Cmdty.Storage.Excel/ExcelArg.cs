@@ -27,6 +27,12 @@ namespace Cmdty.Storage.Excel
 {
     internal static class ExcelArg
     {
+        internal static class CachedObjectName
+        {
+            public const string Name = "Name";
+            public const string Description = "Name of cached object to create.";
+        }
+
         internal static class ValDate
         {
             public const string Name = "Val_date";

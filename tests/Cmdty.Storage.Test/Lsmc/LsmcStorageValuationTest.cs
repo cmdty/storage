@@ -538,9 +538,9 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
             const double percentageTol = 0.04; // 4%
-            _testOutputHelper.WriteLine(intrinsicResults.NetPresentValue.ToString(CultureInfo.InvariantCulture));
+            _testOutputHelper.WriteLine(intrinsicResults.Npv.ToString(CultureInfo.InvariantCulture));
             _testOutputHelper.WriteLine(lsmcResults.Npv.ToString(CultureInfo.InvariantCulture));
-            TestHelper.AssertWithinPercentTol(intrinsicResults.NetPresentValue, lsmcResults.Npv, percentageTol);
+            TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
         [Fact]
@@ -559,9 +559,9 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
             const double percentageTol = 0.04; // 4%
-            _testOutputHelper.WriteLine(intrinsicResults.NetPresentValue.ToString(CultureInfo.InvariantCulture));
+            _testOutputHelper.WriteLine(intrinsicResults.Npv.ToString(CultureInfo.InvariantCulture));
             _testOutputHelper.WriteLine(lsmcResults.Npv.ToString(CultureInfo.InvariantCulture));
-            TestHelper.AssertWithinPercentTol(intrinsicResults.NetPresentValue, lsmcResults.Npv, percentageTol);
+            TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
         [Fact]
@@ -581,7 +581,7 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
             const double percentageTol = 0.0001; // 0.01%
-            TestHelper.AssertWithinPercentTol(intrinsicResults.NetPresentValue, lsmcResults.Npv, percentageTol);
+            TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
         [Fact]
@@ -601,7 +601,7 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
             const double percentageTol = 0.0004; // 0.04%
-            TestHelper.AssertWithinPercentTol(intrinsicResults.NetPresentValue, lsmcResults.Npv, percentageTol);
+            TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
         [Fact]
@@ -661,7 +661,7 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
             const double percentageTol = 0.0001; // 0.01%
-            TestHelper.AssertWithinPercentTol(intrinsicResults.NetPresentValue, lsmcResults.Npv, percentageTol);
+            TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
         [Fact]
@@ -677,7 +677,7 @@ namespace Cmdty.Storage.Test
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
             const double percentageTol = 0.0004; // 0.01%
-            TestHelper.AssertWithinPercentTol(intrinsicResults.NetPresentValue, lsmcResults.Npv, percentageTol);
+            TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
         // TODO refactor this to share code with trinomial test

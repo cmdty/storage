@@ -33,117 +33,58 @@ namespace Cmdty.Storage.Excel
     public static class IntrinsicXl
     {
 
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageIntrinsicValue), 
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = true, IsVolatile = false, IsExceptionSafe = true)]
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageIntrinsicValue),
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
         public static object StorageIntrinsicValue(
-                        DateTime valuationDate,
-                        DateTime storageStart,
-                        DateTime storageEnd,
-                        object injectWithdrawConstraints,
-                        [ExcelArgument(Name = ExcelArg.RatchetInterpolation.Name, Description = ExcelArg.RatchetInterpolation.Description)] string injectWithdrawInterpolation,
-                        double injectionCostRate,
-                        double cmdtyConsumedOnInjection,
-                        double withdrawalCostRate,
-                        double cmdtyConsumedOnWithdrawal,
-                        double currentInventory,
-                        object forwardCurve,
-                        object interestRateCurve,
-                        object numGlobalGridPoints, // TODO excel argument says default is 100
-                        object numericalTolerance,
-                        [ExcelArgument(Name = "Granularity")] object granularity)
-        {
-            return StorageExcelHelper.ExecuteExcelFunction(() =>
-                IntrinsicStorageVal<Day>(valuationDate, storageStart, storageEnd, injectWithdrawConstraints, injectWithdrawInterpolation,
-                    injectionCostRate, cmdtyConsumedOnInjection, withdrawalCostRate,
-                    cmdtyConsumedOnWithdrawal,
-                    currentInventory, forwardCurve, interestRateCurve, numGlobalGridPoints, numericalTolerance).NetPresentValue);
-        }
-
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageIntrinsicDecisionProfile), 
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = true, IsVolatile = false, IsExceptionSafe = true)]
-        public static object StorageIntrinsicDecisionProfile(
-            DateTime valuationDate,
-            DateTime storageStart,
-            DateTime storageEnd,
-            object injectWithdrawConstraints,
-            [ExcelArgument(Name = ExcelArg.RatchetInterpolation.Name, Description = ExcelArg.RatchetInterpolation.Description)] string injectWithdrawInterpolation,
-            double injectionCostRate,
-            double cmdtyConsumedOnInjection,
-            double withdrawalCostRate,
-            double cmdtyConsumedOnWithdrawal,
-            double currentInventory,
-            object forwardCurve,
-            object interestRateCurve,
-            object numGlobalGridPoints, // TODO excel argument says default is 100
-            object numericalTolerance,
-            [ExcelArgument(Name = "Granularity")] object granularity)
+            [ExcelArgument(Name = ExcelArg.CachedObjectName.Name, Description = ExcelArg.CachedObjectName.Description)] string name,
+            [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,
+            [ExcelArgument(Name = ExcelArg.ValDate.Name, Description = ExcelArg.ValDate.Description)] DateTime valuationDate,
+            [ExcelArgument(Name = ExcelArg.Inventory.Name, Description = ExcelArg.Inventory.Description)] double currentInventory,
+            [ExcelArgument(Name = ExcelArg.ForwardCurve.Name, Description = ExcelArg.ForwardCurve.Description)] object forwardCurveIn,
+            [ExcelArgument(Name = ExcelArg.InterestRateCurve.Name, Description = ExcelArg.InterestRateCurve.Description)] object interestRateCurve,
+            [ExcelArgument(Name = ExcelArg.SettleDates.Name, Description = ExcelArg.SettleDates.Description)] object settleDatesIn,
+            [ExcelArgument(Name = ExcelArg.NumGridPoints.Name, Description = ExcelArg.NumGridPoints.Description)] object numGlobalGridPointsIn,
+            [ExcelArgument(Name = ExcelArg.NumericalTolerance.Name, Description = ExcelArg.NumericalTolerance.Description)] object numericalToleranceIn)
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
-                IntrinsicStorageValuationResults<Day> valuationResults = IntrinsicStorageVal<Day>(valuationDate, storageStart, storageEnd,
-                    injectWithdrawConstraints, injectWithdrawInterpolation,
-                    injectionCostRate, cmdtyConsumedOnInjection, withdrawalCostRate,
-                    cmdtyConsumedOnWithdrawal,
-                    currentInventory, forwardCurve, interestRateCurve, numGlobalGridPoints, numericalTolerance);
+                var args = new object[] { name, storageHandle, valuationDate, currentInventory, forwardCurveIn, interestRateCurve, 
+                    settleDatesIn, numGlobalGridPointsIn, numericalToleranceIn };
 
-                var resultArray = new object[valuationResults.StorageProfile.Count, 3];
-
-                for (int i = 0; i < resultArray.GetLength(0); i++)
+                return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
                 {
-                    resultArray[i, 0] = valuationResults.StorageProfile.Indices[i].Start;
-                    resultArray[i, 1] = valuationResults.StorageProfile[i].InjectWithdrawVolume;
-                    resultArray[i, 2] = valuationResults.StorageProfile[i].CmdtyConsumed;
-                }
+                    double numericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalToleranceIn, 1E-10,
+                                                                    "Numerical_tolerance");
 
-                return resultArray;
+                    // TODO provide alternative method for interpolating interest rates
+                    Func<Day, double> interpolatedInterestRates =
+                        StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
+                    Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
+                    Func<Day, Day, double> discountFunc = StorageHelper.CreateAct65ContCompDiscounter(interpolatedInterestRates);
+
+                    var storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
+
+                    TimeSeries<Day, double> forwardCurve = StorageExcelHelper.CreateDoubleTimeSeries<Day>(forwardCurveIn, ExcelArg.ForwardCurve.Name);
+
+                    int numGridPoints =
+                        StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numGlobalGridPointsIn, ExcelArg.NumGridPoints.Default, ExcelArg.NumGridPoints.Name);
+                    Day valDate = Day.FromDateTime(valuationDate);
+
+                    IntrinsicStorageValuationResults<Day> valuationResults = IntrinsicStorageValuation<Day>
+                        .ForStorage(storage)
+                        .WithStartingInventory(currentInventory)
+                        .ForCurrentPeriod(valDate)
+                        .WithForwardCurve(forwardCurve)
+                        .WithCmdtySettlementRule(settleDateRule)
+                        .WithDiscountFactorFunc(discountFunc)
+                        .WithFixedNumberOfPointsOnGlobalInventoryRange(numGridPoints)
+                        .WithLinearInventorySpaceInterpolation()
+                        .WithNumericalTolerance(numericalTolerance)
+                        .Calculate();
+
+                    return valuationResults;
+                });
             });
-        }
-
-        private static IntrinsicStorageValuationResults<T> IntrinsicStorageVal<T>(
-                                    DateTime valuationDateTime,
-                                    DateTime storageStartDateTime,
-                                    DateTime storageEndDateTime,
-                                    object injectWithdrawConstraints,
-                                    string injectWithdrawInterpolation,
-                                    double injectionCostRate,
-                                    double cmdtyConsumedOnInjection,
-                                    double withdrawalCostRate,
-                                    double cmdtyConsumedOnWithdrawal,
-                                    double currentInventory,
-                                    object forwardCurveIn,
-                                    object interestRateCurve,
-                                    object numGlobalGridPointsIn, 
-                                    object numericalToleranceIn)
-            where T : ITimePeriod<T>
-        {
-            double numericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalToleranceIn, 1E-10,
-                                                                            "Numerical_tolerance");
-
-            var storage = StorageExcelHelper.CreateCmdtyStorageFromExcelInputs<T>(storageStartDateTime,
-                        storageEndDateTime, injectWithdrawConstraints, injectWithdrawInterpolation, injectionCostRate, cmdtyConsumedOnInjection,
-                        withdrawalCostRate, cmdtyConsumedOnWithdrawal, "Empty", numericalTolerance);
-
-            T currentPeriod = TimePeriodFactory.FromDateTime<T>(valuationDateTime);
-
-            TimeSeries<T, double> forwardCurve = StorageExcelHelper.CreateDoubleTimeSeries<T>(forwardCurveIn, "Forward_curve");
-            
-            // TODO input settlement dates and use interest rates
-            int numGridPoints =
-                StorageExcelHelper.DefaultIfExcelEmptyOrMissing<int>(numGlobalGridPointsIn, 100, "Num_global_grid_points");
-
-            IntrinsicStorageValuationResults<T> valuationResults = IntrinsicStorageValuation<T>
-                .ForStorage(storage)
-                .WithStartingInventory(currentInventory)
-                .ForCurrentPeriod(currentPeriod)
-                .WithForwardCurve(forwardCurve)
-                .WithCmdtySettlementRule(period => period.First<Day>()) // TODO get rid if this
-                .WithDiscountFactorFunc((currentDate, cashFlowDate) => 1.0) // TODO add proper discounting
-                .WithFixedNumberOfPointsOnGlobalInventoryRange(numGridPoints)
-                .WithLinearInventorySpaceInterpolation()
-                .WithNumericalTolerance(numericalTolerance)
-                .Calculate();
-
-            return valuationResults;
         }
         
     }

@@ -33,24 +33,24 @@ namespace Cmdty.Storage
     public sealed class IntrinsicStorageValuationResults<T>
         where T : ITimePeriod<T>
     {
-        public double NetPresentValue { get; }
+        public double Npv { get; }
         // TODO develop Time Series pane type and include data for StorageProfile
         public TimeSeries<T, StorageProfile> StorageProfile { get; set; }
 
         public IntrinsicStorageValuationResults(double netPresentValue, [NotNull] TimeSeries<T, StorageProfile> storageProfile)
         {
-            NetPresentValue = netPresentValue;
+            Npv = netPresentValue;
             StorageProfile = storageProfile ?? throw new ArgumentNullException(nameof(storageProfile));
         }
 
         public override string ToString()
         {
-            return $"{nameof(NetPresentValue)}: {NetPresentValue}, {nameof(StorageProfile)}.Count = {StorageProfile.Count}";
+            return $"{nameof(Npv)}: {Npv}, {nameof(StorageProfile)}.Count = {StorageProfile.Count}";
         }
 
         public void Deconstruct(out double netPresentValue, out TimeSeries<T, StorageProfile> storageProfile)
         {
-            netPresentValue = NetPresentValue;
+            netPresentValue = Npv;
             storageProfile = StorageProfile;
         }
 

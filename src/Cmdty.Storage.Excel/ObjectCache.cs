@@ -47,7 +47,7 @@ namespace Cmdty.Storage.Excel
             get { return _objects.Keys; }
         }
 
-        public object GetHandle(string handleType, object[] parameters, Func<object> createObject)
+        public object CacheObjectAndGetHandle(string handleType, object[] parameters, Func<object> createObject)
         {
             return ExcelAsyncUtil.Observe(handleType, parameters, () =>
             {
