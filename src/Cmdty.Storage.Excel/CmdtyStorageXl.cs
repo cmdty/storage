@@ -33,7 +33,7 @@ namespace Cmdty.Storage.Excel
     {
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(CreateStorage),
             Description = "Creates and caches an object representing a storage facility.",
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
         public static object CreateStorage(
             [ExcelArgument(Name = "Storage_name", Description = "Name of storage object to create.")] string name,
             [ExcelArgument(Name = ExcelArg.StorageStart.Name, Description = ExcelArg.StorageStart.Description)] DateTime storageStart,
@@ -61,5 +61,64 @@ namespace Cmdty.Storage.Excel
                     });
             });
         }
+
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageInjectionRate),
+            Description = "Returns the maximum injection rate of a storage facility for a specific inventory and date.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
+        public static object StorageInjectionRate(
+            [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,
+            [ExcelArgument(Name = ExcelArg.StoragePropertyDate.Name, Description = ExcelArg.StoragePropertyDate.Description)] DateTime date,
+            [ExcelArgument(Name = ExcelArg.StoragePropertyInventory.Name, Description = ExcelArg.StoragePropertyInventory.Description)] double inventory)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
+                return storage.GetInjectWithdrawRange(Day.FromDateTime(date), inventory).MaxInjectWithdrawRate;
+            });
+        }
+
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageWithdrawalRate),
+            Description = "Returns the maximum withdrawal rate of a storage facility for a specific inventory and date.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
+        public static object StorageWithdrawalRate(
+            [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,
+            [ExcelArgument(Name = ExcelArg.StoragePropertyDate.Name, Description = ExcelArg.StoragePropertyDate.Description)] DateTime date,
+            [ExcelArgument(Name = ExcelArg.StoragePropertyInventory.Name, Description = ExcelArg.StoragePropertyInventory.Description)] double inventory)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
+                return -storage.GetInjectWithdrawRange(Day.FromDateTime(date), inventory).MinInjectWithdrawRate;
+            });
+        }
+
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageMinInventory),
+            Description = "Returns the minimum allowed inventory of a storage facility on a specific date.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
+        public static object StorageMinInventory(
+            [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,
+            [ExcelArgument(Name = ExcelArg.StoragePropertyDate.Name, Description = ExcelArg.StoragePropertyDate.Description)] DateTime date)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
+                return storage.MinInventory(Day.FromDateTime(date));
+            });
+        }
+
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageMaxInventory),
+            Description = "Returns the maximum allowed inventory of a storage facility on a specific date.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
+        public static object StorageMaxInventory(
+            [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,
+            [ExcelArgument(Name = ExcelArg.StoragePropertyDate.Name, Description = ExcelArg.StoragePropertyDate.Description)] DateTime date)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
+                return storage.MaxInventory(Day.FromDateTime(date));
+            });
+        }
+
     }
 }

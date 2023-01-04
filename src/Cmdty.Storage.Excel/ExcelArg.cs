@@ -209,5 +209,17 @@ namespace Cmdty.Storage.Excel
             public const string Description = "Text which determines the constraint on, and value of, inventory on the end date of the storage. Must be either 'Empty', 'ZeroValue', or 'SpotValue'.";
         }
 
+        internal static class StoragePropertyDate
+        {
+            public const string Name = "Date";
+            public const string Description = "The date of injection/withdrawal on which this storage property is evaluated.";
+        }
+
+        internal static class StoragePropertyInventory
+        {
+            public const string Name = "Inventory";
+            public const string Description = "The inventory at which this storage property is evaluated.";
+        }
+
     }
 }
