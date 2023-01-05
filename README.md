@@ -4,7 +4,8 @@
 [![NuGet](https://img.shields.io/nuget/v/cmdty.storage.svg)](https://www.nuget.org/packages/Cmdty.Storage/)
 [![PyPI](https://img.shields.io/pypi/v/cmdty-storage.svg)](https://pypi.org/project/cmdty-storage/)
 
-Multi-Factor Least Squares Monte Carlo energy storage valuation model.
+Multi-Factor Least Squares Monte Carlo energy storage valuation model. Usable from C#, 
+Python and Excel.
 
 ### Table of Contents
 * [Overview](#overview)
@@ -12,6 +13,7 @@ Multi-Factor Least Squares Monte Carlo energy storage valuation model.
 * [Getting Started](#getting-started)
     * [Installing C# API](#installing-c-api)
     * [Installing Python Package](#installing-python-package)
+    * [Installing the Excel Add-In](#installing-the-excel-add-in)
 * [Using the Python API](#using-the-python-api)
     * [Creating the Storage Object](#creating-the-storage-object)
         * [Storage with Constant Parameters](#storage-with-constant-parameters)
@@ -74,6 +76,23 @@ PM> Install-Package Cmdty.Storage -Version 0.1.0-beta2
 ```
 > pip install cmdty-storage
 ```
+
+### Installing the Excel Add-In
+
+* First determine if your installed Excel is 32-bit or 64-bit. A Google search can tell
+you how to do this.
+* Download the Excel add-in xll file from the [releases page](https://github.com/cmdty/storage/releases) for the latest Excel release.
+    * If your Excel is 32-bit, download Cmdty.Storage-x86.xll.
+    * If your Excel is 64-bit, download Cmdty.Storage-x64.xll.
+* Copy the xll file onto your local drive. You might want to create a folder specifically
+to hold Excel add-ins.
+* Open Excel and go to the File > Options dialogue box.
+* Open the Add-ins tab on the left. At the bottom there is “Manage:” label next to a drop-down which 
+should be selected to “Excel Add-ins”. Press the Go button next to this. A new dialogue box will 
+open.
+* Press the Browse button which should open a file selector dialogue box in which you should
+select the Cmdty.Storage xll file which was previously saved to your local disk. Press OK.
+* This should take you back to the previous Add-ins dialogue box where you should press OK.
 
 ## Using the Python API
 

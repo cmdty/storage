@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<DnaLibrary Name="Cmdty.Storage.Excel Add-In" RuntimeVersion="v4.0" xmlns="http://schemas.excel-dna.net/addin/2018/05/dnalibrary">
+<DnaLibrary Name="Cmdty.Storage" RuntimeVersion="v4.0" xmlns="http://schemas.excel-dna.net/addin/2018/05/dnalibrary">
   <ExternalLibrary Path="Cmdty.Storage.Excel.dll" ExplicitRegistration="false" LoadFromBytes="true" Pack="true" IncludePdb="true" />
   <Reference Path="./*.dll" Pack="true" />
 </DnaLibrary>
