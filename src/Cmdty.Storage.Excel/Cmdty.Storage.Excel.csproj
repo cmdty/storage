@@ -9,6 +9,8 @@
 	<PropertyGroup>
 	    <RunExcelDnaPack>true</RunExcelDnaPack>
 	    <ExcelAddInName>Cmdty.Storage</ExcelAddInName>
+		<ExcelDnaPack32BitXllName>Cmdty.Storage-x86</ExcelDnaPack32BitXllName>
+		<ExcelDnaPack64BitXllName>Cmdty.Storage-x64</ExcelDnaPack64BitXllName>
     </PropertyGroup>
 
 	<ItemGroup>
