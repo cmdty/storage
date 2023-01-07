@@ -81,11 +81,12 @@ PM> Install-Package Cmdty.Storage -Version 0.1.0-beta2
 
 * First determine if your installed Excel is 32-bit or 64-bit. A Google search can tell
 you how to do this.
-* Download the Excel add-in xll file from the [releases page](https://github.com/cmdty/storage/releases) for the latest Excel release.
-    * If your Excel is 32-bit, download Cmdty.Storage-x86.xll.
-    * If your Excel is 64-bit, download Cmdty.Storage-x64.xll.
-* Copy the xll file onto your local drive. You might want to create a folder specifically
-to hold Excel add-ins.
+* Download the Excel add-in zip file from the [releases page](https://github.com/cmdty/storage/releases) for the latest Excel release.
+    * If your Excel is 32-bit, download Cmdty.Storage-x86.zip.
+    * If your Excel is 64-bit, download Cmdty.Storage-x64.zip.
+* Create a folder on your local drive to hold the add-in files. You might want to create 
+this within a folder specifically to hold Excel add-ins.
+* Unzip the contents of the zip file into the folder created in the previous step.
 * Open Excel and go to the File > Options dialogue box.
 * Open the Add-ins tab on the left. At the bottom there is “Manage:” label next to a drop-down which 
 should be selected to “Excel Add-ins”. Press the Go button next to this. A new dialogue box will 
@@ -93,6 +94,11 @@ open.
 * Press the Browse button which should open a file selector dialogue box in which you should
 select the Cmdty.Storage xll file which was previously saved to your local disk. Press OK.
 * This should take you back to the previous Add-ins dialogue box where you should press OK.
+* Back in Excel you can confirm that the add-in has been installed by:
+    * In the Add-ins tab of the Ribbon there should now be a drop-down menu labelled "Cmdty.Storage".
+    * New Excel functions prefixed with "cmdty." should be available. These can be seen in
+    the Excel Insert Function dialogue box, within the Cmdty.Storage category.
+
 
 ## Using the Python API
 
@@ -511,8 +517,8 @@ The following results of the build will be saved into the artifacts directory (w
 * The Python package files:
     * cmdty_storage-[version]-py3-none-any.whl
 * 32-bit and 64-bit versions of the Excel add-in:
-    * Cmdty.Storage-x86.xll
-    * Cmdty.Storage-x64.xll
+    * Cmdty.Storage-x86.zip
+    * Cmdty.Storage-x64.zip
 
 ### Building on Linux or macOS
 At the moment only building, testing and packaging the .NET components is possible on a non-Windows OS.
