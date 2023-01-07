@@ -204,6 +204,7 @@ Task("Pack-Python")
 });
 
 Task("Pack-Excel")
+	.IsDependentOn("Test-C#")
     .Does(setupContext =>
 {
     Information("Creating x86 Excel add-in zip file.");
@@ -311,6 +312,7 @@ else
 
 Task("Default")
 	.IsDependentOn("Pack-NuGet")
+	.IsDependentOn("Pack-Excel")
     .IsDependentOn("Pack-Python");
 
 RunTarget(target);
