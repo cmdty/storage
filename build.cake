@@ -1,10 +1,14 @@
+using System.IO.Compression;
+
 var target = Argument<string>("Target", "Default");
 var configuration = Argument<string>("Configuration", "Release");
 bool publishWithoutBuild = Argument<bool>("PublishWithoutBuild", false);
 string nugetPrereleaseTextPart = Argument<string>("PrereleaseText", "alpha");
+string targetFramework = Argument<string>("TargetFramework", "net461");
 
 var artifactsDirectory = Directory("./artifacts");
 var testResultDir = "./temp/";
+string vsBuildOutputDirectory = System.IO.Path.Combine(".", "src", "Cmdty.Storage.Excel", "bin", configuration, targetFramework);
 var isRunningOnBuildServer = !BuildSystem.IsLocalBuild;
 
 var msBuildSettings = new DotNetCoreMSBuildSettings();
@@ -198,6 +202,43 @@ Task("Pack-Python")
     CopyFiles("src/Cmdty.Storage.Python/dist/*", artifactsDirectory);
     Information("Python package file copied to /artifacts directory");
 });
+
+Task("Pack-Excel")
+    .Does(setupContext =>
+{
+    Information("Creating x86 Excel add-in zip file.");
+    CreateAddInZipFile("x86", artifactsDirectory.ToString(), vsBuildOutputDirectory);
+    Information("x86 Excel add-in zip file has been created.");
+
+    Information("Creating x64 Excel add-in zip file.");
+    CreateAddInZipFile("x64", artifactsDirectory.ToString(), vsBuildOutputDirectory);
+    Information("x64 Excel add-in zip file has been created.");
+});
+
+private void WriteFileToZip(ZipArchive zipArchive, string filePath, string zipEntryName)
+{
+    byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+    ZipArchiveEntry entry = zipArchive.CreateEntry(zipEntryName);
+    using (Stream entryStream = entry.Open())
+        entryStream.Write(fileBytes);
+}
+
+private void CreateAddInZipFile(string platform, string artifactsDirectory, string vsBuildOutputDirectory)
+{
+    string xllName = $"Cmdty.Storage-{platform}.xll";
+    string zipFileName = $"Cmdty.Storage-{platform}.zip";
+    string addInZipFilePath = System.IO.Path.Combine(artifactsDirectory, zipFileName);
+    string vsPublishDirectory = System.IO.Path.Combine(vsBuildOutputDirectory, "publish");
+    using (System.IO.FileStream fileStream = System.IO.File.Create(addInZipFilePath))
+    using (ZipArchive zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create))
+    {
+        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.dll"), "Cmdty.Storage.dll");
+        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.pdb"), "Cmdty.Storage.pdb");
+        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, platform, "libiomp5md.dll"), "libiomp5md.dll");
+        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, platform, "MathNet.Numerics.MKL.dll"), "MathNet.Numerics.MKL.dll");
+        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsPublishDirectory, xllName), xllName);
+    }
+}
 
 private string GetEnvironmentVariable(string envVariableName)
 {
