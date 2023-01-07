@@ -3,10 +3,15 @@
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
     <SignAssembly>false</SignAssembly>
-    <RunExcelDnaPack>true</RunExcelDnaPack>
   </PropertyGroup>
 
-  <ItemGroup>
+    <!--Excel-DNA Properties-->
+	<PropertyGroup>
+	    <RunExcelDnaPack>true</RunExcelDnaPack>
+	    <ExcelAddInName>Cmdty.Storage</ExcelAddInName>
+    </PropertyGroup>
+
+	<ItemGroup>
     <ProjectReference Include="..\Cmdty.Storage\Cmdty.Storage.csproj" />
   </ItemGroup>
 
@@ -19,20 +24,13 @@
     <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
   </ItemGroup>
 
-  <!--<ItemGroup>
-    <None Update="Cmdty.Storage.Excel-AddIn.dna">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="$(OutDir)\Cmdty.Storage.Excel-AddIn.dna" DestinationFiles="$(TargetDir)Cmdty.Storage.Excel-AddIn64.dna" />
-    <Copy SourceFiles="..\..\lib\ExcelDna\ExcelDna.xll" DestinationFiles="$(TargetDir)Cmdty.Storage.Excel-AddIn.xll" />
-    <Copy SourceFiles="..\..\lib\ExcelDna\ExcelDna64.xll" DestinationFiles="$(TargetDir)Cmdty.Storage.Excel-AddIn64.xll" />
-    <Exec Command="$(ProjectDir)..\..\lib\ExcelDna\ExcelDnaPack.exe $(TargetDir)Cmdty.Storage.Excel-AddIn.dna /Y /O $(TargetDir)Cmdty.Storage-x86.xll" WorkingDirectory="$(TargetDir)" />
-    <Exec Command="$(ProjectDir)..\..\lib\ExcelDna\ExcelDnaPack.exe $(TargetDir)Cmdty.Storage.Excel-AddIn64.dna /Y /O $(TargetDir)Cmdty.Storage-x64.xll" WorkingDirectory="$(TargetDir)" />
-    <Copy SourceFiles="$(TargetDir)Cmdty.Storage-x86.xll" DestinationFolder="..\..\artifacts" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(TargetDir)Cmdty.Storage-x64.xll" DestinationFolder="..\..\artifacts" OverwriteReadOnlyFiles="true" />
-  </Target>-->
+    <Target Name="PackedReferences" AfterTargets="AfterBuild" BeforeTargets="ExcelDnaBuild">
+	    <ItemGroup>
+		    <References Include="$(OutDir)*.dll" Exclude="$(OutDir)$(TargetFileName)"/>
+	    </ItemGroup>
+	    <PropertyGroup>
+		    <ExcelAddInInclude>@(References)</ExcelAddInInclude>
+	    </PropertyGroup>
+	</Target>
 
 </Project>
