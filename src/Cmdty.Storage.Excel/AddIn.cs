@@ -28,6 +28,6 @@ namespace Cmdty.Storage.Excel
     internal class AddIn
     {
         public const string ExcelFunctionNamePrefix = "cmdty.";
-        public const string ExcelFunctionCategory = "CMDTY Storage";
+        public const string ExcelFunctionCategory = "Cmdty.Storage";
     }
 }
