@@ -13,10 +13,18 @@ pool:
 
 steps:
   - task: UseDotNet@2
+    displayName: 'Use .NET SDK specified in global.json'
     inputs:
       packageType: 'sdk'
       useGlobalJson: true
-
+    
+  - task: UseDotNet@2
+    displayName: 'Use .NET 6.0 runtime (seems to be necessary for Excel-DNA MSBuild tasks)'
+    inputs:
+      packageType: 'runtime'
+      useGlobalJson: false
+      version: 6.0.x
+    
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.7'
