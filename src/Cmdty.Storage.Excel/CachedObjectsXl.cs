@@ -34,8 +34,8 @@ namespace Cmdty.Storage.Excel
     public static class CachedObjectsXl
     {
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeProgress),
-            Description = "TODO.", // TODO
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+//            Description = "TODO.", // TODO
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe = true)]
         public static object SubscribeProgress(string name)
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
@@ -51,8 +51,8 @@ namespace Cmdty.Storage.Excel
         }
 
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeStatus),
-            Description = "TODO.", // TODO
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+//            Description = "TODO.", // TODO
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
         public static object SubscribeStatus(string name)
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
@@ -67,9 +67,26 @@ namespace Cmdty.Storage.Excel
             });
         }
 
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeError),
+    //            Description = "TODO.", // TODO
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
+        public static object SubscribeError(string name)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                const string functionName = nameof(SubscribeError);
+                return ExcelAsyncUtil.Observe(functionName, name, () =>
+                {
+                    ExcelCalcWrapper wrapper = ObjectCache.Instance.GetObject<ExcelCalcWrapper>(name);
+                    var excelObserver = new CalcWrapperExceptionObservable(wrapper);
+                    return excelObserver;
+                });
+            });
+        }
+
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeResultProperty),
-            Description = "TODO.", // TODO
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+//            Description = "TODO.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
         public static object SubscribeResultProperty(string objectHandle, string propertyName, object returnedWhilstWaiting)
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
@@ -87,7 +104,7 @@ namespace Cmdty.Storage.Excel
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(NumberOfRunningCalculations),
             Description = "Returns the number of calculations which are currently running.",
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = true,
-            IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+            IsExceptionSafe = true)]
         public static object NumberOfRunningCalculations()
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
@@ -113,7 +130,7 @@ namespace Cmdty.Storage.Excel
 
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(GetObjectProperty),
 //            Description = "TODO.", // TODO
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
         public static object GetObjectProperty(string objectHandle, string propertyName)
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>

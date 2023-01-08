@@ -36,7 +36,7 @@ namespace Cmdty.Storage.Excel
 
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StorageValueThreeFactor),
             Description = "Calculates the NPV, Deltas, Trigger prices and other metadata using a 3-factor seasonal model of price dynamics.",
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)] // TODO turn IsThreadSafe to true and use ConcurrentDictionary?
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
         public static object StorageValueThreeFactor(
             [ExcelArgument(Name = ExcelArg.CachedObjectName.Name, Description = ExcelArg.CachedObjectName.Description)] string name,
             [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,

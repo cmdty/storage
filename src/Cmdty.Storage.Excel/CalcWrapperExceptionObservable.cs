@@ -23,37 +23,33 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using System;
 using ExcelDna.Integration;
+using System;
+using System.Threading.Tasks;
 
 namespace Cmdty.Storage.Excel
 {
-    abstract class CalcWrapperObservableBase : IExcelObservable, IDisposable
+    sealed class CalcWrapperExceptionObservable : CalcWrapperObservableBase
     {
-        protected readonly ExcelCalcWrapper _calcWrapper;
-        protected IExcelObserver _observer;
+        private AggregateException _taskException;
 
-        protected CalcWrapperObservableBase(ExcelCalcWrapper calcWrapper)
+        public CalcWrapperExceptionObservable(ExcelCalcWrapper calcWrapper) : base(calcWrapper)
+            => calcWrapper.CalcTask.ContinueWith(task => ProcessTaskForExceptions(task), 
+                TaskContinuationOptions.OnlyOnFaulted);
+
+        private void ProcessTaskForExceptions(Task task)
         {
-            _calcWrapper = calcWrapper;
-            _calcWrapper.CalcTask.ContinueWith(task =>
-            {
-                _observer?.OnCompleted(); // TODO this could not get called if invoked before Subscribe. Does this matter?
-            });
+            _taskException = task.Exception;
+            // For some reason _observer.OnError doesn't work as expected
+            _observer?.OnNext(task.Exception.InnerExceptions[0].Message);
         }
 
-        public IDisposable Subscribe(IExcelObserver excelObserver)
+        protected override void OnSubscribe()
         {
-            _observer = excelObserver;
-            OnSubscribe();
-            return this;
+            if (_taskException != null)
+                _observer.OnNext(_taskException.InnerExceptions[0].Message);
+            else
+                _observer.OnNext(ExcelError.ExcelErrorNA);
         }
-
-        protected abstract void OnSubscribe();
-        
-        protected virtual void OnDispose() => _observer = null;
-
-        public void Dispose() => OnDispose();
-
     }
 }

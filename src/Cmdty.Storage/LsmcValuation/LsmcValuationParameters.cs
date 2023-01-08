@@ -152,6 +152,7 @@ namespace Cmdty.Storage
                 [NotNull] MultiFactorParameters<T> modelParameters, int numSims)
             {
                 if (modelParameters == null) throw new ArgumentNullException(nameof(modelParameters));
+                if (numSims <= 0) throw new ArgumentOutOfRangeException(nameof(numSims), "Number of simulations must be positive.");
                 RegressionSpotSimsGenerator = CreateSimulationSpotPrice(regressionSimNormalGenerator, modelParameters, numSims);
                 ValuationSpotSimsGenerator = CreateSimulationSpotPrice(valuationSimNormalGenerator, modelParameters, numSims);
                 return this;

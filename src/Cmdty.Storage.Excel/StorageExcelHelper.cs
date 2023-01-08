@@ -32,7 +32,6 @@ using Cmdty.TimePeriodValueTypes;
 using Cmdty.TimeSeries;
 using ExcelDna.Integration;
 using MathNet.Numerics.Interpolation;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cmdty.Storage.Excel
 {

@@ -23,6 +23,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
+
 namespace Cmdty.Storage.Excel
 {
     sealed class CalcWrapperStatusObservable : CalcWrapperObservableBase
