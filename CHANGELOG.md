@@ -13,3 +13,10 @@ own price simulation data.
 * Error raised if CmdtyStorage instance created with step ratchets, but 
 terminal_storage_npv not specified, as this virtually always results in an 
 error during the valuation.
+
+---
+## Excel Add-In Releases
+
+### 0.1.0
+* First cut of asynchronous object handle based LSMC valuation.
+* Object handle based intrinsic valuation.
