@@ -29,6 +29,7 @@ Python and Excel.
     * [Calculating Optimal Storage Value](#calculating-optimal-storage-value)
         * [Calculating the Intrinsic Value](#calculating-the-intrinsic-value)
         * [Calculating the Extrinsic Value: One-Factor Trinomial Tree](#calculating-the-extrinsic-value-one-factor-trinomial-tree)
+* [Using the Excel Add-In](#using-the-excel-add-in)
 * [Building](#building)
     * [Build on Windows](#building-on-windows)
         * [Build Prerequisites](#build-prerequisites)
@@ -489,6 +490,12 @@ The above code prints the following.
 ```
 Calculated storage NPV: 24809.48
 ```
+
+## Using the Excel Add-In
+Each release of the Excel add-in should include at least one sample spreadsheet which can
+be downloaded as an example of how to use the Excel add-in.
+
+Documentation on using the add-in will be provided at a later date.
 
 ## Building
 This section describes how to run a scripted build on a cloned repo. Visual Studio 2019 is used for development, and can also be used to build the C# and run unit tests on the C# and Python APIs. However, the scripted build process also creates packages (NuGet and Python), builds the C# samples, and verifies the C# interactive documentation. [Cake](https://github.com/cake-build/cake) is used for running scripted builds. The ability to run a full scripted build on non-Windows is [planned](https://github.com/cmdty/storage/issues/2), but at the moment it can only be done on Windows.
