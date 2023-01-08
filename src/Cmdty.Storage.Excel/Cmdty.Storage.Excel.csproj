@@ -34,5 +34,15 @@
 		    <ExcelAddInInclude>@(References)</ExcelAddInInclude>
 	    </PropertyGroup>
 	</Target>
-
+	
+	<!--Copy all add-in files for debugging purposes-->
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(Configuration) == 'Debug'">
+		<Copy SourceFiles="$(OutDir)\publish\Cmdty.Storage-x64.xll" DestinationFolder="$(OutDir)\x64\" />
+		<Copy SourceFiles="$(OutDir)\publish\Cmdty.Storage-x86.xll" DestinationFolder="$(OutDir)\x86\" />
+		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.dll" DestinationFolder="$(OutDir)\x86\" />
+		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.dll" DestinationFolder="$(OutDir)\x64\" />
+		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.pdb" DestinationFolder="$(OutDir)\x86\" />
+		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.pdb" DestinationFolder="$(OutDir)\x64\" />
+	</Target>
+	
 </Project>
