@@ -38,8 +38,6 @@ steps:
     inputs:
       filePath: 'build.ps1'
       arguments: '-Verbosity Diagnostic -PrereleaseNumber=$(Build.BuildNumber)'
-    env:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   - task: PublishTestResults@2
     displayName: Publish Python test results
