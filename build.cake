@@ -218,7 +218,7 @@ private void RunCommandInVirtualEnv(string command, string vEnvActivatePath)
     Information("Running command in venv: " + command);
     string fullCommand = $"/k {vEnvActivatePath} & {command} & deactivate & exit";
     Information("Command to execute: " + fullCommand);
-    StartProcessThrowOnError("cmd", $"/k {vEnvActivatePath} & {command} & deactivate & exit");
+    StartProcessThrowOnError("bash", $"-c {vEnvActivatePath} && {command} && deactivate && exit");
 }
 
 var publishNuGetTask = Task("Publish-NuGet")
