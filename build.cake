@@ -79,7 +79,7 @@ Task("Test-C#")
                 Logger = "trx",
                 ResultsDirectory = testResultDir,
                 Configuration = configuration,
-                NoBuild = true
+                NoBuild = false
             });
     }
 });
