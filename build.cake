@@ -56,7 +56,7 @@ Task("Build")
                 Configuration = configuration,
                 MSBuildSettings = msBuildSettings
             };
-    DotNetCoreBuild("Cmdty.Storage.sln", dotNetCoreSettings);
+    DotNetCoreBuild("src/Cmdty.Storage/Cmdty.Storage.csproj", dotNetCoreSettings);
 });
 
 Task("Test-C#")
