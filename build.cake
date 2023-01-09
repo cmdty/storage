@@ -85,7 +85,7 @@ Task("Test-C#")
 });
 
 string vEnvPath = System.IO.Path.Combine("src", "Cmdty.Storage.Python", "storage-venv");
-string vEnvActivatePath = System.IO.Path.Combine(vEnvPath, "Scripts", "activate.bat");
+string vEnvActivatePath = System.IO.Path.Combine(vEnvPath, "bin", "activate");
 
 Task("Create-VirtualEnv")
     .Does(() =>
