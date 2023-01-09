@@ -21,6 +21,12 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+from pythonnet import load
+
+
+load("coreclr")
+
+
 from cmdty_storage.__version__ import __version__
 from cmdty_storage.cmdty_storage import CmdtyStorage, RatchetInterp
 from cmdty_storage.intrinsic import intrinsic_value
@@ -29,10 +35,6 @@ from cmdty_storage.multi_factor import MultiFactorSpotSim, MultiFactorModel, thr
     multi_factor_value, value_from_sims
 from cmdty_storage.utils import FREQ_TO_PERIOD_TYPE, numerics_provider
 import logging
-from pythonnet import load
-
-
-load("coreclr")
 
 logger: logging.Logger = logging.getLogger('cmdty.storage')
 logger.addHandler(logging.NullHandler())
