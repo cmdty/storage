@@ -168,19 +168,6 @@ Task("Pack-Python")
     Information("Python package file copied to /artifacts directory");
 });
 
-Task("Pack-Excel")
-	.IsDependentOn("Test-C#")
-    .Does(setupContext =>
-{
-    Information("Creating x86 Excel add-in zip file.");
-    CreateAddInZipFile("x86", artifactsDirectory.ToString(), vsBuildOutputDirectory);
-    Information("x86 Excel add-in zip file has been created.");
-
-    Information("Creating x64 Excel add-in zip file.");
-    CreateAddInZipFile("x64", artifactsDirectory.ToString(), vsBuildOutputDirectory);
-    Information("x64 Excel add-in zip file has been created.");
-});
-
 private void WriteFileToZip(ZipArchive zipArchive, string filePath, string zipEntryName)
 {
     byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
@@ -277,7 +264,6 @@ else
 
 Task("Default")
 	.IsDependentOn("Pack-NuGet")
-	.IsDependentOn("Pack-Excel")
     .IsDependentOn("Pack-Python");
 
 RunTarget(target);
