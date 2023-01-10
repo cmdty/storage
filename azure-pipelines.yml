@@ -9,7 +9,7 @@ trigger:
     - master
 
 pool:
-  vmImage: 'macOS-12'
+  vmImage: 'ubuntu-22.04'
 
 steps:
   - task: UseDotNet@2
