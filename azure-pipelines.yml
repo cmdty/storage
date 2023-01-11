@@ -28,6 +28,7 @@ steps:
         pip install twine
         pip install setuptools
         pip install wheel
+        pip install pytest
     displayName: 'Install Python packages: virtualenv, twine, setuptools and wheel'
 
   - script: dotnet tool restore --ignore-failed-sources
