@@ -97,7 +97,7 @@ Task("Create-VirtualEnv")
     else
     {
         Information("Creating storage-venv Virtual Environment.");
-        StartProcessThrowOnError("python", "-m venv " + vEnvPath);
+        StartProcessThrowOnError("python3", "-m venv " + vEnvPath);
     }
 });
 
@@ -105,7 +105,7 @@ Task("Install-VirtualEnvDependencies")
 	.IsDependentOn("Create-VirtualEnv")
     .Does(() =>
 {
-    RunCommandInVirtualEnv("python -m pip install --upgrade pip", vEnvActivatePath);
+    RunCommandInVirtualEnv("python3 -m pip install --upgrade pip", vEnvActivatePath);
     RunCommandInVirtualEnv("pip install pytest", vEnvActivatePath);
     RunCommandInVirtualEnv("pip install -r src/Cmdty.Storage.Python/requirements.txt", vEnvActivatePath);
     RunCommandInVirtualEnv("pip install -e src/Cmdty.Storage.Python", vEnvActivatePath);
@@ -116,7 +116,7 @@ var testPythonTask = Task("Test-Python")
 	.IsDependentOn("Test-C#")
 	.Does(() =>
 {
-    RunCommandInVirtualEnv("python -m pytest src/Cmdty.Storage.Python/tests --junitxml=junit/test-results.xml", vEnvActivatePath);
+    RunCommandInVirtualEnv("python3 -m pytest src/Cmdty.Storage.Python/tests --junitxml=junit/test-results.xml", vEnvActivatePath);
 });
 
 Task("Build-Samples")
@@ -157,7 +157,7 @@ Task("Pack-Python")
     setupContext.Environment.WorkingDirectory = pythonProjDir;
     try
     {    
-        StartProcessThrowOnError("python", "setup.py", "bdist_wheel");
+        StartProcessThrowOnError("python3", "setup.py", "bdist_wheel");
     }
     finally
     {
@@ -239,7 +239,7 @@ var publishTestPyPiTask = Task("Publish-TestPyPI")
     .Does(() =>
 {
     string testPyPiPassword = GetEnvironmentVariable("TEST_PYPI_PASSWORD");
-    StartProcessThrowOnError("python", "-m twine upload --repository-url https://test.pypi.org/legacy/ src/Cmdty.Storage.Python/dist/*",
+    StartProcessThrowOnError("python3", "-m twine upload --repository-url https://test.pypi.org/legacy/ src/Cmdty.Storage.Python/dist/*",
                                         "--username fowja", "--password " + testPyPiPassword);
 });
 
@@ -247,7 +247,7 @@ var publishPyPiTask = Task("Publish-PyPI")
     .Does(() =>
 {
     string pyPiPassword = GetEnvironmentVariable("PYPI_PASSWORD");
-    StartProcessThrowOnError("python", "-m twine upload src/Cmdty.Storage.Python/dist/*",
+    StartProcessThrowOnError("python3", "-m twine upload src/Cmdty.Storage.Python/dist/*",
                                         "--username cmdty", "--password " + pyPiPassword);
 });
 
