@@ -9,7 +9,7 @@ trigger:
     - master
 
 pool:
-  vmImage: 'ubuntu-22.04'
+  vmImage: 'windows-2019'
 
 steps:
   - task: UseDotNet@2
