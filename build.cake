@@ -64,7 +64,7 @@ Task("Build")
                 MSBuildSettings = msBuildSettings
             };
     string solutionName = isWindows ? "Cmdty.Storage.sln" : "Cmdty.Storage.XPlat.sln";
-    DotNetCoreBuild("Cmdty.Storage.sln", dotNetCoreSettings);
+    DotNetCoreBuild(solutionName, dotNetCoreSettings);
 });
 
 Task("Test-C#")
