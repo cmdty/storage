@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 var target = Argument<string>("Target", "Default");
 var configuration = Argument<string>("Configuration", "Release");
@@ -6,6 +7,9 @@ bool publishWithoutBuild = Argument<bool>("PublishWithoutBuild", false);
 string nugetPrereleaseTextPart = Argument<string>("PrereleaseText", "alpha");
 string targetFramework = Argument<string>("TargetFramework", "net461");
 
+bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+string pythonCommand = isWindows ? "python" : "python3";
+string shellCommand = isWindows ? "cmd" : "bash";
 var artifactsDirectory = Directory("./artifacts");
 var testResultDir = "./temp/";
 string vsBuildOutputDirectory = System.IO.Path.Combine(".", "src", "Cmdty.Storage.Excel", "bin", configuration, targetFramework);
@@ -56,6 +60,7 @@ Task("Build")
                 Configuration = configuration,
                 MSBuildSettings = msBuildSettings
             };
+    string solutionName = isWindows ? "Cmdty.Storage.sln" : "Cmdty.Storage.XPlat.sln";
     DotNetCoreBuild("Cmdty.Storage.sln", dotNetCoreSettings);
 });
 
@@ -85,7 +90,9 @@ Task("Test-C#")
 });
 
 string vEnvPath = System.IO.Path.Combine("src", "Cmdty.Storage.Python", "storage-venv");
-string vEnvActivatePath = System.IO.Path.Combine(vEnvPath, "Scripts", "activate.bat");
+string venvActiveFolderAndFile = isWindows ? System.IO.Path.Combine("Scripts", "activate.bat") :
+                                             System.IO.Path.Combine("bin", "activate");
+string vEnvActivatePath = System.IO.Path.Combine(vEnvPath, venvActiveFolderAndFile);
 
 Task("Create-VirtualEnv")
     .Does(() =>
@@ -97,7 +104,7 @@ Task("Create-VirtualEnv")
     else
     {
         Information("Creating storage-venv Virtual Environment.");
-        StartProcessThrowOnError("python", "-m venv " + vEnvPath);
+        StartProcessThrowOnError(pythonCommand, "-m venv " + vEnvPath);
     }
 });
 
@@ -105,7 +112,7 @@ Task("Install-VirtualEnvDependencies")
 	.IsDependentOn("Create-VirtualEnv")
     .Does(() =>
 {
-    RunCommandInVirtualEnv("python -m pip install --upgrade pip", vEnvActivatePath);
+    RunCommandInVirtualEnv(pythonCommand + " -m pip install --upgrade pip", vEnvActivatePath);
     RunCommandInVirtualEnv("pip install pytest", vEnvActivatePath);
     RunCommandInVirtualEnv("pip install -r src/Cmdty.Storage.Python/requirements.txt", vEnvActivatePath);
     RunCommandInVirtualEnv("pip install -e src/Cmdty.Storage.Python", vEnvActivatePath);
@@ -116,7 +123,7 @@ var testPythonTask = Task("Test-Python")
 	.IsDependentOn("Test-C#")
 	.Does(() =>
 {
-    RunCommandInVirtualEnv("python -m pytest src/Cmdty.Storage.Python/tests --junitxml=junit/test-results.xml", vEnvActivatePath);
+    RunCommandInVirtualEnv(pythonCommand + " -m pytest src/Cmdty.Storage.Python/tests --junitxml=junit/test-results.xml", vEnvActivatePath);
 });
 
 Task("Build-Samples")
@@ -157,7 +164,7 @@ Task("Pack-Python")
     setupContext.Environment.WorkingDirectory = pythonProjDir;
     try
     {    
-        StartProcessThrowOnError("python", "setup.py", "bdist_wheel");
+        StartProcessThrowOnError(pythonCommand, "setup.py", "bdist_wheel");
     }
     finally
     {
@@ -229,9 +236,10 @@ private void StartProcessThrowOnError(string applicationName, params string[] pr
 private void RunCommandInVirtualEnv(string command, string vEnvActivatePath)
 {
     Information("Running command in venv: " + command);
-    string fullCommand = $"/k {vEnvActivatePath} & {command} & deactivate & exit";
-    Information("Command to execute: " + fullCommand);
-    StartProcessThrowOnError("cmd", $"/k {vEnvActivatePath} & {command} & deactivate & exit");
+    string fullCommand = isWindows ? $"/k {vEnvActivatePath} & {command} & deactivate & exit" :
+                    $"-c {vEnvActivatePath} && {command} && deactivate && exit";
+    Information($"Command to execute: {shellCommand} " + fullCommand);
+    StartProcessThrowOnError(shellCommand, $"/k {vEnvActivatePath} & {command} & deactivate & exit");
 }
 
 var publishNuGetTask = Task("Publish-NuGet")
@@ -252,7 +260,7 @@ var publishTestPyPiTask = Task("Publish-TestPyPI")
     .Does(() =>
 {
     string testPyPiPassword = GetEnvironmentVariable("TEST_PYPI_PASSWORD");
-    StartProcessThrowOnError("python", "-m twine upload --repository-url https://test.pypi.org/legacy/ src/Cmdty.Storage.Python/dist/*",
+    StartProcessThrowOnError(pythonCommand, "-m twine upload --repository-url https://test.pypi.org/legacy/ src/Cmdty.Storage.Python/dist/*",
                                         "--username fowja", "--password " + testPyPiPassword);
 });
 
@@ -260,7 +268,7 @@ var publishPyPiTask = Task("Publish-PyPI")
     .Does(() =>
 {
     string pyPiPassword = GetEnvironmentVariable("PYPI_PASSWORD");
-    StartProcessThrowOnError("python", "-m twine upload src/Cmdty.Storage.Python/dist/*",
+    StartProcessThrowOnError(pythonCommand, "-m twine upload src/Cmdty.Storage.Python/dist/*",
                                         "--username cmdty", "--password " + pyPiPassword);
 });
 
@@ -275,9 +283,13 @@ else
     Information("Publishing without first building as PublishWithoutBuild variable set to true.");
 }
 
-Task("Default")
+var defaultTask = Task("Default");
+
+defaultTask
 	.IsDependentOn("Pack-NuGet")
-	.IsDependentOn("Pack-Excel")
     .IsDependentOn("Pack-Python");
+
+if (isWindows)
+    defaultTask.IsDependentOn("Pack-Excel");
 
 RunTarget(target);

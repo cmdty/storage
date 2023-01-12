@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{10F327D9-2E26-4747-B714-24ECF7C9CFCC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3AC698D6-ED67-4C58-83C7-ED2BD46472F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D3F154D7-4D1B-4688-8799-EF7D5ACFABAE}"
+	ProjectSection(SolutionItems) = preProject
+		azure-pipelines.yml = azure-pipelines.yml
+		build.cake = build.cake
+		CHANGELOG.md = CHANGELOG.md
+		Directory.Build.props = Directory.Build.props
+		dotnet-tools.json = dotnet-tools.json
+		global.json = global.json
+		NuGet.config = NuGet.config
+		version.props = version.props
+	EndProjectSection
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Cmdty.Storage.Python", "src\Cmdty.Storage.Python\Cmdty.Storage.Python.pyproj", "{21DBF96B-40ED-4DC2-AFE1-0BC170FFF2D3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cmdty.Storage", "src\Cmdty.Storage\Cmdty.Storage.csproj", "{10B444B9-C569-4DB7-9AFC-A4AD92FA0230}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cmdty.Storage.Test", "tests\Cmdty.Storage.Test\Cmdty.Storage.Test.csproj", "{46F0DBAD-5955-4E19-A53C-3A3D3EE59D79}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21DBF96B-40ED-4DC2-AFE1-0BC170FFF2D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21DBF96B-40ED-4DC2-AFE1-0BC170FFF2D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10B444B9-C569-4DB7-9AFC-A4AD92FA0230}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10B444B9-C569-4DB7-9AFC-A4AD92FA0230}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10B444B9-C569-4DB7-9AFC-A4AD92FA0230}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10B444B9-C569-4DB7-9AFC-A4AD92FA0230}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46F0DBAD-5955-4E19-A53C-3A3D3EE59D79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46F0DBAD-5955-4E19-A53C-3A3D3EE59D79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46F0DBAD-5955-4E19-A53C-3A3D3EE59D79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46F0DBAD-5955-4E19-A53C-3A3D3EE59D79}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{21DBF96B-40ED-4DC2-AFE1-0BC170FFF2D3} = {10F327D9-2E26-4747-B714-24ECF7C9CFCC}
+		{10B444B9-C569-4DB7-9AFC-A4AD92FA0230} = {10F327D9-2E26-4747-B714-24ECF7C9CFCC}
+		{46F0DBAD-5955-4E19-A53C-3A3D3EE59D79} = {3AC698D6-ED67-4C58-83C7-ED2BD46472F5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32876876-339D-4624-8B79-387C508559B1}
+	EndGlobalSection
+EndGlobal
