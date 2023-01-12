@@ -8,7 +8,6 @@ string nugetPrereleaseTextPart = Argument<string>("PrereleaseText", "alpha");
 string targetFramework = Argument<string>("TargetFramework", "net461");
 
 bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-Information("Is Windows " + isWindows + ".");
 Information("OS Description: " + System.Runtime.InteropServices.RuntimeInformation.OSDescription);
 
 string pythonCommand = isWindows ? "python" : "python3";
