@@ -21,6 +21,18 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+import platform
+
+os = platform.system()
+# On non-Windows platform try to load Core CLR, rather than the default behaviour which is to load Mono.
+if os != 'Windows':
+    from pythonnet import load
+
+    try:
+        load('coreclr')
+    except:
+        print('Could not load Core CLR runtime, on non-Windows OS, so falling back to Mono.')
+
 from cmdty_storage.__version__ import __version__
 from cmdty_storage.cmdty_storage import CmdtyStorage, RatchetInterp
 from cmdty_storage.intrinsic import intrinsic_value

@@ -14,6 +14,11 @@ own price simulation data.
 terminal_storage_npv not specified, as this virtually always results in an 
 error during the valuation.
 
+### 1.3.0 (not yet released)
+* .NET binaries included in Python package target .NET Standard, not .NET Framework, hence compatible with
+more .NET types.
+* For non-Windows OS default to trying .NET (Core), rather than Mono as default runtime.
+
 ---
 ## Excel Add-In Releases
 
