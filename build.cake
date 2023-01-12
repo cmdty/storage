@@ -242,7 +242,7 @@ private void RunCommandInVirtualEnv(string command, string vEnvActivatePath)
     string fullCommand = isWindows ? $"/k {vEnvActivatePath} & {command} & deactivate & exit" :
                     $"-c {vEnvActivatePath} && {command} && deactivate && exit";
     Information($"Command to execute: {shellCommand} " + fullCommand);
-    StartProcessThrowOnError(shellCommand, $"/k {vEnvActivatePath} & {command} & deactivate & exit");
+    StartProcessThrowOnError(shellCommand, fullCommand);
 }
 
 var publishNuGetTask = Task("Publish-NuGet")
