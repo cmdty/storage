@@ -95,6 +95,7 @@ string vEnvPath = System.IO.Path.Combine("src", "Cmdty.Storage.Python", "storage
 string venvActiveFolderAndFile = isWindows ? System.IO.Path.Combine("Scripts", "activate.bat") :
                                              System.IO.Path.Combine("bin", "activate");
 string vEnvActivatePath = System.IO.Path.Combine(vEnvPath, venvActiveFolderAndFile);
+string sourceOnNonWindows = isWindows ? "" : "source ";
 
 Task("Create-VirtualEnv")
     .Does(() =>
@@ -239,7 +240,7 @@ private void RunCommandInVirtualEnv(string command, string vEnvActivatePath)
 {
     Information("Running command in venv: " + command);
     string fullCommand = isWindows ? $"/k {vEnvActivatePath} & {command} & deactivate & exit" :
-                    $"-c {vEnvActivatePath} && {command} && deactivate && exit";
+                    $"-c {sourceOnNonWindows}{vEnvActivatePath} && {command} && deactivate && exit";
     Information($"Command to execute: {shellCommand} " + fullCommand);
     StartProcessThrowOnError(shellCommand, fullCommand);
 }
