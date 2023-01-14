@@ -64,14 +64,10 @@ namespace Cmdty.Storage.Samples.Intrinsic
             var forwardCurveBuilder = new TimeSeries<Day, double>.Builder();
 
             foreach (var day in new Day(2019, 9, 15).EnumerateTo(new Day(2019, 9, 22)))
-            {
                 forwardCurveBuilder.Add(day, lowerForwardPrice);
-            }
 
             foreach (var day in new Day(2019, 9, 23).EnumerateTo(new Day(2019, 10, 1)))
-            {
                 forwardCurveBuilder.Add(day, higherForwardPrice);
-            }
 
             const double startingInventory = 50.0;
 
@@ -81,7 +77,7 @@ namespace Cmdty.Storage.Samples.Intrinsic
                 .ForCurrentPeriod(currentPeriod)
                 .WithForwardCurve(forwardCurveBuilder.Build())
                 .WithCmdtySettlementRule(day => day.First<Month>().Offset(1).First<Day>().Offset(5)) // Commodity is settled on the 5th day of the next month
-                .WithDiscountFactorFunc((valDate, cfDate) => 1.0) // Assumes to discounting
+                .WithDiscountFactorFunc((valDate, cfDate) => 1.0) // Assumes no discounting (don't do this in practice)
                 .WithFixedGridSpacing(10.0)
                 .WithLinearInventorySpaceInterpolation()
                 .WithNumericalTolerance(1E-12)

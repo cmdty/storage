@@ -81,14 +81,10 @@ namespace Cmdty.Storage.Samples.Trinomial
             var forwardCurveBuilder = new TimeSeries<Day, double>.Builder();
 
             foreach (var day in new Day(2019, 9, 15).EnumerateTo(new Day(2019, 9, 22)))
-            {
                 forwardCurveBuilder.Add(day, lowerForwardPrice);
-            }
 
             foreach (var day in new Day(2019, 9, 23).EnumerateTo(new Day(2019, 10, 1)))
-            {
                 forwardCurveBuilder.Add(day, higherForwardPrice);
-            }
 
             TimeSeries<Month, Day> cmdtySettlementDates = new TimeSeries<Month, Day>.Builder
                 {

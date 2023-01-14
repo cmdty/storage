@@ -69,7 +69,7 @@ including the flexibility for callers to provide own price simulations.
 ### Installing C# API
 For use from C# install the NuGet package Cmdty.Storage.
 ```
-PM> Install-Package Cmdty.Storage -Version 0.1.0-beta2
+PM> Install-Package Cmdty.Storage
 ```
 
 ### Installing Python Package
@@ -293,7 +293,7 @@ CmdtyStorage<Day> storage = CmdtyStorage<Day>.Builder
     .WithPerUnitWithdrawalCost(constantWithdrawalCost, withdrawalDate => withdrawalDate)
     .WithNoCmdtyConsumedOnWithdraw()
     .WithNoCmdtyInventoryLoss()
-    .WithNoCmdtyInventoryCost()
+    .WithNoInventoryCost()
     .MustBeEmptyAtEnd()
     .Build();
 ```
@@ -331,13 +331,13 @@ var injectWithdrawConstraints = new List<InjectWithdrawRangeByInventoryAndPeriod
 
 CmdtyStorage<Day> storage = CmdtyStorage<Day>.Builder
     .WithActiveTimePeriod(new Day(2019, 9, 1), new Day(2019, 10, 1))
-    .WithTimeAndInventoryVaryingInjectWithdrawRates(injectWithdrawConstraints)
+    .WithTimeAndInventoryVaryingInjectWithdrawRatesPiecewiseLinear(injectWithdrawConstraints)
     .WithPerUnitInjectionCost(constantInjectionCost, injectionDate => injectionDate)
     .WithNoCmdtyConsumedOnInject()
     .WithPerUnitWithdrawalCost(constantWithdrawalCost, withdrawalDate => withdrawalDate)
     .WithNoCmdtyConsumedOnWithdraw()
     .WithNoCmdtyInventoryLoss()
-    .WithNoCmdtyInventoryCost()
+    .WithNoInventoryCost()
     .MustBeEmptyAtEnd()
     .Build();
 ```
@@ -350,21 +350,19 @@ the optimal intrinsic inject/withdraw decision profile.
 
 ``` c#
 var currentPeriod = new Day(2019, 9, 15);
+
 const double lowerForwardPrice = 56.6;
 const double forwardSpread = 87.81;
+
 double higherForwardPrice = lowerForwardPrice + forwardSpread;
 
 var forwardCurveBuilder = new TimeSeries<Day, double>.Builder();
 
 foreach (var day in new Day(2019, 9, 15).EnumerateTo(new Day(2019, 9, 22)))
-{
     forwardCurveBuilder.Add(day, lowerForwardPrice);
-}
 
 foreach (var day in new Day(2019, 9, 23).EnumerateTo(new Day(2019, 10, 1)))
-{
     forwardCurveBuilder.Add(day, higherForwardPrice);
-}
 
 const double startingInventory = 50.0;
 
@@ -373,42 +371,20 @@ IntrinsicStorageValuationResults<Day> valuationResults = IntrinsicStorageValuati
     .WithStartingInventory(startingInventory)
     .ForCurrentPeriod(currentPeriod)
     .WithForwardCurve(forwardCurveBuilder.Build())
-    .WithCmdtySettlementRule(day => day.First<Month>().Offset(1).First<Day>().Offset(5))
-    .WithDiscountFactorFunc(day => 1.0)
+    .WithCmdtySettlementRule(day => day.First<Month>().Offset(1).First<Day>().Offset(5)) // Commodity is settled on the 5th day of the next month
+    .WithDiscountFactorFunc((valDate, cfDate) => 1.0) // Assumes no discounting (don't do this in practice)
     .WithFixedGridSpacing(10.0)
     .WithLinearInventorySpaceInterpolation()
     .WithNumericalTolerance(1E-12)
     .Calculate();
 
-Console.WriteLine("Calculated intrinsic storage NPV: " + valuationResults.NetPresentValue.ToString("F2"));
-Console.WriteLine();
-Console.WriteLine("Decision profile:");
-Console.WriteLine(valuationResults.DecisionProfile.FormatData("F2", -1));
+Console.WriteLine("Calculated intrinsic storage NPV: " + valuationResults.Npv.ToString("N2"));
 ```
 
 When run, the above code prints the following to the console.
 
 ```
-Calculated intrinsic storage NPV: 10827.21
-
-Decision profile:
-Count = 16
-2019-09-15  5.26
-2019-09-16  5.26
-2019-09-17  5.26
-2019-09-18  5.26
-2019-09-19  5.26
-2019-09-20  5.26
-2019-09-21  5.26
-2019-09-22  5.26
-2019-09-23  -14.74
-2019-09-24  -14.74
-2019-09-25  0.00
-2019-09-26  -14.74
-2019-09-27  -14.74
-2019-09-28  -14.74
-2019-09-29  -14.74
-2019-09-30  -3.64
+Calculated intrinsic storage NPV: 10,827.21
 ```
 
 #### Calculating the Extrinsic Value: One-Factor Trinomial Tree
@@ -426,14 +402,10 @@ double higherForwardPrice = lowerForwardPrice + forwardSpread;
 var forwardCurveBuilder = new TimeSeries<Day, double>.Builder();
 
 foreach (var day in new Day(2019, 9, 15).EnumerateTo(new Day(2019, 9, 22)))
-{
     forwardCurveBuilder.Add(day, lowerForwardPrice);
-}
 
 foreach (var day in new Day(2019, 9, 23).EnumerateTo(new Day(2019, 10, 1)))
-{
     forwardCurveBuilder.Add(day, higherForwardPrice);
-}
 
 TimeSeries<Month, Day> cmdtySettlementDates = new TimeSeries<Month, Day>.Builder
     {
@@ -482,13 +454,13 @@ TreeStorageValuationResults<Day> valuationResults = TreeStorageValuation<Day>
     .WithNumericalTolerance(1E-12)
     .Calculate();
 
-Console.WriteLine("Calculated storage NPV: " + valuationResults.NetPresentValue.ToString("F2"));
+Console.WriteLine("Calculated storage NPV: " + valuationResults.NetPresentValue.ToString("N2"));
 ```
 
 The above code prints the following.
 
 ```
-Calculated storage NPV: 24809.48
+Calculated storage NPV: 24,799.09
 ```
 
 ## Using the Excel Add-In
