@@ -91,41 +91,11 @@ Task("Test-C#")
     }
 });
 
-string vEnvPath = System.IO.Path.Combine("src", "Cmdty.Storage.Python", "storage-venv");
-string venvActiveFolderAndFile = isWindows ? System.IO.Path.Combine("Scripts", "activate.bat") :
-                                             System.IO.Path.Combine("bin", "activate");
-string vEnvActivatePath = System.IO.Path.Combine(vEnvPath, venvActiveFolderAndFile);
-
-Task("Create-VirtualEnv")
-    .Does(() =>
-{
-    if (System.IO.File.Exists(vEnvActivatePath))
-    {
-        Information("storage-venv Virtual Environment already exists, so no need to create.");
-    }
-    else
-    {
-        Information("Creating storage-venv Virtual Environment.");
-        StartProcessThrowOnError(pythonCommand, "-m venv " + vEnvPath);
-    }
-});
-
-Task("Install-VirtualEnvDependencies")
-	.IsDependentOn("Create-VirtualEnv")
-    .Does(() =>
-{
-    RunCommandInVirtualEnv(pythonCommand + " -m pip install --upgrade pip", vEnvActivatePath);
-    RunCommandInVirtualEnv("pip install pytest", vEnvActivatePath);
-    RunCommandInVirtualEnv("pip install -r src/Cmdty.Storage.Python/requirements.txt", vEnvActivatePath);
-    RunCommandInVirtualEnv("pip install -e src/Cmdty.Storage.Python", vEnvActivatePath);
-});
-
 var testPythonTask = Task("Test-Python")
-    .IsDependentOn("Install-VirtualEnvDependencies")
-	.IsDependentOn("Test-C#")
+//	.IsDependentOn("Test-C#")
 	.Does(() =>
 {
-    RunCommandInVirtualEnv(pythonCommand + " -m pytest src/Cmdty.Storage.Python/tests --junitxml=junit/test-results.xml", vEnvActivatePath);
+    StartProcessThrowOnError(pythonCommand, "-m", "pytest", "src/Cmdty.Storage.Python/tests", "--junitxml=junit/test-results.xml");
 });
 
 Task("Build-Samples")
@@ -233,15 +203,6 @@ private void StartProcessThrowOnError(string applicationName, params string[] pr
     int exitCode = StartProcess(applicationName, new ProcessSettings {Arguments = argsBuilder});
     if (exitCode != 0)
         throw new ApplicationException($"Starting {applicationName} in new process returned non-zero exit code of {exitCode}");
-}
-
-private void RunCommandInVirtualEnv(string command, string vEnvActivatePath)
-{
-    Information("Running command in venv: " + command);
-    string fullCommand = isWindows ? $"/k {vEnvActivatePath} & {command} & deactivate & exit" :
-                    $"-c {vEnvActivatePath} && {command} && deactivate && exit";
-    Information($"Command to execute: {shellCommand} " + fullCommand);
-    StartProcessThrowOnError(shellCommand, fullCommand);
 }
 
 var publishNuGetTask = Task("Publish-NuGet")

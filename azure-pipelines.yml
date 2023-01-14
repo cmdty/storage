@@ -23,12 +23,8 @@ steps:
       versionSpec: '3.7'
     displayName: "Use Python 3.7"
 
-  - script: |
-        pip install virtualenv
-        pip install twine
-        pip install setuptools
-        pip install wheel
-    displayName: 'Install Python packages: virtualenv, twine, setuptools and wheel'
+  - script: 'pip -r ./src/Cmdty.Storage.Python/requirements.txt'
+    displayName: 'Install Python packages from ./src/Cmdty.Storage.Python/requirements.txt'
 
   - script: dotnet tool restore --ignore-failed-sources
     displayName: 'dotnet tool restore'
