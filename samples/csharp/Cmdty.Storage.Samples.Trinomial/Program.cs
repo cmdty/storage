@@ -61,13 +61,13 @@ namespace Cmdty.Storage.Samples.Trinomial
 
             CmdtyStorage<Day> storage = CmdtyStorage<Day>.Builder
                 .WithActiveTimePeriod(new Day(2019, 9, 1), new Day(2019, 10, 1))
-                .WithTimeAndInventoryVaryingInjectWithdrawRates(injectWithdrawConstraints)
+                .WithTimeAndInventoryVaryingInjectWithdrawRatesPiecewiseLinear(injectWithdrawConstraints)
                 .WithPerUnitInjectionCost(constantInjectionCost, injectionDate => injectionDate)
                 .WithNoCmdtyConsumedOnInject()
                 .WithPerUnitWithdrawalCost(constantWithdrawalCost, withdrawalDate => withdrawalDate)
                 .WithNoCmdtyConsumedOnWithdraw()
                 .WithNoCmdtyInventoryLoss()
-                .WithNoCmdtyInventoryCost()
+                .WithNoInventoryCost()
                 .MustBeEmptyAtEnd()
                 .Build();
 
@@ -137,7 +137,7 @@ namespace Cmdty.Storage.Samples.Trinomial
                 .WithNumericalTolerance(1E-12)
                 .Calculate();
 
-            Console.WriteLine("Calculated storage NPV: " + valuationResults.NetPresentValue.ToString("F2"));
+            Console.WriteLine("Calculated storage NPV: " + valuationResults.NetPresentValue.ToString("N2"));
             Console.WriteLine();
 
             Console.WriteLine("Press any key to exit");

@@ -34,7 +34,7 @@ namespace Cmdty.Storage
         /// <summary>
         /// Adds discount factor function.
         /// </summary>
-        /// <param name="discountFactors">Function mapping from cash flow date to discount factor.</param>
+        /// <param name="discountFactors">Function mapping from valuation and cash flow dates to discount factor.</param>
         IIntrinsicAddInventoryGridCalculation<T> WithDiscountFactorFunc(Func<Day, Day, double> discountFactors);
     }
 }

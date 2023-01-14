@@ -50,7 +50,7 @@ namespace Cmdty.Storage.Samples.Intrinsic
                 .WithPerUnitWithdrawalCost(constantWithdrawalCost, withdrawalDate => withdrawalDate)
                 .WithNoCmdtyConsumedOnWithdraw()
                 .WithNoCmdtyInventoryLoss()
-                .WithNoCmdtyInventoryCost()
+                .WithNoInventoryCost()
                 .MustBeEmptyAtEnd()
                 .Build();
 
@@ -81,16 +81,14 @@ namespace Cmdty.Storage.Samples.Intrinsic
                 .ForCurrentPeriod(currentPeriod)
                 .WithForwardCurve(forwardCurveBuilder.Build())
                 .WithCmdtySettlementRule(day => day.First<Month>().Offset(1).First<Day>().Offset(5)) // Commodity is settled on the 5th day of the next month
-                .WithDiscountFactorFunc(day => 1.0) // Assumes to discounting
+                .WithDiscountFactorFunc((valDate, cfDate) => 1.0) // Assumes to discounting
                 .WithFixedGridSpacing(10.0)
                 .WithLinearInventorySpaceInterpolation()
                 .WithNumericalTolerance(1E-12)
                 .Calculate();
 
-            Console.WriteLine("Calculated intrinsic storage NPV: " + valuationResults.NetPresentValue.ToString("F2"));
+            Console.WriteLine("Calculated intrinsic storage NPV: " + valuationResults.Npv.ToString("N2"));
             Console.WriteLine();
-            Console.WriteLine("Decision profile:");
-            Console.WriteLine(valuationResults.DecisionProfile.FormatData("F2", -1));
 
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
