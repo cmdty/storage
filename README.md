@@ -14,6 +14,7 @@ Python and Excel.
     * [Installing C# API](#installing-c-api)
     * [Installing Python Package](#installing-python-package)
     * [Installing the Excel Add-In](#installing-the-excel-add-in)
+* [.NET Dependency](#net-dependency)
 * [Using the Python API](#using-the-python-api)
     * [Creating the Storage Object](#creating-the-storage-object)
         * [Storage with Constant Parameters](#storage-with-constant-parameters)
@@ -77,6 +78,8 @@ PM> Install-Package Cmdty.Storage
 ```
 > pip install cmdty-storage
 ```
+If running on an OS other than Windows see the section [.NET Dependency](#net-dependency)
+below.
 
 ### Installing the Excel Add-In
 
@@ -100,6 +103,17 @@ select the Cmdty.Storage xll file which was previously saved to your local disk.
     * New Excel functions prefixed with "cmdty." should be available. These can be seen in
     the Excel Insert Function dialogue box, within the Cmdty.Storage category.
 
+## .NET Dependency
+As Cmdty.Storage is mostly written in C# it requires the .NET runtime to be installed to execute.
+The dlls are targetting [.NET Standard 2.0](https://learn.microsoft.com/en-us/dotnet/standard/net-standard?tabs=net-standard-2-0) which is compatible with .NET Framework versions 4.6.1
+upwards. A version of .NET Framework meeting this restriction should be installed on most
+Windows computers, so nothing extra is required.
+
+If running on a non-Windows OS then the runtime of a cross-platform type of the .NET will be 
+required. .NET Standard is compatible with .NET and Mono, with the former being recommended.
+For the Python package, by default it will try to use .NET, and if this isn't installed it will
+try Mono. See the Microsoft documentation on installing the .NET runtime on [Linux](https://learn.microsoft.com/en-us/dotnet/core/install/linux)
+and on [macOS](https://learn.microsoft.com/en-us/dotnet/core/install/macos).
 
 ## Using the Python API
 
