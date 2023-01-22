@@ -13,6 +13,11 @@ import csv
 import os
 from PyQt5.QtWidgets import QFileDialog, QApplication
 from datetime import datetime
+import os
+
+
+# Workaround to stop Python Kernel crashing due to multiple OpenMP dlls being loaded
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 # Shared variables
 freq = 'D'
