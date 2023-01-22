@@ -178,3 +178,16 @@ required. .NET Standard is compatible with .NET and Mono, with the former being 
 For the Python package, by default it will try to use .NET, and if this isn't installed it will
 try Mono. See the Microsoft documentation on installing the .NET runtime on [Linux](https://learn.microsoft.com/en-us/dotnet/core/install/linux)
 and on [macOS](https://learn.microsoft.com/en-us/dotnet/core/install/macos).
+
+## Workaround for Crashing Python Interpreter
+In some environments the valuation calculations have been observed to crash the Python 
+interpretter. This is due to the use of Intel MKL, which itself loads libiomp5md.dll, the OpenMP threading library.
+The crash occurs during the initialisation of libiomp5md.dll, due to this dll already having
+been initialised, presumably by Intel MKL usage from NumPy. The below code is a  workaround to fix to fix this by setting the KMP_DUPLICATE_LIB_OK environment variable to true.
+
+```python
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+```
+
+The code should be run at the start of any notebook or program.
