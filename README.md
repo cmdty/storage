@@ -22,6 +22,7 @@ Python and Excel.
     * [Storage Optimisation Using LSMC](#storage-optimisation-using-lsmc)
     * [Inspecting Valuation Results](#inspecting-valuation-results)
     * [Example Python GUI](#example-python-gui)
+    * [Workaround for Crashing Python Interpreter](#workaround-for-crashing-python-interpreter)
     * [Python Version Compatibility](#python-version-compatibility)
 * [Using the C# API](#using-the-c-api)
     * [Creating the Storage Object](#creating-the-storage-object-1)
@@ -109,7 +110,7 @@ The dlls are targetting [.NET Standard 2.0](https://learn.microsoft.com/en-us/do
 upwards. A version of .NET Framework meeting this restriction should be installed on most
 Windows computers, so nothing extra is required.
 
-If running on a non-Windows OS then the runtime of a cross-platform type of the .NET will be 
+If running on a non-Windows OS then the runtime of a cross-platform type of .NET will be 
 required. .NET Standard is compatible with .NET and Mono, with the former being recommended.
 For the Python package, by default it will try to use .NET, and if this isn't installed it will
 try Mono. See the Microsoft documentation on installing the .NET runtime on [Linux](https://learn.microsoft.com/en-us/dotnet/core/install/linux)
@@ -267,6 +268,21 @@ An example GUI notebook created using Jupyter Widgets can be found
 [here](./samples/python/multi_factor_gui.ipynb).
 
 ![Demo GUI](./assets/gui_demo.gif)
+
+### Workaround for Crashing Python Interpreter
+In some environments the valuation calculations have been observed to crash the Python 
+interpretter. This is due to the use of Intel MKL, which itself loads libiomp5md.dll, the OpenMP threading library.
+The crash occurs during the initialisation of libiomp5md.dll, due to this dll already having
+been initialised, presumably by Intel MKL usage from NumPy. The below code is a  
+[workaround suggested by mattslezak-shell](https://github.com/cmdty/storage/issues/13) to fix 
+to fix this by setting the KMP_DUPLICATE_LIB_OK environment variable to true.
+
+```python
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+```
+
+The code should be run at the start of any notebook or program.
 
 ### Python Version Compatibility
 The cmdty-storage package should be compatible with the Python interpreter up to **version 3.11**.
