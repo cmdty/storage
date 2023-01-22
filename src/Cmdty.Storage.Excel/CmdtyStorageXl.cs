@@ -45,18 +45,19 @@ namespace Cmdty.Storage.Excel
             [ExcelArgument(Name = ExcelArg.WithdrawalCost.Name, Description = ExcelArg.WithdrawalCost.Description)] double withdrawalCostRate,
             [ExcelArgument(Name = ExcelArg.CmdtyConsumedWithdraw.Name, Description = ExcelArg.CmdtyConsumedWithdraw.Description)] double cmdtyConsumedOnWithdrawal,
             [ExcelArgument(Name = ExcelArg.TerminalInventoryConstraint.Name, Description = ExcelArg.TerminalInventoryConstraint.Description)] string terminalInventory,
+            [ExcelArgument(Name = ExcelArg.TerminalInventoryValueParameter.Name, Description = ExcelArg.TerminalInventoryValueParameter.Description)] object terminalInventoryParam,
             [ExcelArgument(Name = ExcelArg.NumericalTolerance.Name, Description = ExcelArg.NumericalTolerance.Description)] object numericalToleranceIn)
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
                 return ObjectCache.Instance.CacheObjectAndGetHandle(name, new object[] {storageStart, storageEnd, ratchets,
                     ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection, withdrawalCostRate,
-                    cmdtyConsumedOnWithdrawal, terminalInventory, numericalToleranceIn}, () =>
+                    cmdtyConsumedOnWithdrawal, terminalInventory, terminalInventoryParam, numericalToleranceIn}, () =>
                     {
                         double numericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalToleranceIn, 1E-10, "Numerical_tolerance");
                         CmdtyStorage<Day> storage = StorageExcelHelper.CreateCmdtyStorageFromExcelInputs<Day>(storageStart,
                             storageEnd, ratchets, ratchetInterpolation, injectionCostRate, cmdtyConsumedOnInjection,
-                            withdrawalCostRate, cmdtyConsumedOnWithdrawal, terminalInventory, numericalTolerance);
+                            withdrawalCostRate, cmdtyConsumedOnWithdrawal, terminalInventory, terminalInventoryParam, numericalTolerance);
                         return storage;
                     });
             });

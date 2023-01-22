@@ -25,3 +25,7 @@ more .NET types.
 ### 0.1.0
 * First cut of asynchronous object handle based LSMC valuation.
 * Object handle based intrinsic valuation.
+
+### 0.2.0 (Not yet release)
+* Change to allowable values Terminal_inventory argument of cmdty.CreateStorage function and addition of
+associated Terminal_val_param argument.

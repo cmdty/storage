@@ -206,7 +206,16 @@ namespace Cmdty.Storage.Excel
         internal static class TerminalInventoryConstraint
         {
             public const string Name = "Terminal_inventory";
-            public const string Description = "Text which determines the constraint on, and value of, inventory on the end date of the storage. Must be either 'Empty', 'ZeroValue', or 'SpotValue'.";
+            public const string Description = "Value of, or constraint on, inventory on the end date. " +
+                "Either 'Empty', 'SpotValueMultiple' (value=spot*inventory*Terminal_val_param), " +
+                "or 'InventoryMultiple' (value=inventory*Terminal_val_param).";
+        }
+
+        internal static class TerminalInventoryValueParameter
+        {
+            public const string Name = "[Terminal_val_param]";
+            public const string Description = "Parameter of the valuation of inventory left in storage at the end date. Necessary only if Terminal_inventory argument " +
+                "is 'SpotValueMultiple', or 'InventoryMultiple'.";
         }
 
         internal static class StoragePropertyDate

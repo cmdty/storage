@@ -121,6 +121,7 @@ namespace Cmdty.Storage.Excel
             double withdrawalCostRate,
             double cmdtyConsumedOnWithdrawal, 
             string terminalInventory,
+            object terminalInventoryParam,
             double numericalTolerance)
             where T : ITimePeriod<T>
         {
@@ -191,16 +192,19 @@ namespace Cmdty.Storage.Excel
                 case "Empty":
                     buildCmdtyStorage = addTerminalStorageState.MustBeEmptyAtEnd();
                     break;
-                case "ZeroValue":
-                    buildCmdtyStorage = addTerminalStorageState.WithTerminalInventoryNpv((cmdtyPrice, finalInventory) => 0.0);
+                case "SpotValueMultiple":
+                    double spotMultiple = ObjectToDouble(terminalInventoryParam, ExcelArg.TerminalInventoryConstraint.Name + " argument set to 'SpotValueMultiple', so " +
+                        ExcelArg.TerminalInventoryValueParameter.Name + " argument must be specified as a numeric value.");
+                    buildCmdtyStorage = addTerminalStorageState.WithTerminalInventoryNpv((cmdtyPrice, finalInventory) => cmdtyPrice * finalInventory * spotMultiple);
                     break;
-                case "SpotValue":
-                    buildCmdtyStorage = addTerminalStorageState.WithTerminalInventoryNpv(
-                                            (cmdtyPrice, finalInventory) => cmdtyPrice * finalInventory);
+                case "InventoryMultiple":
+                    double inventoryMultiple = ObjectToDouble(terminalInventoryParam, ExcelArg.TerminalInventoryConstraint.Name + " argument set to 'InventoryMultiple', so " +
+                        ExcelArg.TerminalInventoryValueParameter.Name + " argument must be specified as a numeric value.");
+                    buildCmdtyStorage = addTerminalStorageState.WithTerminalInventoryNpv((cmdtyPrice, finalInventory) => finalInventory * inventoryMultiple);
                     break;
                 default:
                     throw new ArgumentException($"{ExcelArg.TerminalInventoryConstraint.Name} value of '{terminalInventory}' not valid." +
-                        $" Must be either 'Empty', 'ZeroValue', or 'SpotValue'.");
+                        $" Must be either 'Empty', 'SpotValueMultiple', or 'InventoryMultiple'.");
             }
 
             CmdtyStorage<T> storage = buildCmdtyStorage.Build();
