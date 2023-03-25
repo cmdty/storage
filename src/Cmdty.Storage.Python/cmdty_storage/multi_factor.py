@@ -39,22 +39,18 @@ import numpy as np
 from datetime import datetime, date
 import typing as tp
 from cmdty_storage import utils, CmdtyStorage
-from cmdty_storage import time_func as tf
-import math
 import cmdty_storage.intrinsic as cs_intrinsic
 import logging
 
 logger: logging.Logger = logging.getLogger('cmdty.storage.multi-factor')
-
-FactorCorrsType = tp.Optional[tp.Union[float, np.ndarray]]
 
 
 class MultiFactorSpotSim:
 
     def __init__(self,
                  freq: str,
-                 factors: tp.Iterable[tp.Tuple[float, utils.CurveType]],
-                 factor_corrs: FactorCorrsType,
+                 factors: tp.Collection[tp.Tuple[float, utils.CurveType]],
+                 factor_corrs: utils.FactorCorrsType,
                  current_date: tp.Union[datetime, date, str, pd.Period],
                  fwd_curve: utils.CurveType,
                  sim_periods: tp.Iterable[tp.Union[pd.Period, datetime, date, str]],
@@ -62,7 +58,7 @@ class MultiFactorSpotSim:
                  antithetic: bool = False,
                  # time_func: Callable[[Union[datetime, date], Union[datetime, date]], float] TODO add this back in
                  ):
-        factor_corrs = _validate_multi_factor_params(factors, factor_corrs)
+        factor_corrs = utils.validate_multi_factor_params(factors, factor_corrs)
         if freq not in utils.FREQ_TO_PERIOD_TYPE:
             raise ValueError("freq parameter value of '{}' not supported. The allowable values can be found in the "
                              "keys of the dict curves.FREQ_TO_PERIOD_TYPE.".format(freq))
@@ -110,186 +106,6 @@ def _create_net_multi_factor_params(factor_corrs, factors, time_period_type):
     net_multi_factor_params = net_sim.MultiFactor.MultiFactorParameters[time_period_type](net_factor_corrs,
                                                                                           *net_factors)
     return net_multi_factor_params
-
-
-def _validate_multi_factor_params(  # TODO unit test validation fails
-        factors: tp.Iterable[tp.Tuple[float, utils.CurveType]],
-        factor_corrs: FactorCorrsType) -> np.ndarray:
-    factors_len = len(factors)
-    if factors_len == 0:
-        raise ValueError("factors cannot be empty.")
-    if factors_len == 1 and factor_corrs is None:
-        factor_corrs = np.array([[1.0]])
-    if factors_len == 2 and (isinstance(factor_corrs, float) or isinstance(factor_corrs, int)):
-        factor_corrs = np.array([[1.0, float(factor_corrs)],
-                                 [float(factor_corrs), 1.0]])
-
-    if factor_corrs.ndim != 2:
-        raise ValueError("Factor correlation matrix is not 2-dimensional.")
-    corr_shape = factor_corrs.shape
-    if corr_shape[0] != corr_shape[1]:
-        raise ValueError("Factor correlation matrix is not square.")
-    if factor_corrs.dtype != np.float64:
-        factor_corrs = factor_corrs.astype(np.float64)
-    for (i, j), corr in np.ndenumerate(factor_corrs):
-        if i == j:
-            if not np.isclose([corr], [1.0]):
-                raise ValueError("Factor correlation on diagonal position ({i}, {j}) value of {corr} not valid as not "
-                                 "equal to 1.".format(i=i, j=j, corr=corr))
-        else:
-            if not -1 <= corr <= 1:
-                raise ValueError("Factor correlation in position ({i}, {j}) value of {corr} not valid as not in the "
-                                 "interval [-1, 1]".format(i=i, j=j, corr=corr))
-    num_factors = corr_shape[0]
-    if factors_len != num_factors:
-        raise ValueError("factors and factor_corrs are of inconsistent sizes.")
-    for idx, (mr, vol) in enumerate(factors):
-        if mr < 0.0:
-            raise ValueError("Mean reversion value of {mr} for factor at index {idx} not valid as is negative.".format(
-                mr=mr, idx=idx))
-    return factor_corrs
-
-
-# TODO convert to common key types for vol curve and fwd contracts
-class MultiFactorModel:
-    _corr_tolerance = 1E-10  # TODO more scientific way of finding this.
-    _factors: tp.List[tp.Tuple[float, utils.CurveType]]
-    _factor_corrs: FactorCorrsType
-    _time_func: utils.TimeFunctionType
-
-    def __init__(self,
-                 freq: str,
-                 factors: tp.Iterable[tp.Tuple[float, utils.CurveType]],
-                 factor_corrs: FactorCorrsType = None,
-                 time_func: tp.Optional[utils.TimeFunctionType] = None):
-        self._factor_corrs = _validate_multi_factor_params(factors, factor_corrs)
-        self._factors = list(factors)
-        self._time_func = tf.act_365 if time_func is None else time_func
-
-    def integrated_covar(self,
-                         obs_start: utils.TimePeriodSpecType,
-                         obs_end: utils.TimePeriodSpecType,
-                         fwd_contract_1: utils.ForwardPointType,
-                         fwd_contract_2: utils.ForwardPointType) -> float:
-        obs_start_t = 0.0
-        obs_end_t = self._time_func(obs_start, obs_end)
-        if obs_end_t < 0.0:
-            raise ValueError("obs_end cannot be before obs_start.")
-        fwd_1_t = self._time_func(obs_start, fwd_contract_1)
-        fwd_2_t = self._time_func(obs_start, fwd_contract_2)
-
-        cov = 0.0
-        for (i, j), corr in np.ndenumerate(self._factor_corrs):
-            mr_i, vol_curve_i = self._factors[i]
-            vol_i = self._get_factor_vol(i, fwd_contract_1,
-                                         vol_curve_i)  # TODO if converted to nested loop vol_i could be looked up less
-            mr_j, vol_curve_j = self._factors[j]
-            vol_j = self._get_factor_vol(j, fwd_contract_2, vol_curve_j)
-            cov += vol_i * vol_j * self._factor_corrs[i, j] * math.exp(-mr_i * fwd_1_t - mr_j * fwd_2_t) * \
-                   self._cont_ext(-obs_start_t, -obs_end_t, mr_i + mr_j)
-        return cov
-
-    def integrated_variance(self,
-                            obs_start: utils.TimePeriodSpecType,
-                            obs_end: utils.TimePeriodSpecType,
-                            fwd_contract: utils.ForwardPointType) -> float:
-        return self.integrated_covar(obs_start, obs_end, fwd_contract, fwd_contract)
-
-    def integrated_stan_dev(self,
-                            obs_start: utils.TimePeriodSpecType,
-                            obs_end: utils.TimePeriodSpecType,
-                            fwd_contract: utils.ForwardPointType) -> float:
-        return math.sqrt(self.integrated_covar(obs_start, obs_end, fwd_contract, fwd_contract))
-
-    def integrated_vol(self,
-                       val_date: utils.TimePeriodSpecType,
-                       expiry: utils.TimePeriodSpecType,
-                       fwd_contract: utils.ForwardPointType) -> float:
-        time_to_expiry = self._time_func(val_date, expiry)
-        if time_to_expiry <= 0:
-            raise ValueError("val_date must be before expiry.")
-        return math.sqrt(self.integrated_covar(val_date, expiry, fwd_contract, fwd_contract) / time_to_expiry)
-
-    def integrated_corr(self,
-                        obs_start: utils.TimePeriodSpecType,
-                        obs_end: utils.TimePeriodSpecType,
-                        fwd_contract_1: utils.ForwardPointType,
-                        fwd_contract_2: utils.ForwardPointType) -> float:
-        covariance = self.integrated_covar(obs_start, obs_end, fwd_contract_1, fwd_contract_2)
-        variance_1 = self.integrated_variance(obs_start, obs_end, fwd_contract_1)
-        variance_2 = self.integrated_variance(obs_start, obs_end, fwd_contract_2)
-        corr = covariance / math.sqrt(variance_1 * variance_2)
-        if 1.0 < corr < (1.0 + self._corr_tolerance):
-            return 1.0
-        if (-1.0 - self._corr_tolerance) < corr < -1:
-            return -1.0
-        return corr
-
-    @staticmethod
-    def _cont_ext(c1, c2, x) -> float:
-        if x == 0.0:
-            return c1 - c2
-        return (math.exp(-x * c2) - math.exp(-x * c1)) / x
-
-    @staticmethod
-    def _get_factor_vol(factor_num, fwd_contract, vol_curve) -> float:
-        vol = vol_curve.get(fwd_contract, None)
-        if vol is None:
-            raise ValueError(
-                "No point in vol curve of factor {factor_num} for fwd_contract_1 value of {fwd}.".format(
-                    factor_num=factor_num, fwd=fwd_contract))
-        return vol
-
-    @staticmethod
-    def for_3_factor_seasonal(freq: str,
-                              spot_mean_reversion: float,
-                              spot_vol: float,
-                              long_term_vol: float,
-                              seasonal_vol: float,
-                              start: utils.ForwardPointType,
-                              end: utils.ForwardPointType,
-                              time_func: tp.Optional[utils.TimeFunctionType] = None) -> 'MultiFactorModel':
-        factors, factor_corrs = create_3_factor_season_params(freq, spot_mean_reversion, spot_vol, long_term_vol,
-                                                              seasonal_vol, start, end)
-        return MultiFactorModel(freq, factors, factor_corrs, time_func)
-
-
-days_per_year = 365.25
-seconds_per_year = 60 * 60 * 24 * days_per_year
-
-
-def create_3_factor_season_params(
-        freq: str,
-        spot_mean_reversion: float,
-        spot_vol: float,
-        long_term_vol: float,
-        seasonal_vol: float,
-        start: utils.ForwardPointType,
-        end: utils.ForwardPointType) -> tp.Tuple[tp.Iterable[tp.Tuple[float, utils.CurveType]], np.ndarray]:
-    factor_corrs = np.array([
-        [1.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 0.0, 1.0]])
-    start_period = start if isinstance(start, pd.Period) else pd.Period(start, freq=freq)
-    end_period = end if isinstance(end, pd.Period) else pd.Period(end, freq=freq)
-    index = pd.period_range(start=start_period, end=end_period, freq=freq)
-    long_term_vol_curve = pd.Series(index=index, data=[long_term_vol] * len(index))
-    spot_vol_curve = pd.Series(index=index.copy(), data=[spot_vol] * len(index))
-    peak_period = pd.Period(year=start_period.year, month=2, day=1, freq=freq)
-    phase = np.pi / 2.0
-    amplitude = seasonal_vol / 2.0
-    seasonal_vol_array = np.empty((len(index)))
-    for i, p in enumerate(index):
-        t_from_peak = (p.start_time - peak_period.start_time).total_seconds() / seconds_per_year
-        seasonal_vol_array[i] = 2.0 * np.pi * t_from_peak + phase
-    seasonal_vol_array = np.sin(seasonal_vol_array) * amplitude
-    seasonal_vol_curve = pd.Series(index=index.copy(), data=seasonal_vol_array)
-    factors = [
-        (spot_mean_reversion, spot_vol_curve),
-        (0.0, long_term_vol_curve),
-        (0.0, seasonal_vol_curve)
-    ]
-    return factors, factor_corrs
 
 
 class TriggerPricePoint(tp.NamedTuple):
@@ -371,7 +187,7 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
                        interest_rates: pd.Series,
                        settlement_rule: tp.Callable[[pd.Period], date],
                        factors: tp.Iterable[tp.Tuple[float, utils.CurveType]],
-                       factor_corrs: FactorCorrsType,
+                       factor_corrs: utils.FactorCorrsType,
                        num_sims: int,
                        basis_funcs: str,
                        discount_deltas: bool,
@@ -382,7 +198,7 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
                        numerical_tolerance: float = 1E-12,
                        on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
                        ) -> MultiFactorValuationResults:
-    factor_corrs = _validate_multi_factor_params(factors, factor_corrs)
+    factor_corrs = utils.validate_multi_factor_params(factors, factor_corrs)
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
     net_multi_factor_params = _create_net_multi_factor_params(factor_corrs, factors, time_period_type)
 

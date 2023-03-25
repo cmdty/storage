@@ -27,7 +27,6 @@ import numpy as np
 from cmdty_storage import multi_factor as mf, CmdtyStorage, three_factor_seasonal_value, \
     multi_factor_value, value_from_sims
 from datetime import date
-import itertools
 from tests import utils
 
 
@@ -90,78 +89,6 @@ class TestSpotPriceSim(unittest.TestCase):
         self.assertEqual(65.500441945042979, sim4['2020-08-01'])
         self.assertEqual(42.812676607997183, sim4['2021-01-15'])
         self.assertEqual(76.586790647813046, sim4['2021-07-30'])
-
-
-class TestMultiFactorModel(unittest.TestCase):
-    _short_plus_long_indices = pd.period_range(start='2020-09-01', periods=25, freq='D') \
-        .append(pd.period_range(start='2030-09-01', periods=25, freq='D'))
-    _1f_0_mr_model = mf.MultiFactorModel('D', [(0.0, {'2020-09-01': 0.36, '2020-10-01': 0.29, '2020-11-01': 0.23})])
-    _1f_pos_mr_model = mf.MultiFactorModel('D', [(2.5, pd.Series(data=np.linspace(0.65, 0.38, num=50),
-                                                                 index=_short_plus_long_indices))])
-    _2f_canonical_model = mf.MultiFactorModel('D',
-                                              factors=[(0.0, pd.Series(data=np.linspace(0.53, 0.487, num=50),
-                                                                       index=_short_plus_long_indices)),
-                                                       (2.5, pd.Series(data=np.linspace(1.45, 1.065, num=50),
-                                                                       index=_short_plus_long_indices))],
-                                              factor_corrs=0.87)  # If only 2 factors can supply a float for factor_corrs rather than a matrix
-
-    def test_single_non_mean_reverting_factor_implied_vol_equals_factor_vol(self):
-        fwd_contract = '2020-09-01'
-        implied_vol = self._1f_0_mr_model.integrated_vol(date(2020, 8, 5), date(2020, 8, 30), '2020-09-01')
-        factor_vol = self._1f_0_mr_model._factors[0][1][fwd_contract]
-        self.assertEqual(factor_vol, implied_vol)
-
-    def test_single_non_mean_reverting_factor_correlations_equal_one(self):
-        self._assert_cross_correlations_all_one(date(2020, 8, 1), date(2020, 9, 1), self._1f_0_mr_model)
-
-    def test_single_mean_reverting_factor_correlations_equal_one(self):
-        self._assert_cross_correlations_all_one(date(2020, 5, 1), date(2020, 9, 1), self._1f_pos_mr_model)
-
-    def _assert_cross_correlations_all_one(self, obs_start, obs_end, model: mf.MultiFactorModel):
-        fwd_points = model._factors[0][1].keys()
-        for fwd_point_1, fwd_point_2 in itertools.product(fwd_points, fwd_points):
-            if fwd_point_1 != fwd_point_2:
-                corr = model.integrated_corr(obs_start, obs_end, fwd_point_1, fwd_point_2)
-                self.assertAlmostEqual(1.0, corr, places=14)
-
-    def test_single_mean_reverting_factor_variance_far_in_future_equals_zero(self):
-        variance = self._1f_pos_mr_model.integrated_variance('2020-08-05', '2020-09-01', fwd_contract='2030-09-15')
-        self.assertAlmostEqual(0.0, variance, places=14)
-
-    def test_2f_canonical_vol_far_in_future_equal_non_mr_vol(self):
-        fwd_contract = '2030-09-15'
-        implied_vol = self._2f_canonical_model.integrated_vol('2020-08-05', '2021-08-05', fwd_contract)
-        non_mr_factor_vol = self._2f_canonical_model._factors[0][1][fwd_contract]
-        self.assertAlmostEqual(non_mr_factor_vol, implied_vol, places=10)
-
-    def test_diff_corr_types_give_same_results(self):
-        factors = [(0.0, pd.Series(data=np.linspace(0.53, 0.487, num=50),
-                                   index=self._short_plus_long_indices)),
-                   (2.5, pd.Series(data=np.linspace(1.45, 1.065, num=50),
-                                   index=self._short_plus_long_indices))]
-        two_f_model_float_corr = mf.MultiFactorModel('D', factors=factors, factor_corrs=0.0)
-        two_f_model_int_corr = mf.MultiFactorModel('D', factors=factors, factor_corrs=0)
-        two_f_model_float_array_corr = mf.MultiFactorModel('D', factors=factors, factor_corrs=np.array([[1.0, 0.0],
-                                                                                                        [0.0, 1.0]]))
-        two_f_model_int_array_corr = mf.MultiFactorModel('D', factors=factors, factor_corrs=np.array([[1, 0],
-                                                                                                      [0, 1]]))
-
-        two_f_model_float_corr_covar = two_f_model_float_corr.integrated_covar(date(2020, 8, 5),
-                                                                               date(2020, 8, 30), '2020-09-01',
-                                                                               '2020-09-20')
-        two_f_model_float_array_corr_covar = two_f_model_float_array_corr.integrated_covar(date(2020, 8, 5),
-                                                                                           date(2020, 8, 30),
-                                                                                           '2020-09-01', '2020-09-20')
-        two_f_model_int_corr_covar = two_f_model_int_corr.integrated_covar(date(2020, 8, 5),
-                                                                           date(2020, 8, 30), '2020-09-01',
-                                                                           '2020-09-20')
-        two_f_model_int_array_corr_covar = two_f_model_int_array_corr.integrated_covar(date(2020, 8, 5),
-                                                                                       date(2020, 8, 30), '2020-09-01',
-                                                                                       '2020-09-20')
-        self.assertEqual(two_f_model_float_corr_covar, two_f_model_float_array_corr_covar)
-        self.assertEqual(two_f_model_float_corr_covar, two_f_model_int_corr_covar)
-        self.assertEqual(two_f_model_float_corr_covar, two_f_model_int_array_corr_covar)
-        # TODO test MultiFactorModel.for_3_factor_seasonal
 
 
 class TestMultiFactorValue(unittest.TestCase):
