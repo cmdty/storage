@@ -27,21 +27,22 @@ import pandas as pd
 from cmdty_storage import time_func as tf
 import math
 from cmdty_storage import utils
+from cmdty_storage import _multi_factor_common as mfc
 
 
 # TODO convert to common key types for vol curve and fwd contracts
 class MultiFactorModel:
     _corr_tolerance = 1E-10  # TODO more scientific way of finding this.
     _factors: tp.List[tp.Tuple[float, utils.CurveType]]
-    _factor_corrs: utils.FactorCorrsType
+    _factor_corrs: mfc.FactorCorrsType
     _time_func: utils.TimeFunctionType
 
     def __init__(self,
                  freq: str,
                  factors: tp.Collection[tp.Tuple[float, utils.CurveType]],
-                 factor_corrs: utils.FactorCorrsType = None,
+                 factor_corrs: mfc.FactorCorrsType = None,
                  time_func: tp.Optional[utils.TimeFunctionType] = None):
-        self._factor_corrs = utils.validate_multi_factor_params(factors, factor_corrs)
+        self._factor_corrs = mfc.validate_multi_factor_params(factors, factor_corrs)
         self._factors = list(factors)
         self._time_func = tf.act_365 if time_func is None else time_func
 
@@ -144,7 +145,7 @@ def _create_3_factor_season_params(
         long_term_vol: float,
         seasonal_vol: float,
         start: utils.ForwardPointType,
-        end: utils.ForwardPointType) -> tp.Tuple[tp.Iterable[tp.Tuple[float, utils.CurveType]], np.ndarray]:
+        end: utils.ForwardPointType) -> tp.Tuple[tp.Collection[tp.Tuple[float, utils.CurveType]], np.ndarray]:
     factor_corrs = np.array([
         [1.0, 0.0, 0.0],
         [0.0, 1.0, 0.0],

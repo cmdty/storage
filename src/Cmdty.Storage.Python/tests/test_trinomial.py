@@ -197,3 +197,7 @@ class TestIntrinsicValue(unittest.TestCase):
         pcnt_error = (withdraw_delta - expected_withdraw_delta) / expected_withdraw_delta
         self.assertAlmostEqual(pcnt_error, 0.0, 3)
         self.assertTrue(isinstance(trinomial_deltas, list))
+
+
+if __name__ == '__main__':
+    unittest.main()

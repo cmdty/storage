@@ -23,7 +23,6 @@
 
 import pandas as pd
 import numpy as np
-from datetime import datetime
 import ctypes
 import clr
 import System as dotnet
@@ -46,8 +45,6 @@ from datetime import date, datetime
 import dateutil
 import typing as tp
 import re
-
-FactorCorrsType = tp.Optional[tp.Union[float, np.ndarray]]
 
 
 def from_datetime_like(datetime_like: tp.Union[datetime, date, str, pd.Period], time_period_type):
@@ -328,41 +325,3 @@ def create_net_log_adapter(logger, net_logger_type):
     is_enabled = dotnet.Func[dotnet.Int32, dotnet.Boolean](lambda level: logger.isEnabledFor(level))
     py_log = dotnet.Action[dotnet.Int32, dotnet.String](log)
     return net_cs.PythonHelpers.PythonLoggerAdapter[net_logger_type](is_enabled, py_log)
-
-
-def validate_multi_factor_params(  # TODO unit test validation fails
-        factors: tp.Collection[tp.Tuple[float, CurveType]],
-        factor_corrs: FactorCorrsType) -> np.ndarray:
-    factors_len = len(factors)
-    if factors_len == 0:
-        raise ValueError("factors cannot be empty.")
-    if factors_len == 1 and factor_corrs is None:
-        factor_corrs = np.array([[1.0]])
-    if factors_len == 2 and (isinstance(factor_corrs, float) or isinstance(factor_corrs, int)):
-        factor_corrs = np.array([[1.0, float(factor_corrs)],
-                                 [float(factor_corrs), 1.0]])
-
-    if factor_corrs.ndim != 2:
-        raise ValueError("Factor correlation matrix is not 2-dimensional.")
-    corr_shape = factor_corrs.shape
-    if corr_shape[0] != corr_shape[1]:
-        raise ValueError("Factor correlation matrix is not square.")
-    if factor_corrs.dtype != np.float64:
-        factor_corrs = factor_corrs.astype(np.float64)
-    for (i, j), corr in np.ndenumerate(factor_corrs):
-        if i == j:
-            if not np.isclose([corr], [1.0]):
-                raise ValueError("Factor correlation on diagonal position ({i}, {j}) value of {corr} not valid as not "
-                                 "equal to 1.".format(i=i, j=j, corr=corr))
-        else:
-            if not -1 <= corr <= 1:
-                raise ValueError("Factor correlation in position ({i}, {j}) value of {corr} not valid as not in the "
-                                 "interval [-1, 1]".format(i=i, j=j, corr=corr))
-    num_factors = corr_shape[0]
-    if factors_len != num_factors:
-        raise ValueError("factors and factor_corrs are of inconsistent sizes.")
-    for idx, (mr, vol) in enumerate(factors):
-        if mr < 0.0:
-            raise ValueError("Mean reversion value of {mr} for factor at index {idx} not valid as is negative.".format(
-                mr=mr, idx=idx))
-    return factor_corrs
