@@ -200,12 +200,12 @@ def read_ratchets():
     ratchets = []
     for ratchet in enumerate_ratchets():
         if ratchet.date != '':
-            dt_item = (pd.Period(ratchet.date, freq=freq), [(ratchet.inventory, -ratchet.inject_rate,
-                                                             ratchet.withdraw_rate)])
+            dt_item = (pd.Period(ratchet.date, freq=freq), [(ratchet.inventory, -ratchet.withdraw_rate,
+                                                             ratchet.inject_rate)])
             ratchets.append(dt_item)
         else:
-            dt_item[1].append((ratchet.inventory, -ratchet.inject_rate,
-                               ratchet.withdraw_rate))
+            dt_item[1].append((ratchet.inventory, -ratchet.withdraw_rate,
+                               ratchet.inject_rate))
     return ratchets
 
 
