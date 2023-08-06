@@ -183,6 +183,9 @@ namespace Cmdty.Storage
                 }
                 else
                 {
+                    // TODO option to use SVD rather than QR for regression. Will be slower, but will function with design matrix collinearity.
+                    // TODO normalise regressors for better stability
+                    // TODO perform regression by direct call to Intel MKL dgels/dgelss, 
                     PopulateDesignMatrix(designMatrix, period, regressionSpotSims, basisFunctionList);
                     stopwatches.PseudoInverse.Start();
                     QR<double> designMatrixQr = designMatrix.QR(QRMethod.Thin);
