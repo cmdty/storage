@@ -20,6 +20,7 @@ Python and Excel.
         * [Storage with Time and Inventory Varying Inject/Withdraw Rates](#storage-with-time-and-inventory-varying-injectwithdraw-rates)
     * [Storage Optimisation Using LSMC](#storage-optimisation-using-lsmc)
     * [Inspecting Valuation Results](#inspecting-valuation-results)
+    * [Ancillary Python Classes for Model Covariance and Spot Simulation](#ancillary-python-classes-for-model-covariance-and-spot-simulation)
     * [Example Python GUI](#example-python-gui)
     * [Workaround for Crashing Python Interpreter](#workaround-for-crashing-python-interpreter)
     * [Python Version Compatibility](#python-version-compatibility)
@@ -265,7 +266,7 @@ ax_triggers.legend(['Inject Trigger Price', 'Withdraw Trigger', 'Forward Curve']
 ### Ancillary Python Classes for Model Covariance and Spot Simulation
 The following (currently undocumented) Python classes provide helper functionality 
 around the multi-factor model:
-* [MultiFactorModel](./src/Cmdty.Storage.Python/cmdty_storage/multi_factor_diffusion_model.py) calculates forward covariances, given multi-factor parameters. This
+* [MultiFactorModel](./src/Cmdty.Storage.Python/cmdty_storage/multi_factor_diffusion_model.py) calculates forward covariances given multi-factor parameters. This
 can be used to understand the dynamics of the model for various purposes, including calibration.
 * [MultiFactorSpotSim](./src/Cmdty.Storage.Python/cmdty_storage/multi_factor_spot_sim.py) simulations
 the spot prices using the multi-factor model. This can be used to build other Monte Carlo models.
