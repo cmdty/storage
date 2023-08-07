@@ -262,6 +262,15 @@ ax_triggers.legend(['Inject Trigger Price', 'Withdraw Trigger', 'Forward Curve']
 ```
 ![Trigger Prices Chart](./assets/trigger_prices_chart.png)
 
+### Ancillary Python Classes for Model Covariance and Spot Simulation
+The following (currently undocumented) Python classes provide helper functionality 
+around the multi-factor model:
+* [MultiFactorModel](./src/Cmdty.Storage.Python/cmdty_storage/multi_factor_diffusion_model.py) calculates forward covariances, given multi-factor parameters. This
+can be used to understand the dynamics of the model for various purposes, including calibration.
+* [MultiFactorSpotSim](./src/Cmdty.Storage.Python/cmdty_storage/multi_factor_spot_sim.py) simulations
+the spot prices using the multi-factor model. This can be used to build other Monte Carlo models.
+
+
 ### Example Python GUI
 An example GUI notebook created using Jupyter Widgets can be found 
 [here](./samples/python/multi_factor_gui.ipynb).
