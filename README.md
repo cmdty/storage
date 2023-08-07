@@ -45,6 +45,7 @@ Python and Excel.
 * [Debugging C# Code From a Jupyter Notebook](#debugging-c-code-from-a-jupyter-notebook)
     * [Debugging a Released PyPI Package](#debugging-a-released-pypi-package)
     * [Debugging Code With Custom Modifications](#debugging-code-with-custom-modifications)
+* [Get in Touch and/or Give a Star](#get-in-touch-andor-give-a-star)
 * [License](#license)
 
 ## Overview
@@ -627,6 +628,12 @@ The process of debugging the C# code with custom modifications is identical to t
 above, except that a [pip local project install](https://pip.pypa.io/en/stable/topics/local-project-installs/) is required. This should be done in the Anaconda Prompt using the
 path of the directory src\Cmdty.Storage.Python\ within the cloned cmdty-storage repo as the path in
 the pip install command.
+
+## Get in Touch and/or Give a Star
+It's always motivating to hear how the model is being used, especially by practitioners in the 
+energy trading sector. So don't hesitate to [get in touch](mailto:jake@cmdty.co.uk?subject=Cmdty%20Storage%20Model) 
+to discuss storage modelling or suggest future
+enhancements. Also, show your appreciation by giving this repo a star!
 
 ## License
 
