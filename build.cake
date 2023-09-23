@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 
-var target = Argument<string>("Target", "Default");
+var target = Argument<string>("Target", "Build");
 var configuration = Argument<string>("Configuration", "Release");
 bool publishWithoutBuild = Argument<bool>("PublishWithoutBuild", false);
 string nugetPrereleaseTextPart = Argument<string>("PrereleaseText", "alpha");
@@ -30,6 +30,7 @@ var prereleaseVersionTextMapping = new Dictionary<string, string>
 string pythonPrereleaseTextPart = prereleaseVersionTextMapping[nugetPrereleaseTextPart];
 
 msBuildSettings.WithProperty("PythonPreReleaseTextPart", pythonPrereleaseTextPart);
+//msBuildSettings.Verbosity = Cake.Common.Tools.DotNetCore.DotNetCoreVerbosity.Detailed;
 
 if (HasArgument("PrereleaseNumber"))
 {
@@ -60,9 +61,10 @@ Task("Build")
     var dotNetCoreSettings = new DotNetCoreBuildSettings()
             {
                 Configuration = configuration,
-                MSBuildSettings = msBuildSettings
+                MSBuildSettings = msBuildSettings,
+                Verbosity = Cake.Common.Tools.DotNetCore.DotNetCoreVerbosity.Normal
             };
-    string solutionName = isWindows ? "Cmdty.Storage.sln" : "Cmdty.Storage.XPlat.sln";
+    string solutionName = isWindows ? "src\\Cmdty.Storage\\Cmdty.Storage.csproj" : "Cmdty.Storage.XPlat.sln";
     DotNetCoreBuild(solutionName, dotNetCoreSettings);
 });
 
