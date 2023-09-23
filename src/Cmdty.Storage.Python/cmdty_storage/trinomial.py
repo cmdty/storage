@@ -40,7 +40,7 @@ def trinomial_value(cmdty_storage: CmdtyStorage,
                     spot_volatility: pd.Series,
                     mean_reversion: float,
                     time_step: float,
-                    interest_rates: pd.Series,
+                    interest_rates: pd.Series,  # TODO change this to function which returns discount factor, i.e. delegate DF calc to caller.
                     settlement_rule: tp.Callable[[pd.Period], date],
                     num_inventory_grid_points: int = 100,
                     numerical_tolerance: float = 1E-12) -> float:

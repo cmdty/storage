@@ -35,12 +35,16 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="cmdty_storage\multi_factor.py" />
+    <Compile Include="cmdty_storage\multi_factor_diffusion_model.py" />
+    <Compile Include="cmdty_storage\multi_factor_spot_sim.py" />
+    <Compile Include="cmdty_storage\time_func.py" />
     <Compile Include="cmdty_storage\trinomial.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="cmdty_storage\utils.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="cmdty_storage\_multi_factor_common.py" />
     <Compile Include="cmdty_storage\__init__.py">
       <SubType>Code</SubType>
     </Compile>

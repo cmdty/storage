@@ -43,7 +43,7 @@ def intrinsic_value(cmdty_storage: CmdtyStorage,
                     val_date: utils.TimePeriodSpecType,
                     inventory: Union[float, int],
                     forward_curve: pd.Series,
-                    interest_rates: pd.Series,
+                    interest_rates: pd.Series, # TODO change this to function which returns discount factor, i.e. delegate DF calc to caller.
                     settlement_rule: Callable[[pd.Period], date],
                     num_inventory_grid_points: int = 100,
                     numerical_tolerance: float = 1E-12) -> IntrinsicValuationResults:
