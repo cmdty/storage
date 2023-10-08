@@ -261,7 +261,7 @@ def as_numpy_array(net_array) -> np.ndarray:
     try:
         np_array = np.empty(dims, order='C', dtype=_MAP_NET_NP[net_type])
     except KeyError:
-        raise NotImplementedError("asNumpyArray does not yet support System type {}".format(net_type))
+        raise NotImplementedError("as_numpy_array does not yet support System type {}".format(net_type))
 
     try:  # Memmove
         source_handle = dotnet.Runtime.InteropServices.GCHandle.Alloc(
