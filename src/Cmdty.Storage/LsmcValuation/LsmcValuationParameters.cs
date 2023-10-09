@@ -54,11 +54,12 @@ namespace Cmdty.Storage
         public Action<double> OnProgressUpdate { get; }
         public bool DiscountDeltas { get; }
         public int ExtraDecisions { get; }
+        public SimulationDataReturned SimulationDataReturned { get; }
 
         private LsmcValuationParameters(T currentPeriod, double inventory, TimeSeries<T, double> forwardCurve, 
             ICmdtyStorage<T> storage, Func<T, Day> settleDateRule, Func<Day, Day, double> discountFactors, IDoubleStateSpaceGridCalc gridCalc, 
             double numericalTolerance, SimulateSpotPrice regressionSpotSims, SimulateSpotPrice valuationSpotSims, IEnumerable<BasisFunction> basisFunctions, 
-            CancellationToken cancellationToken, bool discountDeltas, int extraDecisions, Action<double> onProgressUpdate = null)
+            CancellationToken cancellationToken, bool discountDeltas, int extraDecisions, SimulationDataReturned simulationDataReturned, Action<double> onProgressUpdate = null)
         {
             CurrentPeriod = currentPeriod;
             Inventory = inventory;
@@ -75,6 +76,7 @@ namespace Cmdty.Storage
             DiscountDeltas = discountDeltas;
             ExtraDecisions = extraDecisions;
             OnProgressUpdate = onProgressUpdate;
+            SimulationDataReturned = simulationDataReturned;
         }
 
         public delegate ISpotSimResults<T> SimulateSpotPrice(T currentPeriod, T storageStart, T storageEnd, 
@@ -97,6 +99,7 @@ namespace Cmdty.Storage
             public CancellationToken CancellationToken { get; set; }
             public Action<double> OnProgressUpdate { get; set; }
             public int ExtraDecisions { get; set; }
+            public SimulationDataReturned? SimulationDataReturned { get; set; }
 
             public bool DiscountDeltas { get; set; }
             private T _currentPeriod;
@@ -131,13 +134,14 @@ namespace Cmdty.Storage
                 ThrowIfNotSet(RegressionSpotSimsGenerator, nameof(RegressionSpotSimsGenerator));
                 ThrowIfNotSet(ValuationSpotSimsGenerator, nameof(ValuationSpotSimsGenerator));
                 ThrowIfNotSet(BasisFunctions, nameof(BasisFunctions));
+                ThrowIfNotSet(SimulationDataReturned, nameof(SimulationDataReturned));
                 if (ExtraDecisions < 0)
                     throw new InvalidOperationException(nameof(ExtraDecisions) + " must be non-negative.");
 
                 // ReSharper disable once PossibleInvalidOperationException
                 return new LsmcValuationParameters<T>(CurrentPeriod, Inventory.Value, ForwardCurve, Storage, SettleDateRule, 
                     DiscountFactors, GridCalc, NumericalTolerance, RegressionSpotSimsGenerator, ValuationSpotSimsGenerator, 
-                    BasisFunctions, CancellationToken, DiscountDeltas, ExtraDecisions, OnProgressUpdate);
+                    BasisFunctions, CancellationToken, DiscountDeltas, ExtraDecisions, SimulationDataReturned.Value, OnProgressUpdate);
             }
 
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local

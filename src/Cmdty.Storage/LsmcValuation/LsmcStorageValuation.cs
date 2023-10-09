@@ -351,21 +351,27 @@ namespace Cmdty.Storage
             stopwatches.ValuationPriceSimulation.Stop();
             _logger?.LogInformation("Valuation spot price simulation complete.");
 
+            (bool returnSimSpotPriceForRegress, bool returnSimSpotPriceForValuation, bool returnSimFactorsForRegression, bool returnSimFactorsForValuation, 
+                    bool returnSimInventory, bool returnSimInjectWithdrawVolume, bool returnSimCmdtyConsumed,
+                    bool returnSimInventoryLoss, bool returnSimNetVolume, bool returnSimPv) = ParseSimulationDataReturned(lsmcParams.SimulationDataReturned);
+
             TimeSeries<T, Panel<int, double>> regressCoeffs = regressCoeffsBuilder.Build();
-            var inventoryBySim = new Panel<T, double>(periodsForResultsTimeSeries, numSims);
-            var injectWithdrawVolumeBySim = new Panel<T, double>(periodsForResultsTimeSeries, numSims);
-            var cmdtyConsumedBySim = new Panel<T, double>(periodsForResultsTimeSeries, numSims);
-            var inventoryLossBySim = new Panel<T, double>(periodsForResultsTimeSeries, numSims);
-            var netVolumeBySim = new Panel<T, double>(periodsForResultsTimeSeries, numSims);
-            var pvByPeriodAndSim = new Panel<T, double>(periodsForResultsTimeSeries, numSims);
+            var inventoryBySim = returnSimInventory ? new Panel<T, double>(periodsForResultsTimeSeries, numSims) : Panel<T, double>.CreateEmpty();
+            var injectWithdrawVolumeBySim = returnSimInjectWithdrawVolume ? new Panel<T, double>(periodsForResultsTimeSeries, numSims) : Panel<T, double>.CreateEmpty();
+            var cmdtyConsumedBySim = returnSimCmdtyConsumed ? new Panel<T, double>(periodsForResultsTimeSeries, numSims) : Panel<T, double>.CreateEmpty();
+            var inventoryLossBySim = returnSimInventoryLoss ? new Panel<T, double>(periodsForResultsTimeSeries, numSims) : Panel<T, double>.CreateEmpty();
+            var netVolumeBySim = returnSimNetVolume ? new Panel<T, double>(periodsForResultsTimeSeries, numSims) : Panel<T, double>.CreateEmpty();
+            var pvByPeriodAndSim = returnSimPv ? new Panel<T, double>(periodsForResultsTimeSeries, numSims) : Panel<T, double>.CreateEmpty();
             var storageProfiles = new StorageProfile[periodsForResultsTimeSeries.Length];
             var pvBySim = new double[numSims];
 
             var deltas = new double[periodsForResultsTimeSeries.Length];
 
-            var startingInventories = inventoryBySim[0];
-            for (int i = 0; i < numSims; i++)
-                startingInventories[i] = lsmcParams.Inventory;
+            Span<double> thisPeriodInventories = returnSimInventory ? inventoryBySim[0] : new double[numSims];
+
+            //Span<double> startingInventories = inventoryBySim[0];
+            for (int i = 0; i < thisPeriodInventories.Length; i++)
+                thisPeriodInventories[i] = lsmcParams.Inventory;
 
             // Trigger price variables
             int numTriggerPriceVolumes = 10; // TODO move to parameters?
@@ -421,11 +427,11 @@ namespace Cmdty.Storage
                 
                 (double nextStepInventorySpaceMin, double nextStepInventorySpaceMax) = inventorySpace[period.Offset(1)];
                 Span<double> thisPeriodInventories = inventoryBySim[periodIndex];
-                Span<double> thisPeriodInjectWithdrawVolumes = injectWithdrawVolumeBySim[periodIndex];
-                Span<double> thisPeriodCmdtyConsumed = cmdtyConsumedBySim[periodIndex];
-                Span<double> thisPeriodInventoryLoss = inventoryLossBySim[periodIndex];
-                Span<double> thisPeriodNetVolume = netVolumeBySim[periodIndex];
-                Span<double> thisPeriodPv = pvByPeriodAndSim[periodIndex];
+                Span<double> thisPeriodInjectWithdrawVolumes = returnSimInjectWithdrawVolume ? injectWithdrawVolumeBySim[periodIndex] : Span<double>.Empty;
+                Span<double> thisPeriodCmdtyConsumed = returnSimCmdtyConsumed ? cmdtyConsumedBySim[periodIndex] : Span<double>.Empty;
+                Span<double> thisPeriodInventoryLoss = returnSimInventoryLoss ? inventoryLossBySim[periodIndex] : Span<double>.Empty;
+                Span<double> thisPeriodNetVolume = returnSimNetVolume ? netVolumeBySim[periodIndex] : Span<double>.Empty;
+                Span<double> thisPeriodPv = returnSimPv ? pvByPeriodAndSim[periodIndex] : Span<double>.Empty;
 
                 for (int simIndex = 0; simIndex < numSims; simIndex++)
                 {
@@ -474,12 +480,17 @@ namespace Cmdty.Storage
 
                     sumSpotPriceTimesVolume += -(optimalDecisionVolume + optimalCmdtyUsedForInjectWithdrawVolume) * simulatedSpotPrice;
 
-                    thisPeriodInjectWithdrawVolumes[simIndex] = optimalDecisionVolume;
-                    thisPeriodCmdtyConsumed[simIndex] = optimalCmdtyUsedForInjectWithdrawVolume;
-                    thisPeriodInventoryLoss[simIndex] = inventoryLoss;
-                    thisPeriodNetVolume[simIndex] = -optimalDecisionVolume - optimalCmdtyUsedForInjectWithdrawVolume;
+                    if (returnSimInjectWithdrawVolume)
+                        thisPeriodInjectWithdrawVolumes[simIndex] = optimalDecisionVolume;
+                    if (returnSimCmdtyConsumed)
+                        thisPeriodCmdtyConsumed[simIndex] = optimalCmdtyUsedForInjectWithdrawVolume;
+                    if (returnSimInventoryLoss)
+                        thisPeriodInventoryLoss[simIndex] = inventoryLoss;
+                    if (returnSimNetVolume)
+                        thisPeriodNetVolume[simIndex] = -optimalDecisionVolume - optimalCmdtyUsedForInjectWithdrawVolume;
                     double optimalImmediatePv = immediatePv[indexOfOptimalDecision];
-                    thisPeriodPv[simIndex] = optimalImmediatePv;
+                    if (returnSimPv)
+                        thisPeriodPv[simIndex] = optimalImmediatePv;
                     pvBySim[simIndex] += optimalImmediatePv;
                 }
 
@@ -605,12 +616,14 @@ namespace Cmdty.Storage
 
             // TODO make the returning of factors and spot prices optional so client can save memory
 
-            Panel<T, double> regressionSpotPricePanel = ExtractSpotSims(regressionSpotSims);
-            Panel<T, double> valuationSpotPricePanel = ExtractSpotSims(valuationSpotSims);
+            Panel<T, double> regressionSpotPricePanel = returnSimSpotPriceForRegress ? ExtractSpotSims(regressionSpotSims) : Panel<T, double>.CreateEmpty();
+            Panel<T, double> valuationSpotPricePanel = returnSimSpotPriceForValuation ? ExtractSpotSims(valuationSpotSims) : Panel<T, double>.CreateEmpty();
 
             // TODO in future refactor ISpotSimResults should make use of Panel type, making this code not necessary
-            Panel<T, double>[] regressionMarkovFactors = ExtractMarkovFactorsToPanel(regressionSpotSims);
-            Panel<T, double>[] valuationMarkovFactors = ExtractMarkovFactorsToPanel(valuationSpotSims);
+            Panel<T, double>[] regressionMarkovFactors = returnSimFactorsForRegression ? ExtractMarkovFactorsToPanel(regressionSpotSims) 
+                : Enumerable.Range(0, regressionSpotSims.NumFactors).Select(i => Panel<T, double>.CreateEmpty()).ToArray();
+            Panel<T, double>[] valuationMarkovFactors = returnSimFactorsForValuation ? ExtractMarkovFactorsToPanel(valuationSpotSims)
+                : Enumerable.Range(0, valuationSpotSims.NumFactors).Select(i => Panel<T, double>.CreateEmpty()).ToArray();
             lsmcParams.OnProgressUpdate?.Invoke(1.0); // Progress with approximately 1.0 should have occurred already, but might have been a bit off because of floating-point error.
 
             stopwatches.All.Stop();
@@ -624,6 +637,18 @@ namespace Cmdty.Storage
             return new LsmcStorageValuationResults<T>(forwardNpv, deltasSeries, storageProfileSeries, regressionSpotPricePanel,
                 valuationSpotPricePanel, inventoryBySim, injectWithdrawVolumeBySim, cmdtyConsumedBySim, inventoryLossBySim, netVolumeBySim, 
                 triggerPrices, triggerPriceVolumeProfiles, pvByPeriodAndSim, pvBySim, regressionMarkovFactors, valuationMarkovFactors);
+        }
+
+        private static (bool ReturnSimSpotPriceForRegress, bool ReturnSimSpotPriceForValuation, bool ReturnSimFactorsForRegression, bool
+            ReturnSimFactorsForValuation, bool ReturnSimInventory, bool ReturnSimInjectWithdrawVolume, bool ReturnSimCmdtyConsumed,
+            bool ReturnSimInventoryLoss, bool ReturnSimNetVolume, bool ReturnSimPv)
+            ParseSimulationDataReturned(SimulationDataReturned simulationDataReturned)
+        {
+            return (simulationDataReturned.HasFlag(SimulationDataReturned.SpotPricesForRegression), simulationDataReturned.HasFlag(SimulationDataReturned.SpotPricesForValuation), 
+                simulationDataReturned.HasFlag(SimulationDataReturned.FactorsForRegression), simulationDataReturned.HasFlag(SimulationDataReturned.FactorsForValuation),
+                simulationDataReturned.HasFlag(SimulationDataReturned.Inventory), simulationDataReturned.HasFlag(SimulationDataReturned.InjectWithdrawVolume),
+                simulationDataReturned.HasFlag(SimulationDataReturned.CmdtyConsumed), simulationDataReturned.HasFlag(SimulationDataReturned.InventoryLoss),
+                simulationDataReturned.HasFlag(SimulationDataReturned.NetVolume), simulationDataReturned.HasFlag(SimulationDataReturned.Pv));
         }
 
         private Panel<T, double> ExtractSpotSims<T>(ISpotSimResults<T> spotSimResults)
