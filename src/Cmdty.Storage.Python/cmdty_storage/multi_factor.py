@@ -39,8 +39,26 @@ from cmdty_storage import utils, CmdtyStorage
 import cmdty_storage.intrinsic as cs_intrinsic
 from cmdty_storage import _multi_factor_common as mfc
 import logging
+from enum import Flag, auto
 
 logger: logging.Logger = logging.getLogger('cmdty.storage.multi-factor')
+
+
+class SimulationDataReturned(Flag):
+    NONE = auto()
+    SPOT_REGRESS = auto()
+    SPOT_VALUATION = auto()
+    SPOT_ALL = SPOT_REGRESS | SPOT_VALUATION
+    FACTORS_REGRESS = auto()
+    FACTORS_VALUATION = auto()
+    FACTORS_ALL = FACTORS_REGRESS | FACTORS_VALUATION
+    INVENTORY = auto()
+    INJECT_WITHDRAW_VOLUME = auto()
+    CMDTY_CONSUMED = auto()
+    INVENTORY_LOSS = auto()
+    NET_VOLUME = auto()
+    PV = auto()
+    ALL = SPOT_ALL | FACTORS_ALL | INVENTORY | INJECT_WITHDRAW_VOLUME | CMDTY_CONSUMED | INVENTORY_LOSS | NET_VOLUME | PV
 
 
 class TriggerPricePoint(tp.NamedTuple):
@@ -96,6 +114,7 @@ def three_factor_seasonal_value(cmdty_storage: CmdtyStorage,
                                 num_inventory_grid_points: int = 100,
                                 numerical_tolerance: float = 1E-12,
                                 on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
+                                sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL # TODO on next major version increment change this to default to NONE
                                 ) -> MultiFactorValuationResults:
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
     net_current_period = utils.from_datetime_like(val_date, time_period_type)
@@ -112,7 +131,7 @@ def three_factor_seasonal_value(cmdty_storage: CmdtyStorage,
     return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_multi_factor_sim,
                                   num_inventory_grid_points, numerical_tolerance, on_progress_update,
                                   basis_func_transformed, settlement_rule, time_period_type,
-                                  val_date, discount_deltas, extra_decisions)
+                                  val_date, discount_deltas, extra_decisions, sim_data_returned)
 
 
 def multi_factor_value(cmdty_storage: CmdtyStorage,
@@ -132,6 +151,7 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
                        num_inventory_grid_points: int = 100,
                        numerical_tolerance: float = 1E-12,
                        on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
+                       sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL # TODO on next major version increment change this to default to NONE
                        ) -> MultiFactorValuationResults:
     factor_corrs = mfc.validate_multi_factor_params(factors, factor_corrs)
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
@@ -144,7 +164,7 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
     return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_multi_factor_sim,
                                   num_inventory_grid_points, numerical_tolerance, on_progress_update,
                                   basis_funcs, settlement_rule, time_period_type,
-                                  val_date, discount_deltas, extra_decisions)
+                                  val_date, discount_deltas, extra_decisions, sim_data_returned)
 
 
 def value_from_sims(cmdty_storage: CmdtyStorage,
@@ -163,6 +183,7 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
                     num_inventory_grid_points: int = 100,
                     numerical_tolerance: float = 1E-12,
                     on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
+                    sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL # TODO on next major version increment change this to default to NONE
                     ) -> MultiFactorValuationResults:
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
     net_sim_results_regress = _create_net_spot_sim_results(sim_spot_regress, sim_factors_regress, time_period_type)
@@ -174,7 +195,7 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
     return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_sim_results,
                                   num_inventory_grid_points, numerical_tolerance, on_progress_update,
                                   basis_funcs, settlement_rule, time_period_type,
-                                  val_date, discount_deltas, extra_decisions)
+                                  val_date, discount_deltas, extra_decisions, sim_data_returned)
 
 
 def _create_net_spot_sim_results(sim_spot, sim_factors, time_period_type):
@@ -189,7 +210,7 @@ def _create_net_spot_sim_results(sim_spot, sim_factors, time_period_type):
 def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_sim_to_val_params,
                            num_inventory_grid_points, numerical_tolerance, on_progress_update,
                            basis_funcs, settlement_rule, time_period_type,
-                           val_date, discount_deltas, extra_decisions):
+                           val_date, discount_deltas, extra_decisions, sim_data_returned):
     if cmdty_storage.freq != fwd_curve.index.freqstr:
         raise ValueError("cmdty_storage and forward_curve have different frequencies.")
     # Convert inputs to .NET types
@@ -215,6 +236,7 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     logger.info('Calculation of intrinsic value complete.')
 
     # Multi-factor calc
+    # TODO: pass sim_data_returned through to .NET API do avoid this simulation data even getting allocated
     logger.info('Calculating LSMC value.')
     net_logger = utils.create_net_log_adapter(logger, net_cs.LsmcStorageValuation)
     lsmc = net_cs.LsmcStorageValuation(net_logger)
@@ -243,19 +265,28 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     expected_profile = cs_intrinsic.profile_to_data_frame(cmdty_storage.freq, net_val_results.ExpectedStorageProfile)
     trigger_prices = _trigger_prices_to_data_frame(cmdty_storage.freq, net_val_results.TriggerPrices)
     trigger_profiles = _trigger_profiles_to_data_frame(cmdty_storage.freq, net_val_results.TriggerPriceVolumeProfiles)
-    sim_spot_regress = utils.net_panel_to_data_frame(net_val_results.RegressionSpotPriceSim, cmdty_storage.freq)
-    sim_spot_valuation = utils.net_panel_to_data_frame(net_val_results.ValuationSpotPriceSim, cmdty_storage.freq)
-
-    sim_inventory = utils.net_panel_to_data_frame(net_val_results.InventoryBySim, cmdty_storage.freq)
-    sim_inject_withdraw = utils.net_panel_to_data_frame(net_val_results.InjectWithdrawVolumeBySim, cmdty_storage.freq)
-    sim_cmdty_consumed = utils.net_panel_to_data_frame(net_val_results.CmdtyConsumedBySim, cmdty_storage.freq)
-    sim_inventory_loss = utils.net_panel_to_data_frame(net_val_results.InventoryLossBySim, cmdty_storage.freq)
-    sim_net_volume = utils.net_panel_to_data_frame(net_val_results.NetVolumeBySim, cmdty_storage.freq)
-    sim_pv = utils.net_panel_to_data_frame(net_val_results.PvByPeriodAndSim, cmdty_storage.freq)
+    sim_spot_regress = utils.net_panel_to_data_frame(net_val_results.RegressionSpotPriceSim, cmdty_storage.freq) \
+        if SimulationDataReturned.SPOT_REGRESS in sim_data_returned else pd.DataFrame()
+    sim_spot_valuation = utils.net_panel_to_data_frame(net_val_results.ValuationSpotPriceSim, cmdty_storage.freq) \
+        if SimulationDataReturned.SPOT_VALUATION in sim_data_returned else pd.DataFrame()
+    sim_inventory = utils.net_panel_to_data_frame(net_val_results.InventoryBySim, cmdty_storage.freq) \
+        if SimulationDataReturned.INVENTORY in sim_data_returned else pd.DataFrame()
+    sim_inject_withdraw = utils.net_panel_to_data_frame(net_val_results.InjectWithdrawVolumeBySim, cmdty_storage.freq) \
+        if SimulationDataReturned.INJECT_WITHDRAW_VOLUME in sim_data_returned else pd.DataFrame()
+    sim_cmdty_consumed = utils.net_panel_to_data_frame(net_val_results.CmdtyConsumedBySim, cmdty_storage.freq) \
+        if SimulationDataReturned.CMDTY_CONSUMED in sim_data_returned else pd.DataFrame()
+    sim_inventory_loss = utils.net_panel_to_data_frame(net_val_results.InventoryLossBySim, cmdty_storage.freq) \
+        if SimulationDataReturned.INVENTORY_LOSS in sim_data_returned else pd.DataFrame()
+    sim_net_volume = utils.net_panel_to_data_frame(net_val_results.NetVolumeBySim, cmdty_storage.freq) \
+        if SimulationDataReturned.NET_VOLUME in sim_data_returned else pd.DataFrame()
+    sim_pv = utils.net_panel_to_data_frame(net_val_results.PvByPeriodAndSim, cmdty_storage.freq) \
+        if SimulationDataReturned.PV in sim_data_returned else pd.DataFrame()
     sim_factors_regress = _net_panel_enumerable_to_data_frame_tuple(net_val_results.RegressionMarkovFactors,
-                                                                    cmdty_storage.freq)
+                                                                    cmdty_storage.freq) \
+        if SimulationDataReturned.FACTORS_REGRESS in sim_data_returned else (pd.DataFrame(), ) * net_val_results.RegressionMarkovFactors.Count
     sim_factors_valuation = _net_panel_enumerable_to_data_frame_tuple(net_val_results.ValuationMarkovFactors,
-                                                                      cmdty_storage.freq)
+                                                                      cmdty_storage.freq) \
+        if SimulationDataReturned.FACTORS_VALUATION in sim_data_returned else (pd.DataFrame(), ) * net_val_results.ValuationMarkovFactors.Count
 
     return MultiFactorValuationResults(net_val_results.Npv, deltas, expected_profile,
                                        intrinsic_result.npv, intrinsic_result.profile, sim_spot_regress,
