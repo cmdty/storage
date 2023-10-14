@@ -25,23 +25,22 @@
 
 namespace Cmdty.Storage
 {
-    public sealed class StorageProfile
+    public sealed class StorageProfile // TODO replace by record type
     {
         public double Inventory { get; }
         public double InjectWithdrawVolume { get; }
         public double CmdtyConsumed { get; }
         public double InventoryLoss { get; }
-        public double NetVolume { get; }
+        public double NetVolume => -InjectWithdrawVolume - CmdtyConsumed;
         public double PeriodPv { get; set; }
 
         public StorageProfile(double inventory, double injectWithdrawVolume, double cmdtyConsumed, 
-                                double inventoryLoss, double netVolume, double periodPv)
+                                double inventoryLoss, double periodPv)
         {
             Inventory = inventory;
             InjectWithdrawVolume = injectWithdrawVolume;
             CmdtyConsumed = cmdtyConsumed;
             InventoryLoss = inventoryLoss;
-            NetVolume = netVolume;
             PeriodPv = periodPv;
         }
 

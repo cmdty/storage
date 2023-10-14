@@ -230,7 +230,7 @@ namespace Cmdty.Storage
                 if (periodLoop.Equals(storage.EndPeriod))
                 {
                     double endPeriodNpv = storage.MustBeEmptyAtEnd ? 0.0 : storage.TerminalStorageNpv(spotPrice, inventoryLoop);
-                    storageProfile = new StorageProfile(inventoryLoop, 0.0, 0.0, 0.0, 0.0, endPeriodNpv);
+                    storageProfile = new StorageProfile(inventoryLoop, 0.0, 0.0, 0.0, endPeriodNpv);
                 }
                 else
                 {
@@ -247,7 +247,7 @@ namespace Cmdty.Storage
                     inventoryLoop += optimalInjectWithdraw - inventoryLoss;
 
                     double netVolume = -optimalInjectWithdraw - cmdtyConsumedOnAction;
-                    storageProfile = new StorageProfile(inventoryLoop, optimalInjectWithdraw, cmdtyConsumedOnAction, inventoryLoss, netVolume, optimalPeriodPv);
+                    storageProfile = new StorageProfile(inventoryLoop, optimalInjectWithdraw, cmdtyConsumedOnAction, inventoryLoss, optimalPeriodPv);
 
                 }
                 storageProfiles[i] = storageProfile;

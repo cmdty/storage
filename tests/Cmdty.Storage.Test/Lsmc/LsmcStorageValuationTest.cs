@@ -723,67 +723,9 @@ namespace Cmdty.Storage.Test
                 { new Month(2020, 3),  new Day(2020, 4, 22)}
             }.Build();
 
-            var injectWithdrawConstraints = new List<InjectWithdrawRangeByInventoryAndPeriod<Day>>
-            {
-                (period: storageStart, injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
-                {
-                    (inventory: minInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0)),
-                    (inventory: maxInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0))
-                }),
-                (period: forcedInjectionStart, injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
-                {
-                    (inventory: minInventory, (minInjectWithdrawRate: forcedInjectionRate, maxInjectWithdrawRate: forcedInjectionRate)),
-                    (inventory: maxInventory, (minInjectWithdrawRate: forcedInjectionRate, maxInjectWithdrawRate: forcedInjectionRate))
-                }),
-                (period: forcedInjectionStart.Offset(forcedInjectionNumDays), injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
-                {
-                    (inventory: minInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0)),
-                    (inventory: maxInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0))
-                }),
-                (period: forcedWithdrawalStart, injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
-                {
-                    (inventory: minInventory, (minInjectWithdrawRate: -forcedWithdrawalRate, maxInjectWithdrawRate: -forcedWithdrawalRate)),
-                    (inventory: maxInventory, (minInjectWithdrawRate: -forcedWithdrawalRate, maxInjectWithdrawRate: -forcedWithdrawalRate))
-                }),
-                (period: forcedWithdrawalStart.Offset(forcedWithdrawalNumDays), injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
-                {
-                    (inventory: minInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0)),
-                    (inventory: maxInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0))
-                }),
-            };
-
-            Day InjectionCostPaymentTerms(Day injectionDate) => injectionDate.Offset(10);
-            Day WithdrawalCostPaymentTerms(Day withdrawalDate) => withdrawalDate.Offset(4);
-
-            CmdtyStorage<Day> storage = CmdtyStorage<Day>.Builder
-                .WithActiveTimePeriod(storageStart, storageEnd)
-                .WithTimeAndInventoryVaryingInjectWithdrawRatesPolynomial(injectWithdrawConstraints)
-                .WithPerUnitInjectionCost(injectionPerUnitCost, InjectionCostPaymentTerms)
-                .WithFixedPercentCmdtyConsumedOnInject(injectionCmdtyConsumed)
-                .WithPerUnitWithdrawalCost(withdrawalPerUnitCost, WithdrawalCostPaymentTerms)
-                .WithFixedPercentCmdtyConsumedOnWithdraw(withdrawalCmdtyConsumed)
-                .WithNoCmdtyInventoryLoss()
-                .WithNoInventoryCost()
-                .WithTerminalInventoryNpv((cmdtySpotPrice, inventory) => 0.0)
-                .Build();
-
-            const int numInventorySpacePoints = 500;
-            const int numSims = 1_000;
-            const int seed = 11;
-            
-            var lsmcParams = new LsmcValuationParameters<Day>.Builder
-            {
-                CurrentPeriod = currentDate,
-                Inventory = 0.0,
-                ForwardCurve = forwardCurve,
-                Storage = storage,
-                SettleDateRule = deliveryDate => settlementDates[Month.FromDateTime(deliveryDate.Start)],
-                DiscountFactors = StorageHelper.CreateAct65ContCompDiscounter(interestRate),
-                GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(storage, numInventorySpacePoints),
-                BasisFunctions = _oneFactorBasisFunctions,
-            }
-            .SimulateWithMultiFactorModelAndMersenneTwister(MultiFactorParameters.For1Factor(meanReversion, spotVolCurve), numSims, seed)
-            .Build();
+            LsmcValuationParameters<Day> lsmcParams = BuildForcedInjectWithdrawLsmcParam(storageStart, minInventory, maxInventory, forcedInjectionStart, forcedInjectionRate, 
+                forcedInjectionNumDays, forcedWithdrawalStart, forcedWithdrawalRate, forcedWithdrawalNumDays, storageEnd, injectionPerUnitCost, injectionCmdtyConsumed, 
+                withdrawalPerUnitCost, withdrawalCmdtyConsumed, currentDate, forwardCurve, settlementDates, interestRate, meanReversion, spotVolCurve);
 
             LsmcStorageValuationResults<Day> valuationResults = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
 
@@ -836,11 +778,140 @@ namespace Cmdty.Storage.Test
             Assert.InRange(percentError, -percentageTol, percentageTol);
         }
 
+        private LsmcValuationParameters<Day> BuildForcedInjectWithdrawLsmcParam(Day storageStart, double minInventory, double maxInventory,
+            Day forcedInjectionStart, double forcedInjectionRate, int forcedInjectionNumDays, Day forcedWithdrawalStart, double forcedWithdrawalRate,
+            int forcedWithdrawalNumDays, Day storageEnd, double injectionPerUnitCost, double injectionCmdtyConsumed, double withdrawalPerUnitCost,
+            double withdrawalCmdtyConsumed, Day currentDate, DoubleTimeSeries<Day> forwardCurve, TimeSeries<Month, Day> settlementDates, double interestRate,
+            double meanReversion, DoubleTimeSeries<Day> spotVolCurve)
+        {
+            var injectWithdrawConstraints = new List<InjectWithdrawRangeByInventoryAndPeriod<Day>>
+            {
+                (period: storageStart, injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
+                {
+                    (inventory: minInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0)),
+                    (inventory: maxInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0))
+                }),
+                (period: forcedInjectionStart, injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
+                {
+                    (inventory: minInventory, (minInjectWithdrawRate: forcedInjectionRate, maxInjectWithdrawRate: forcedInjectionRate)),
+                    (inventory: maxInventory, (minInjectWithdrawRate: forcedInjectionRate, maxInjectWithdrawRate: forcedInjectionRate))
+                }),
+                (period: forcedInjectionStart.Offset(forcedInjectionNumDays), injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
+                {
+                    (inventory: minInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0)),
+                    (inventory: maxInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0))
+                }),
+                (period: forcedWithdrawalStart, injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
+                {
+                    (inventory: minInventory, (minInjectWithdrawRate: -forcedWithdrawalRate, maxInjectWithdrawRate: -forcedWithdrawalRate)),
+                    (inventory: maxInventory, (minInjectWithdrawRate: -forcedWithdrawalRate, maxInjectWithdrawRate: -forcedWithdrawalRate))
+                }),
+                (period: forcedWithdrawalStart.Offset(forcedWithdrawalNumDays), injectWithdrawRanges: new List<InjectWithdrawRangeByInventory>
+                {
+                    (inventory: minInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0)),
+                    (inventory: maxInventory, (minInjectWithdrawRate: 0.0, maxInjectWithdrawRate: 0.0))
+                }),
+            };
+
+            CmdtyStorage<Day> storage = CmdtyStorage<Day>.Builder
+                .WithActiveTimePeriod(storageStart, storageEnd)
+                .WithTimeAndInventoryVaryingInjectWithdrawRatesPolynomial(injectWithdrawConstraints)
+                .WithPerUnitInjectionCost(injectionPerUnitCost, InjectionCostPaymentTerms)
+                .WithFixedPercentCmdtyConsumedOnInject(injectionCmdtyConsumed)
+                .WithPerUnitWithdrawalCost(withdrawalPerUnitCost, WithdrawalCostPaymentTerms)
+                .WithFixedPercentCmdtyConsumedOnWithdraw(withdrawalCmdtyConsumed)
+                .WithNoCmdtyInventoryLoss()
+                .WithNoInventoryCost()
+                .WithTerminalInventoryNpv((cmdtySpotPrice, inventory) => 0.0)
+                .Build();
+
+            const int numInventorySpacePoints = 500;
+            const int numSims = 1_000;
+            const int seed = 11;
+
+            var lsmcParams = new LsmcValuationParameters<Day>.Builder
+                {
+                    CurrentPeriod = currentDate,
+                    Inventory = 0.0,
+                    ForwardCurve = forwardCurve,
+                    Storage = storage,
+                    SettleDateRule = deliveryDate => settlementDates[Month.FromDateTime(deliveryDate.Start)],
+                    DiscountFactors = StorageHelper.CreateAct65ContCompDiscounter(interestRate),
+                    GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(storage, numInventorySpacePoints),
+                    BasisFunctions = _oneFactorBasisFunctions,
+                }
+                .SimulateWithMultiFactorModelAndMersenneTwister(MultiFactorParameters.For1Factor(meanReversion, spotVolCurve), numSims, seed)
+                .Build();
+            return lsmcParams;
+        }
+
+        private Day WithdrawalCostPaymentTerms(Day withdrawalDate) => withdrawalDate.Offset(4);
+
+        private Day InjectionCostPaymentTerms(Day injectionDate) => injectionDate.Offset(10);
+
         private static double Act365ContCompoundDiscountFactor(Day currentDate, Day paymentDate, double interestRate)
         {
             return Math.Exp(-paymentDate.OffsetFrom(currentDate) / 365.0 * interestRate);
         }
 
+        [Fact]
+        [Trait("Category", "Lsmc.LikeIntrinsic")]
+        public void Calculate_StorageWithForcedInjectAndWithdraw_StorageProfileInjectWithdrawVolumeAsExpected()
+        {
+            var currentDate = new Day(2019, 8, 29);
+
+            var storageStart = new Day(2019, 12, 1);
+            var storageEnd = new Day(2020, 4, 1);
+
+            const double minInventory = 0.0;
+            const double maxInventory = 10_000.0;
+
+            const double forcedInjectionRate = 211.5;
+            const int forcedInjectionNumDays = 20;
+            var forcedInjectionStart = new Day(2019, 12, 20);
+
+            const double injectionPerUnitCost = 1.23;
+            const double injectionCmdtyConsumed = 0.01;
+
+            const double forcedWithdrawalRate = 187.54;
+            const int forcedWithdrawalNumDays = 15;
+            var forcedWithdrawalStart = new Day(2020, 2, 5);
+
+            const double withdrawalPerUnitCost = 0.98;
+            const double withdrawalCmdtyConsumed = 0.015;
+
+            (DoubleTimeSeries<Day> forwardCurve, DoubleTimeSeries<Day> spotVolCurve) = TestHelper.CreateDailyTestForwardAndSpotVolCurves(currentDate, storageEnd);
+            const double meanReversion = 16.5;
+            const double interestRate = 0.09;
+
+            TimeSeries<Month, Day> settlementDates = new TimeSeries<Month, Day>.Builder()
+            {
+                { new Month(2019, 12),  new Day(2020, 1, 20)},
+                { new Month(2020, 1),  new Day(2020, 2, 18)},
+                { new Month(2020, 2),  new Day(2020, 3, 21)},
+                { new Month(2020, 3),  new Day(2020, 4, 22)}
+            }.Build();
+
+            LsmcValuationParameters<Day> lsmcParams = BuildForcedInjectWithdrawLsmcParam(storageStart, minInventory, maxInventory, forcedInjectionStart, forcedInjectionRate,
+                forcedInjectionNumDays, forcedWithdrawalStart, forcedWithdrawalRate, forcedWithdrawalNumDays, storageEnd, injectionPerUnitCost, injectionCmdtyConsumed,
+                withdrawalPerUnitCost, withdrawalCmdtyConsumed, currentDate, forwardCurve, settlementDates, interestRate, meanReversion, spotVolCurve);
+
+            LsmcStorageValuationResults<Day> valuationResults = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
+
+            Day dateLoop = storageStart;
+            while (dateLoop < storageEnd)
+            {
+                StorageProfile storageProfile = valuationResults.ExpectedStorageProfile[dateLoop];
+                if (dateLoop >= forcedInjectionStart && dateLoop < forcedInjectionStart.Offset(forcedInjectionNumDays)) // Period of forced injection
+                    Assert.Equal(forcedInjectionRate, storageProfile.InjectWithdrawVolume, 12);
+                else if (dateLoop >= forcedWithdrawalStart && dateLoop < forcedWithdrawalStart.Offset(forcedWithdrawalNumDays)) // Period of forced withdrawal
+                    Assert.Equal(-forcedWithdrawalRate, storageProfile.InjectWithdrawVolume, 12);
+                else
+                    Assert.Equal(0.0, storageProfile.InjectWithdrawVolume);
+                dateLoop++;
+            }
+        }
+        
         [Fact]
         [Trait("Category", "Lsmc.Deltas")]
         public void Calculate_DiscountDeltasTrue_DeltasEqualUndiscountedDeltasTimeDiscountFactor()

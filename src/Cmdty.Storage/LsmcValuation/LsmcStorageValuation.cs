@@ -440,6 +440,8 @@ namespace Cmdty.Storage
                 nextPeriodInventories = returnSimInventory ? inventoryBySim[periodIndex + 1] : 
                     thisPeriodInventories == inventoryBuffer1 ? inventoryBuffer2 : inventoryBuffer1;
 
+                double sumOverSimsInjectWithdrawVolumes, sumOverSimsCmdtyConsumed, sumOverSimsInventoryLoss, sumOverSimsPv;
+                sumOverSimsInjectWithdrawVolumes = sumOverSimsCmdtyConsumed = sumOverSimsInventoryLoss = sumOverSimsPv = 0.0;
                 for (int simIndex = 0; simIndex < numSims; simIndex++)
                 {
                     double simulatedSpotPrice = simulatedPrices[simIndex];
@@ -489,21 +491,25 @@ namespace Cmdty.Storage
 
                     if (returnSimInjectWithdrawVolume)
                         thisPeriodInjectWithdrawVolumes[simIndex] = optimalDecisionVolume;
+                    sumOverSimsInjectWithdrawVolumes += optimalDecisionVolume;
                     if (returnSimCmdtyConsumed)
                         thisPeriodCmdtyConsumed[simIndex] = optimalCmdtyUsedForInjectWithdrawVolume;
+                    sumOverSimsCmdtyConsumed += optimalCmdtyUsedForInjectWithdrawVolume;
                     if (returnSimInventoryLoss)
                         thisPeriodInventoryLoss[simIndex] = inventoryLoss;
+                    sumOverSimsInventoryLoss += inventoryLoss;
                     if (returnSimNetVolume)
                         thisPeriodNetVolume[simIndex] = -optimalDecisionVolume - optimalCmdtyUsedForInjectWithdrawVolume;
                     double optimalImmediatePv = immediatePv[indexOfOptimalDecision];
                     if (returnSimPv)
                         thisPeriodPv[simIndex] = optimalImmediatePv;
+                    sumOverSimsPv += optimalImmediatePv;
                     pvBySim[simIndex] += optimalImmediatePv;
                 }
 
                 double expectedInventory = Average(thisPeriodInventories);
-                storageProfiles[periodIndex] = new StorageProfile(expectedInventory, Average(thisPeriodInjectWithdrawVolumes),
-                    Average(thisPeriodCmdtyConsumed), Average(thisPeriodInventoryLoss), Average(thisPeriodNetVolume), Average(thisPeriodPv));
+                storageProfiles[periodIndex] = new StorageProfile(expectedInventory, sumOverSimsInjectWithdrawVolumes/numSims,
+                    sumOverSimsCmdtyConsumed/numSims, sumOverSimsInventoryLoss/numSims, sumOverSimsPv/numSims);
                 double forwardPrice = lsmcParams.ForwardCurve[period];
                 double periodDelta = (sumSpotPriceTimesVolume / forwardPrice / numSims) * discountForDeltas;
                 deltas[periodIndex] = periodDelta;
@@ -616,7 +622,7 @@ namespace Cmdty.Storage
 
             double expectedFinalInventory = Average(nextPeriodInventories);
             // Profile at storage end when no decisions can happen
-            storageProfiles[storageProfiles.Length - 1] = new StorageProfile(expectedFinalInventory, 0.0, 0.0, 0.0, 0.0, endPeriodPv);
+            storageProfiles[storageProfiles.Length - 1] = new StorageProfile(expectedFinalInventory, 0.0, 0.0, 0.0, endPeriodPv);
 
             var deltasSeries = new DoubleTimeSeries<T>(periodsForResultsTimeSeries[0], deltas);
             var storageProfileSeries = new TimeSeries<T, StorageProfile>(periodsForResultsTimeSeries[0], storageProfiles);
