@@ -367,8 +367,12 @@ namespace Cmdty.Storage
 
             var deltas = new double[periodsForResultsTimeSeries.Length];
 
-            Span<double> thisPeriodInventories = returnSimInventory ? inventoryBySim[0] : new double[numSims];
-            Span<double> nextPeriodInventories = returnSimInventory ? inventoryBySim[1] : new double[numSims]; // TODO will inventoryBySim[1] every throw index out of range exception?
+            Span<double> inventoryBuffer1 = returnSimInventory ? Span<double>.Empty : new double[numSims];
+            Span<double> inventoryBuffer2 = returnSimInventory ? Span<double>.Empty : new double[numSims];
+
+
+            Span<double> thisPeriodInventories = returnSimInventory ? inventoryBySim[0] : inventoryBuffer1;
+            Span<double> nextPeriodInventories = returnSimInventory ? inventoryBySim[1] : inventoryBuffer2; // TODO will inventoryBySim[1] every throw index out of range exception?
 
             //Span<double> startingInventories = inventoryBySim[0];
             for (int i = 0; i < thisPeriodInventories.Length; i++)
@@ -433,7 +437,8 @@ namespace Cmdty.Storage
                 Span<double> thisPeriodInventoryLoss = returnSimInventoryLoss ? inventoryLossBySim[periodIndex] : Span<double>.Empty;
                 Span<double> thisPeriodNetVolume = returnSimNetVolume ? netVolumeBySim[periodIndex] : Span<double>.Empty;
                 Span<double> thisPeriodPv = returnSimPv ? pvByPeriodAndSim[periodIndex] : Span<double>.Empty;
-                nextPeriodInventories = returnSimInventory ? inventoryBySim[periodIndex + 1] : nextPeriodInventories;
+                nextPeriodInventories = returnSimInventory ? inventoryBySim[periodIndex + 1] : 
+                    thisPeriodInventories == inventoryBuffer1 ? inventoryBuffer2 : inventoryBuffer1;
 
                 for (int simIndex = 0; simIndex < numSims; simIndex++)
                 {
