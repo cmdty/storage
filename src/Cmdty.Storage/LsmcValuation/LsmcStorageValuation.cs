@@ -368,6 +368,7 @@ namespace Cmdty.Storage
             var deltas = new double[periodsForResultsTimeSeries.Length];
 
             Span<double> thisPeriodInventories = returnSimInventory ? inventoryBySim[0] : new double[numSims];
+            Span<double> nextPeriodInventories = returnSimInventory ? inventoryBySim[1] : new double[numSims]; // TODO will inventoryBySim[1] every throw index out of range exception?
 
             //Span<double> startingInventories = inventoryBySim[0];
             for (int i = 0; i < thisPeriodInventories.Length; i++)
@@ -384,8 +385,7 @@ namespace Cmdty.Storage
             for (int periodIndex = 0; periodIndex < periodsForResultsTimeSeries.Length - 1; periodIndex++) // TODO more clearly handle this -1
             {
                 T period = periodsForResultsTimeSeries[periodIndex];
-                Span<double> nextPeriodInventories = inventoryBySim[periodIndex + 1];
-
+                
                 double[] nextPeriodInventorySpaceGrid = inventorySpaceGrids[periodIndex + 1];
                 //Vector<double>[] regressContinuationValues = storageRegressValuesByPeriod[periodIndex + 1];
                 Vector<double>[] regressContinuationValues = new Vector<double>[nextPeriodInventorySpaceGrid.Length];
@@ -426,12 +426,14 @@ namespace Cmdty.Storage
                     simulatedPrices = valuationSpotSims.SpotPricesForPeriod(period).Span;
                 
                 (double nextStepInventorySpaceMin, double nextStepInventorySpaceMax) = inventorySpace[period.Offset(1)];
-                Span<double> thisPeriodInventories = inventoryBySim[periodIndex];
+                thisPeriodInventories = returnSimInventory ? inventoryBySim[periodIndex] 
+                                            : (periodIndex == 0 ? thisPeriodInventories : nextPeriodInventories);
                 Span<double> thisPeriodInjectWithdrawVolumes = returnSimInjectWithdrawVolume ? injectWithdrawVolumeBySim[periodIndex] : Span<double>.Empty;
                 Span<double> thisPeriodCmdtyConsumed = returnSimCmdtyConsumed ? cmdtyConsumedBySim[periodIndex] : Span<double>.Empty;
                 Span<double> thisPeriodInventoryLoss = returnSimInventoryLoss ? inventoryLossBySim[periodIndex] : Span<double>.Empty;
                 Span<double> thisPeriodNetVolume = returnSimNetVolume ? netVolumeBySim[periodIndex] : Span<double>.Empty;
                 Span<double> thisPeriodPv = returnSimPv ? pvByPeriodAndSim[periodIndex] : Span<double>.Empty;
+                nextPeriodInventories = returnSimInventory ? inventoryBySim[periodIndex + 1] : nextPeriodInventories;
 
                 for (int simIndex = 0; simIndex < numSims; simIndex++)
                 {
@@ -580,17 +582,19 @@ namespace Cmdty.Storage
             if (!lsmcParams.Storage.MustBeEmptyAtEnd)
             {
                 ReadOnlySpan<double> storageEndPeriodSpotPrices = regressionSpotSims.SpotPricesForPeriod(lsmcParams.Storage.EndPeriod).Span;
-                Span<double> storageEndInventory = inventoryBySim[lsmcParams.Storage.EndPeriod];
-                Span<double> storageEndPv = pvByPeriodAndSim[periodsForResultsTimeSeries.Length-1];
+                Span<double> storageEndInventory = nextPeriodInventories;
+                Span<double> storageEndPv = returnSimPv ? pvByPeriodAndSim[periodsForResultsTimeSeries.Length-1] : Array.Empty<double>();
+                double terminalPv = 0.0;
                 for (int simIndex = 0; simIndex < numSims; simIndex++)
                 {
                     double inventory = storageEndInventory[simIndex];
                     double spotPrice = storageEndPeriodSpotPrices[simIndex];
-                    double terminalPv = lsmcParams.Storage.TerminalStorageNpv(spotPrice, inventory);
-                    storageEndPv[simIndex] = terminalPv;
+                    terminalPv += lsmcParams.Storage.TerminalStorageNpv(spotPrice, inventory);
+                    if (returnSimPv)
+                        storageEndPv[simIndex] = terminalPv;
                     pvBySim[simIndex] += terminalPv;
                 }
-                endPeriodPv = Average(storageEndPv);
+                endPeriodPv = terminalPv/numSims;
             }
 
             stopwatches.ForwardSimulation.Stop();
@@ -605,7 +609,7 @@ namespace Cmdty.Storage
 
             _logger?.LogInformation("Backward Pv: " + backwardNpv.ToString("N", CultureInfo.InvariantCulture));
 
-            double expectedFinalInventory = Average(inventoryBySim[inventoryBySim.NumRows - 1]);
+            double expectedFinalInventory = Average(nextPeriodInventories);
             // Profile at storage end when no decisions can happen
             storageProfiles[storageProfiles.Length - 1] = new StorageProfile(expectedFinalInventory, 0.0, 0.0, 0.0, 0.0, endPeriodPv);
 

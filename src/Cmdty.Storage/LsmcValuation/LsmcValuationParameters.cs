@@ -99,7 +99,7 @@ namespace Cmdty.Storage
             public CancellationToken CancellationToken { get; set; }
             public Action<double> OnProgressUpdate { get; set; }
             public int ExtraDecisions { get; set; }
-            public SimulationDataReturned? SimulationDataReturned { get; set; }
+            public SimulationDataReturned SimulationDataReturned { get; set; }
 
             public bool DiscountDeltas { get; set; }
             private T _currentPeriod;
@@ -134,14 +134,13 @@ namespace Cmdty.Storage
                 ThrowIfNotSet(RegressionSpotSimsGenerator, nameof(RegressionSpotSimsGenerator));
                 ThrowIfNotSet(ValuationSpotSimsGenerator, nameof(ValuationSpotSimsGenerator));
                 ThrowIfNotSet(BasisFunctions, nameof(BasisFunctions));
-                ThrowIfNotSet(SimulationDataReturned, nameof(SimulationDataReturned));
                 if (ExtraDecisions < 0)
                     throw new InvalidOperationException(nameof(ExtraDecisions) + " must be non-negative.");
 
                 // ReSharper disable once PossibleInvalidOperationException
                 return new LsmcValuationParameters<T>(CurrentPeriod, Inventory.Value, ForwardCurve, Storage, SettleDateRule, 
                     DiscountFactors, GridCalc, NumericalTolerance, RegressionSpotSimsGenerator, ValuationSpotSimsGenerator, 
-                    BasisFunctions, CancellationToken, DiscountDeltas, ExtraDecisions, SimulationDataReturned.Value, OnProgressUpdate);
+                    BasisFunctions, CancellationToken, DiscountDeltas, ExtraDecisions, SimulationDataReturned, OnProgressUpdate);
             }
 
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local

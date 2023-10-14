@@ -98,7 +98,9 @@ namespace Cmdty.Storage.Excel
                             OnProgressUpdate = onProgress,
                             GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(storage, numGlobalGridPoints),
                             NumericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalTolerance, LsmcValuationParameters<Day>.Builder.DefaultNumericalTolerance, ExcelArg.NumericalTolerance.Description),
-                            SettleDateRule = settleDateRule
+                            SettleDateRule = settleDateRule,
+                            SimulationDataReturned = SimulationDataReturned.All // All for backward compatibility
+                            // TODO: populate SimulationDataReturned based on Excel argument
                         };
 
                         // TODO test that this works with expired storage
