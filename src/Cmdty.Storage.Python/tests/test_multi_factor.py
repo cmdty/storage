@@ -24,7 +24,7 @@
 import unittest
 import pandas as pd
 from cmdty_storage import CmdtyStorage, three_factor_seasonal_value, \
-    multi_factor_value, value_from_sims
+    multi_factor_value, value_from_sims, SimulationDataReturned
 from tests import utils
 
 
@@ -91,7 +91,8 @@ class TestMultiFactorValue(unittest.TestCase):
                                               basis_funcs, discount_deltas,
                                               seed=seed,
                                               fwd_sim_seed=fwd_sim_seed,
-                                              on_progress_update=on_progress)
+                                              on_progress_update=on_progress,
+                                              sim_data_returned=SimulationDataReturned.ALL)
         self.assertAlmostEqual(multi_factor_val.npv, 1780380.7581833513, places=6)
         self.assertEqual(123, len(multi_factor_val.deltas))  # TODO look into why deltas is longer the intrinsic profile
         self.assertEqual(123, len(multi_factor_val.expected_profile))
@@ -172,14 +173,16 @@ class TestMultiFactorValue(unittest.TestCase):
                                               factors, factor_corrs, num_sims,
                                               basis_funcs, discount_deltas,
                                               seed=seed,
-                                              fwd_sim_seed=fwd_sim_seed)
+                                              fwd_sim_seed=fwd_sim_seed,
+                                              sim_data_returned=SimulationDataReturned.ALL)
         value_from_sims_result = value_from_sims(cmdty_storage, val_date, inventory, forward_curve,
                                                  interest_rate_curve, twentieth_of_next_month,
                                                  multi_factor_val.sim_spot_regress,
                                                  multi_factor_val.sim_spot_valuation,
                                                  basis_funcs, discount_deltas,
                                                  multi_factor_val.sim_factors_regress,
-                                                 multi_factor_val.sim_factors_valuation, )
+                                                 multi_factor_val.sim_factors_valuation,
+                                                 sim_data_returned=SimulationDataReturned.ALL)
         self.assertEqual(multi_factor_val.npv, value_from_sims_result.npv)
         self.assertTrue(multi_factor_val.deltas.equals(value_from_sims_result.deltas))
         self.assertTrue(multi_factor_val.expected_profile.equals(value_from_sims_result.expected_profile))
@@ -243,7 +246,8 @@ class TestMultiFactorValue(unittest.TestCase):
                                                        discount_deltas,
                                                        seed=seed,
                                                        fwd_sim_seed=fwd_sim_seed,
-                                                       on_progress_update=on_progress)
+                                                       on_progress_update=on_progress,
+                                                       sim_data_returned=SimulationDataReturned.ALL)
         self.assertAlmostEqual(multi_factor_val.npv, 1766460.137569665, places=6)
         self.assertEqual(123, len(multi_factor_val.deltas))  # TODO look into why deltas is longer the intrinsic profile
         self.assertEqual(123, len(multi_factor_val.expected_profile))

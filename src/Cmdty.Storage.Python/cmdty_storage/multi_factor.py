@@ -39,25 +39,25 @@ from cmdty_storage import utils, CmdtyStorage
 import cmdty_storage.intrinsic as cs_intrinsic
 from cmdty_storage import _multi_factor_common as mfc
 import logging
-from enum import Flag, auto
+from enum import Flag
 
 logger: logging.Logger = logging.getLogger('cmdty.storage.multi-factor')
 
 
 class SimulationDataReturned(Flag):
-    NONE = auto()
-    SPOT_REGRESS = auto()
-    SPOT_VALUATION = auto()
+    NONE = 0
+    SPOT_REGRESS = 1
+    SPOT_VALUATION = 1 << 2
     SPOT_ALL = SPOT_REGRESS | SPOT_VALUATION
-    FACTORS_REGRESS = auto()
-    FACTORS_VALUATION = auto()
+    FACTORS_REGRESS = 1 << 3
+    FACTORS_VALUATION = 1 << 4
     FACTORS_ALL = FACTORS_REGRESS | FACTORS_VALUATION
-    INVENTORY = auto()
-    INJECT_WITHDRAW_VOLUME = auto()
-    CMDTY_CONSUMED = auto()
-    INVENTORY_LOSS = auto()
-    NET_VOLUME = auto()
-    PV = auto()
+    INVENTORY = 1 << 5
+    INJECT_WITHDRAW_VOLUME = 1 << 6
+    CMDTY_CONSUMED = 1 << 7
+    INVENTORY_LOSS = 1 << 8
+    NET_VOLUME = 1 << 9
+    PV = 1 << 10
     ALL = SPOT_ALL | FACTORS_ALL | INVENTORY | INJECT_WITHDRAW_VOLUME | CMDTY_CONSUMED | INVENTORY_LOSS | NET_VOLUME | PV
 
 
@@ -250,6 +250,7 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     net_lsmc_params_builder.GridCalc = net_grid_calc
     net_lsmc_params_builder.NumericalTolerance = numerical_tolerance
     net_lsmc_params_builder.BasisFunctions = net_basis_functions
+    net_lsmc_params_builder.SimulationDataReturned = net_cs.SimulationDataReturned(sim_data_returned.value)
     if net_on_progress is not None:
         net_lsmc_params_builder.OnProgressUpdate = net_on_progress
     net_lsmc_params_builder.DiscountDeltas = discount_deltas
