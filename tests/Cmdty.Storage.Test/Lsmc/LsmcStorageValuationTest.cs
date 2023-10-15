@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using Cmdty.Core.Common;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
 using Cmdty.TimeSeries;
@@ -1081,6 +1082,9 @@ namespace Cmdty.Storage.Test
                 Assert.Equal(storageProfile1.PeriodPv, storageProfile2.PeriodPv);
             }
 
+            // PV By Sim
+            Assert.Equal(lsmcResults1.PvBySim, lsmcResults2.PvBySim);
+
             // Trigger Prices
             Assert.Equal(lsmcResults1.TriggerPrices.Count, lsmcResults2.TriggerPrices.Count);
             for (int i = 0; i < lsmcResults1.TriggerPrices.Count; i++)
@@ -1117,6 +1121,67 @@ namespace Cmdty.Storage.Test
                 Assert.Equal(triggerPricePoint1.Volume, triggerPricePoint2.Volume);
                 Assert.Equal(triggerPricePoint1.Price, triggerPricePoint2.Price);
             }
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedAll_AllSimDataRightSize()
+        {
+            const int numSims = 20;
+            LsmcStorageValuationResults<Day> lsmcResults = RunWithSimulationDataReturns(SimulationDataReturned.All, numSims);
+            Assert.Equal(numSims, lsmcResults.RegressionSpotPriceSim.NumCols);
+            Assert.Equal(numSims, lsmcResults.ValuationSpotPriceSim.NumCols);
+            Assert.Equal(numSims, lsmcResults.InventoryBySim.NumCols);
+            Assert.Equal(numSims, lsmcResults.InjectWithdrawVolumeBySim.NumCols);
+            Assert.Equal(numSims, lsmcResults.CmdtyConsumedBySim.NumCols);
+            Assert.Equal(numSims, lsmcResults.InventoryLossBySim.NumCols);
+            Assert.Equal(numSims, lsmcResults.NetVolumeBySim.NumCols);
+            Assert.Equal(numSims, lsmcResults.PvByPeriodAndSim.NumCols);
+            foreach (Panel<Day, double> regressionMarkovFactors in lsmcResults.RegressionMarkovFactors)
+                Assert.Equal(numSims, regressionMarkovFactors.NumCols);
+            foreach (Panel<Day, double> valuationMarkovFactors in lsmcResults.ValuationMarkovFactors)
+                Assert.Equal(numSims, valuationMarkovFactors.NumCols);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedNone_AllSimDataEmpty()
+        {
+            const int numSims = 20;
+            LsmcStorageValuationResults<Day> lsmcResults = RunWithSimulationDataReturns(SimulationDataReturned.None, numSims);
+            Assert.True(lsmcResults.RegressionSpotPriceSim.IsEmpty);
+            Assert.True(lsmcResults.ValuationSpotPriceSim.IsEmpty);
+            Assert.True(lsmcResults.InventoryBySim.IsEmpty);
+            Assert.True(lsmcResults.InjectWithdrawVolumeBySim.IsEmpty);
+            Assert.True(lsmcResults.CmdtyConsumedBySim.IsEmpty);
+            Assert.True(lsmcResults.InventoryLossBySim.IsEmpty);
+            Assert.True(lsmcResults.NetVolumeBySim.IsEmpty);
+            Assert.True(lsmcResults.PvByPeriodAndSim.IsEmpty);
+            foreach (Panel<Day, double> regressionMarkovFactors in lsmcResults.RegressionMarkovFactors)
+                Assert.True(regressionMarkovFactors.IsEmpty);
+            foreach (Panel<Day, double> valuationMarkovFactors in lsmcResults.ValuationMarkovFactors)
+                Assert.True(valuationMarkovFactors.IsEmpty);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedInventoryAndPvAndValuationMarkovFactors_AllSimDataRightSize()
+        {
+            const int numSims = 20;
+            LsmcStorageValuationResults<Day> lsmcResults = RunWithSimulationDataReturns(SimulationDataReturned.Inventory | SimulationDataReturned.Pv | 
+                                                                                        SimulationDataReturned.FactorsForValuation, numSims);
+            Assert.True(lsmcResults.RegressionSpotPriceSim.IsEmpty);
+            Assert.True(lsmcResults.ValuationSpotPriceSim.IsEmpty);
+            Assert.Equal(numSims, lsmcResults.InventoryBySim.NumCols);
+            Assert.True(lsmcResults.InjectWithdrawVolumeBySim.IsEmpty);
+            Assert.True(lsmcResults.CmdtyConsumedBySim.IsEmpty);
+            Assert.True(lsmcResults.InventoryLossBySim.IsEmpty);
+            Assert.True(lsmcResults.NetVolumeBySim.IsEmpty);
+            Assert.Equal(numSims, lsmcResults.PvByPeriodAndSim.NumCols);
+            foreach (Panel<Day, double> regressionMarkovFactors in lsmcResults.RegressionMarkovFactors)
+                Assert.True(regressionMarkovFactors.IsEmpty);
+            foreach (Panel<Day, double> valuationMarkovFactors in lsmcResults.ValuationMarkovFactors)
+                Assert.Equal(numSims, valuationMarkovFactors.NumCols);
         }
 
         [Fact(Skip = "Failing, needs further investigation")]
