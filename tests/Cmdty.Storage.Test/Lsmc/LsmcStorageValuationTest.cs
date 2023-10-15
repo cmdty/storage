@@ -986,6 +986,138 @@ namespace Cmdty.Storage.Test
             });
         }
 
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedAllAndNone_DoesNotChangeValuationResults()
+        {
+            RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned.All, SimulationDataReturned.None);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedAllAndSpotPricesForRegression_DoesNotChangeValuationResults()
+        {
+            RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned.All, SimulationDataReturned.SpotPricesForRegression);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedSpotPricesForRegressionAndSpotPricesForValuation_DoesNotChangeValuationResults()
+        {
+            RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned.SpotPricesForRegression, SimulationDataReturned.SpotPricesForValuation);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedSpotPricesForValuationAndAllSpotPrices_DoesNotChangeValuationResults()
+        {
+            RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned.SpotPricesForValuation, SimulationDataReturned.AllSpotPrices);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedAllSpotPricesAndInjectWithdrawVolume_DoesNotChangeValuationResults()
+        {
+            RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned.AllSpotPrices, SimulationDataReturned.InjectWithdrawVolume);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedInventoryAndCmdtyConsumedWithInjectWithdrawVolume_DoesNotChangeValuationResults()
+        {
+            RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned.Inventory, SimulationDataReturned.CmdtyConsumed | SimulationDataReturned.InjectWithdrawVolume);
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.SimDataReturned")]
+        public void Calculate_SimulationDataReturnedPvAndInventoryLossWithAll_DoesNotChangeValuationResults()
+        {
+            RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned.Pv | SimulationDataReturned.InventoryLoss, SimulationDataReturned.All);
+        }
+
+        private void RunAndAssertSimulationDataReturnedSpecifiedDoesNotChangeValuationResults(SimulationDataReturned simulationDataReturned1, SimulationDataReturned simulationDataReturned2)
+        {
+            const int numSims = 20;
+            LsmcStorageValuationResults<Day> lsmcResults1 = RunWithSimulationDataReturns(simulationDataReturned1, numSims);
+            LsmcStorageValuationResults<Day> lsmcResults2 = RunWithSimulationDataReturns(simulationDataReturned2, numSims);
+            AssertLsmcStorageValuationResultsEqual(lsmcResults1, lsmcResults2);
+        }
+
+        private LsmcStorageValuationResults<Day> RunWithSimulationDataReturns(SimulationDataReturned simulationDataReturned, int numSims)
+        {
+            var paramsBuilder = _1FactorParamsBuilder.Clone();
+            paramsBuilder.Storage = _simpleDailyStorage;
+            paramsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(MultiFactorParameters.For1Factor(16.5, _oneFactorFlatSpotVols), numSims, RandomSeed);
+            paramsBuilder.SimulationDataReturned = simulationDataReturned;
+            LsmcValuationParameters<Day> lsmcParams = paramsBuilder.Build();
+            return LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
+        }
+
+        private static void AssertLsmcStorageValuationResultsEqual<T>(LsmcStorageValuationResults<T> lsmcResults1, LsmcStorageValuationResults<T> lsmcResults2)
+            where T : ITimePeriod<T>
+        {
+            Assert.Equal(lsmcResults1.Npv, lsmcResults2.Npv);
+            
+            // Deltas
+            Assert.Equal(lsmcResults1.Deltas.Count, lsmcResults2.Deltas.Count);
+            for (int i = 0; i < lsmcResults1.Deltas.Count; i++)
+            {
+                Assert.Equal(lsmcResults1.Deltas.Indices[i], lsmcResults2.Deltas.Indices[i]);
+                Assert.Equal(lsmcResults1.Deltas[i], lsmcResults2.Deltas[i]);
+            }
+
+            // Storage Profile
+            Assert.Equal(lsmcResults1.ExpectedStorageProfile.Count, lsmcResults2.ExpectedStorageProfile.Count);
+            for (int i = 0; i < lsmcResults1.ExpectedStorageProfile.Count; i++)
+            {
+                Assert.Equal(lsmcResults1.ExpectedStorageProfile.Indices[i], lsmcResults2.ExpectedStorageProfile.Indices[i]);
+                StorageProfile storageProfile1 = lsmcResults1.ExpectedStorageProfile[i];
+                StorageProfile storageProfile2 = lsmcResults2.ExpectedStorageProfile[i];
+                Assert.Equal(storageProfile1.Inventory, storageProfile2.Inventory);
+                Assert.Equal(storageProfile1.InjectWithdrawVolume, storageProfile2.InjectWithdrawVolume);
+                Assert.Equal(storageProfile1.CmdtyConsumed, storageProfile2.CmdtyConsumed);
+                Assert.Equal(storageProfile1.InventoryLoss, storageProfile2.InventoryLoss);
+                Assert.Equal(storageProfile1.NetVolume, storageProfile2.NetVolume);
+                Assert.Equal(storageProfile1.PeriodPv, storageProfile2.PeriodPv);
+            }
+
+            // Trigger Prices
+            Assert.Equal(lsmcResults1.TriggerPrices.Count, lsmcResults2.TriggerPrices.Count);
+            for (int i = 0; i < lsmcResults1.TriggerPrices.Count; i++)
+            {
+                Assert.Equal(lsmcResults1.TriggerPrices.Indices[i], lsmcResults2.TriggerPrices.Indices[i]);
+                TriggerPrices triggerPrices1 = lsmcResults1.TriggerPrices[i];
+                TriggerPrices triggerPrices2 = lsmcResults2.TriggerPrices[i];
+                Assert.Equal(triggerPrices1.MaxInjectVolume, triggerPrices2.MaxInjectVolume);
+                Assert.Equal(triggerPrices1.MaxInjectTriggerPrice, triggerPrices2.MaxInjectTriggerPrice);
+                Assert.Equal(triggerPrices1.MaxWithdrawVolume, triggerPrices2.MaxWithdrawVolume);
+                Assert.Equal(triggerPrices1.MaxWithdrawTriggerPrice, triggerPrices2.MaxWithdrawTriggerPrice);
+
+            }
+
+            // Trigger Price Volume Profile
+            Assert.Equal(lsmcResults1.TriggerPriceVolumeProfiles.Count, lsmcResults2.TriggerPriceVolumeProfiles.Count);
+            for (int i = 0; i < lsmcResults1.TriggerPriceVolumeProfiles.Count; i++)
+            {
+                Assert.Equal(lsmcResults1.TriggerPriceVolumeProfiles.Indices[i], lsmcResults2.TriggerPriceVolumeProfiles.Indices[i]);
+                TriggerPriceVolumeProfiles triggerProfile1 = lsmcResults1.TriggerPriceVolumeProfiles[i];
+                TriggerPriceVolumeProfiles triggerProfile2 = lsmcResults2.TriggerPriceVolumeProfiles[i];
+                AssertTriggerPricePricePointsEqual(triggerProfile1.InjectTriggerPrices, triggerProfile2.InjectTriggerPrices);
+                AssertTriggerPricePricePointsEqual(triggerProfile1.WithdrawTriggerPrices, triggerProfile2.WithdrawTriggerPrices);
+            }
+        }
+
+        private static void AssertTriggerPricePricePointsEqual(IReadOnlyList<TriggerPricePoint> triggerPrices1, IReadOnlyList<TriggerPricePoint> triggerPrices2)
+        {
+            Assert.Equal(triggerPrices1.Count, triggerPrices2.Count);
+            for (int i = 0; i < triggerPrices1.Count; i++)
+            {
+                TriggerPricePoint triggerPricePoint1 = triggerPrices1[i];
+                TriggerPricePoint triggerPricePoint2 = triggerPrices2[i];
+                Assert.Equal(triggerPricePoint1.Volume, triggerPricePoint2.Volume);
+                Assert.Equal(triggerPricePoint1.Price, triggerPricePoint2.Price);
+            }
+        }
 
         [Fact(Skip = "Failing, needs further investigation")]
         [Trait("Category", "Lsmc.TriggerPrices")]

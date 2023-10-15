@@ -28,7 +28,7 @@ using System.Linq;
 
 namespace Cmdty.Storage
 {
-    public sealed class TriggerPriceVolumeProfiles
+    public sealed class TriggerPriceVolumeProfiles // TODO replace with record type
     {
         public IReadOnlyList<TriggerPricePoint> InjectTriggerPrices { get; }
         public IReadOnlyList<TriggerPricePoint> WithdrawTriggerPrices { get; }

@@ -25,7 +25,7 @@
 
 namespace Cmdty.Storage
 {
-    public sealed class TriggerPricePoint
+    public sealed class TriggerPricePoint // TODO replace with record type
     {
         public double Volume { get; }
         public double Price { get; }
