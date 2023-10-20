@@ -26,7 +26,7 @@ import pandas as pd
 from cmdty_storage import CmdtyStorage, three_factor_seasonal_value, \
     multi_factor_value, value_from_sims
 from tests import utils
-
+from os import path
 
 # README: PROPER UNIT TESTS ARE IN THE C# CODE.
 class TestMultiFactorValue(unittest.TestCase):
@@ -93,12 +93,9 @@ class TestMultiFactorValue(unittest.TestCase):
                                               fwd_sim_seed=fwd_sim_seed,
                                               on_progress_update=on_progress)
         self.assertAlmostEqual(multi_factor_val.npv, 1780380.7581833513, places=6)
-        self.assertEqual(123, len(multi_factor_val.deltas))  # TODO look into why deltas is longer the intrinsic profile
-        self.assertEqual(123, len(multi_factor_val.expected_profile))
         self.assertEqual(progresses[-1], 1.0)
         self.assertEqual(245, len(progresses))
         self.assertEqual(1703773.0757192627, multi_factor_val.intrinsic_npv)
-        self.assertEqual(123, len(multi_factor_val.intrinsic_profile))
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_regress.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_valuation.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_inventory.shape)
@@ -113,6 +110,13 @@ class TestMultiFactorValue(unittest.TestCase):
         self.assertEqual(len(factors), len(multi_factor_val.sim_factors_valuation))
         for sim_factor_valuation in multi_factor_val.sim_factors_valuation:
             self.assertEqual((123, num_sims), sim_factor_valuation.shape)
+
+        regress_deltas, regress_expected_profile, regress_intrinsic_profile, regress_trigger_prices = \
+            self._load_valuation_results_csvs(path.join('.', 'regression_test_data', 'multi_factor_test-1'))
+        pd.testing.assert_series_equal(multi_factor_val.deltas, regress_deltas, check_names=False)
+        pd.testing.assert_frame_equal(multi_factor_val.expected_profile, regress_expected_profile)
+        pd.testing.assert_frame_equal(multi_factor_val.intrinsic_profile, regress_intrinsic_profile)
+        pd.testing.assert_frame_equal(multi_factor_val.trigger_prices, regress_trigger_prices)
 
     def test_value_from_sims_using_sims_from_multi_factor_value(self):
         """Test which first runs multi_factor_value, then passes the simulated spot
@@ -245,12 +249,9 @@ class TestMultiFactorValue(unittest.TestCase):
                                                        fwd_sim_seed=fwd_sim_seed,
                                                        on_progress_update=on_progress)
         self.assertAlmostEqual(multi_factor_val.npv, 1766460.137569665, places=6)
-        self.assertEqual(123, len(multi_factor_val.deltas))  # TODO look into why deltas is longer the intrinsic profile
-        self.assertEqual(123, len(multi_factor_val.expected_profile))
         self.assertEqual(progresses[-1], 1.0)
         self.assertEqual(245, len(progresses))
         self.assertEqual(1703773.0757192627, multi_factor_val.intrinsic_npv)
-        self.assertEqual(123, len(multi_factor_val.intrinsic_profile))
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_regress.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_valuation.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_inventory.shape)
@@ -266,6 +267,34 @@ class TestMultiFactorValue(unittest.TestCase):
         for sim_factor_valuation in multi_factor_val.sim_factors_valuation:
             self.assertEqual((123, num_sims), sim_factor_valuation.shape)
 
+        regress_deltas, regress_expected_profile, regress_intrinsic_profile, regress_trigger_prices = \
+            self._load_valuation_results_csvs(path.join('.', 'regression_test_data', 'three_factor_test-1'))
+        pd.testing.assert_series_equal(multi_factor_val.deltas, regress_deltas, check_names=False)
+        pd.testing.assert_frame_equal(multi_factor_val.expected_profile, regress_expected_profile)
+        pd.testing.assert_frame_equal(multi_factor_val.intrinsic_profile, regress_intrinsic_profile)
+        pd.testing.assert_frame_equal(multi_factor_val.trigger_prices, regress_trigger_prices)
+
+    @staticmethod
+    def _save_valuation_results_csvs(val_results, root_path: str):
+        val_results.deltas.to_csv(path.join(root_path, 'deltas.csv'), header=False)
+        val_results.expected_profile.to_csv(path.join(root_path, 'expected_profile.csv'))
+        val_results.intrinsic_profile.to_csv(path.join(root_path, 'intrinsic_profile.csv'))
+        val_results.trigger_prices.to_csv(path.join(root_path, 'trigger_prices.csv'))
+
+    @staticmethod
+    def _load_valuation_results_csvs(root_path: str):
+        deltas = pd.read_csv(path.join(root_path, 'deltas.csv'), header=None, index_col=0, parse_dates=True).iloc[:,0]
+        deltas.index = deltas.index.to_period('D')
+        expected_profile = TestMultiFactorValue._load_data_frame_from_csv(path.join(root_path, 'expected_profile.csv'))
+        intrinsic_profile = TestMultiFactorValue._load_data_frame_from_csv(path.join(root_path, 'intrinsic_profile.csv'))
+        trigger_prices = TestMultiFactorValue._load_data_frame_from_csv(path.join(root_path, 'trigger_prices.csv'))
+        return deltas, expected_profile, intrinsic_profile, trigger_prices
+
+    @staticmethod
+    def _load_data_frame_from_csv(file_path):
+        df = pd.read_csv(file_path, index_col=0, parse_dates=True)
+        df.index = df.index.to_period('D')
+        return df
 
 if __name__ == '__main__':
     unittest.main()
