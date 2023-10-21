@@ -311,6 +311,8 @@ def numerics_provider() -> str:
 
 
 def net_panel_to_data_frame(net_panel, freq: str) -> pd.DataFrame:
+    if net_panel.IsEmpty:
+        return pd.DataFrame()
     np_array = as_numpy_array(net_panel.RawData)
     np_array.resize((net_panel.NumRows, net_panel.NumCols))
     sim_periods = [net_time_period_to_pandas_period(p, freq) for p in net_panel.RowKeys]

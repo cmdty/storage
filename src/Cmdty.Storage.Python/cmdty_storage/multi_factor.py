@@ -79,8 +79,8 @@ class MultiFactorValuationResults(tp.NamedTuple):
     intrinsic_profile: pd.DataFrame
     sim_spot_regress: pd.DataFrame
     sim_spot_valuation: pd.DataFrame
-    sim_factors_regress: tp.Tuple[pd.DataFrame]
-    sim_factors_valuation: tp.Tuple[pd.DataFrame]
+    sim_factors_regress: tp.Tuple[pd.DataFrame, ...]
+    sim_factors_valuation: tp.Tuple[pd.DataFrame, ...]
     sim_inventory: pd.DataFrame
     sim_inject_withdraw: pd.DataFrame
     sim_cmdty_consumed: pd.DataFrame
@@ -266,28 +266,16 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     expected_profile = cs_intrinsic.profile_to_data_frame(cmdty_storage.freq, net_val_results.ExpectedStorageProfile)
     trigger_prices = _trigger_prices_to_data_frame(cmdty_storage.freq, net_val_results.TriggerPrices)
     trigger_profiles = _trigger_profiles_to_data_frame(cmdty_storage.freq, net_val_results.TriggerPriceVolumeProfiles)
-    sim_spot_regress = utils.net_panel_to_data_frame(net_val_results.RegressionSpotPriceSim, cmdty_storage.freq) \
-        if SimulationDataReturned.SPOT_REGRESS in sim_data_returned else pd.DataFrame()
-    sim_spot_valuation = utils.net_panel_to_data_frame(net_val_results.ValuationSpotPriceSim, cmdty_storage.freq) \
-        if SimulationDataReturned.SPOT_VALUATION in sim_data_returned else pd.DataFrame()
-    sim_inventory = utils.net_panel_to_data_frame(net_val_results.InventoryBySim, cmdty_storage.freq) \
-        if SimulationDataReturned.INVENTORY in sim_data_returned else pd.DataFrame()
-    sim_inject_withdraw = utils.net_panel_to_data_frame(net_val_results.InjectWithdrawVolumeBySim, cmdty_storage.freq) \
-        if SimulationDataReturned.INJECT_WITHDRAW_VOLUME in sim_data_returned else pd.DataFrame()
-    sim_cmdty_consumed = utils.net_panel_to_data_frame(net_val_results.CmdtyConsumedBySim, cmdty_storage.freq) \
-        if SimulationDataReturned.CMDTY_CONSUMED in sim_data_returned else pd.DataFrame()
-    sim_inventory_loss = utils.net_panel_to_data_frame(net_val_results.InventoryLossBySim, cmdty_storage.freq) \
-        if SimulationDataReturned.INVENTORY_LOSS in sim_data_returned else pd.DataFrame()
-    sim_net_volume = utils.net_panel_to_data_frame(net_val_results.NetVolumeBySim, cmdty_storage.freq) \
-        if SimulationDataReturned.NET_VOLUME in sim_data_returned else pd.DataFrame()
-    sim_pv = utils.net_panel_to_data_frame(net_val_results.PvByPeriodAndSim, cmdty_storage.freq) \
-        if SimulationDataReturned.PV in sim_data_returned else pd.DataFrame()
-    sim_factors_regress = _net_panel_enumerable_to_data_frame_tuple(net_val_results.RegressionMarkovFactors,
-                                                                    cmdty_storage.freq) \
-        if SimulationDataReturned.FACTORS_REGRESS in sim_data_returned else (pd.DataFrame(), ) * net_val_results.RegressionMarkovFactors.Count
-    sim_factors_valuation = _net_panel_enumerable_to_data_frame_tuple(net_val_results.ValuationMarkovFactors,
-                                                                      cmdty_storage.freq) \
-        if SimulationDataReturned.FACTORS_VALUATION in sim_data_returned else (pd.DataFrame(), ) * net_val_results.ValuationMarkovFactors.Count
+    sim_spot_regress = utils.net_panel_to_data_frame(net_val_results.RegressionSpotPriceSim, cmdty_storage.freq)
+    sim_spot_valuation = utils.net_panel_to_data_frame(net_val_results.ValuationSpotPriceSim, cmdty_storage.freq)
+    sim_inventory = utils.net_panel_to_data_frame(net_val_results.InventoryBySim, cmdty_storage.freq)
+    sim_inject_withdraw = utils.net_panel_to_data_frame(net_val_results.InjectWithdrawVolumeBySim, cmdty_storage.freq)
+    sim_cmdty_consumed = utils.net_panel_to_data_frame(net_val_results.CmdtyConsumedBySim, cmdty_storage.freq)
+    sim_inventory_loss = utils.net_panel_to_data_frame(net_val_results.InventoryLossBySim, cmdty_storage.freq)
+    sim_net_volume = utils.net_panel_to_data_frame(net_val_results.NetVolumeBySim, cmdty_storage.freq)
+    sim_pv = utils.net_panel_to_data_frame(net_val_results.PvByPeriodAndSim, cmdty_storage.freq)
+    sim_factors_regress = _net_panel_enumerable_to_data_frame_tuple(net_val_results.RegressionMarkovFactors, cmdty_storage.freq)
+    sim_factors_valuation = _net_panel_enumerable_to_data_frame_tuple(net_val_results.ValuationMarkovFactors, cmdty_storage.freq)
 
     return MultiFactorValuationResults(net_val_results.Npv, deltas, expected_profile,
                                        intrinsic_result.npv, intrinsic_result.profile, sim_spot_regress,
@@ -297,7 +285,7 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
                                        trigger_prices, trigger_profiles)
 
 
-def _net_panel_enumerable_to_data_frame_tuple(net_panel_enumerable, freq):
+def _net_panel_enumerable_to_data_frame_tuple(net_panel_enumerable, freq) -> tp.Tuple[pd.DataFrame, ...]:
     return tuple(utils.net_panel_to_data_frame(net_panel, freq) for net_panel in net_panel_enumerable)
 
 
