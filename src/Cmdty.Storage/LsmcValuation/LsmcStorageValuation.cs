@@ -372,7 +372,7 @@ namespace Cmdty.Storage
 
 
             Span<double> thisPeriodInventories = returnSimInventory ? inventoryBySim[0] : inventoryBuffer1;
-            Span<double> nextPeriodInventories = returnSimInventory ? inventoryBySim[1] : inventoryBuffer2; // TODO will inventoryBySim[1] every throw index out of range exception?
+            Span<double> nextPeriodInventories = returnSimInventory ? inventoryBySim[1] : inventoryBuffer2;
 
             //Span<double> startingInventories = inventoryBySim[0];
             for (int i = 0; i < thisPeriodInventories.Length; i++)
