@@ -28,8 +28,11 @@ from cmdty_storage import CmdtyStorage, three_factor_seasonal_value, \
 from tests import utils
 from os import path
 
+
 # README: PROPER UNIT TESTS ARE IN THE C# CODE.
 class TestMultiFactorValue(unittest.TestCase):
+    _reg_test_directory = path.join(path.dirname(path.relpath(__file__)), 'regression_test_data')
+
     def test_multi_factor_value_regression(self):
         storage_start = '2019-12-01'
         storage_end = '2020-04-01'
@@ -113,7 +116,7 @@ class TestMultiFactorValue(unittest.TestCase):
             self.assertEqual((123, num_sims), sim_factor_valuation.shape)
 
         regress_deltas, regress_expected_profile, regress_intrinsic_profile, regress_trigger_prices = \
-            self._load_valuation_results_csvs(path.join('.', 'regression_test_data', 'multi_factor_test-1'))
+            self._load_valuation_results_csvs('multi_factor_test-1')
         pd.testing.assert_series_equal(multi_factor_val.deltas, regress_deltas, check_names=False)
         pd.testing.assert_frame_equal(multi_factor_val.expected_profile, regress_expected_profile)
         pd.testing.assert_frame_equal(multi_factor_val.intrinsic_profile, regress_intrinsic_profile)
@@ -272,7 +275,7 @@ class TestMultiFactorValue(unittest.TestCase):
             self.assertEqual((123, num_sims), sim_factor_valuation.shape)
 
         regress_deltas, regress_expected_profile, regress_intrinsic_profile, regress_trigger_prices = \
-            self._load_valuation_results_csvs(path.join('.', 'regression_test_data', 'three_factor_test-1'))
+            self._load_valuation_results_csvs('three_factor_test-1')
         pd.testing.assert_series_equal(multi_factor_val.deltas, regress_deltas, check_names=False)
         pd.testing.assert_frame_equal(multi_factor_val.expected_profile, regress_expected_profile)
         pd.testing.assert_frame_equal(multi_factor_val.intrinsic_profile, regress_intrinsic_profile)
@@ -285,8 +288,8 @@ class TestMultiFactorValue(unittest.TestCase):
         val_results.intrinsic_profile.to_csv(path.join(root_path, 'intrinsic_profile.csv'))
         val_results.trigger_prices.to_csv(path.join(root_path, 'trigger_prices.csv'))
 
-    @staticmethod
-    def _load_valuation_results_csvs(root_path: str):
+    def _load_valuation_results_csvs(self, reg_test_folder: str):
+        root_path = path.join(self._reg_test_directory, reg_test_folder)
         deltas = pd.read_csv(path.join(root_path, 'deltas.csv'), header=None, index_col=0, parse_dates=True).iloc[:,0]
         deltas.index = deltas.index.to_period('D')
         expected_profile = TestMultiFactorValue._load_data_frame_from_csv(path.join(root_path, 'expected_profile.csv'))
