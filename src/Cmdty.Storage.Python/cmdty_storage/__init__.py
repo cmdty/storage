@@ -41,6 +41,7 @@ from cmdty_storage.multi_factor import three_factor_seasonal_value, multi_factor
 from cmdty_storage.multi_factor_diffusion_model import MultiFactorModel
 from cmdty_storage.multi_factor_spot_sim import MultiFactorSpotSim
 from cmdty_storage.utils import FREQ_TO_PERIOD_TYPE, numerics_provider
+from cmdty_storage.three_factor_calibration import StorageCalibrationTarget, calibrate_seasonal_three_factor
 import logging
 
 logger: logging.Logger = logging.getLogger('cmdty.storage')
