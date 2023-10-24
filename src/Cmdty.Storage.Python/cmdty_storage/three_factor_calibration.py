@@ -23,8 +23,11 @@
 
 import logging
 import typing as tp
+import numpy as np
 from scipy import optimize
-from cmdty_storage import utils, CmdtyStorage
+import utils
+from cmdty_storage import CmdtyStorage
+from multi_factor import three_factor_seasonal_value, SimulationDataReturned
 import pandas as pd
 from datetime import date
 
@@ -41,31 +44,57 @@ class StorageCalibrationTarget(tp.NamedTuple):
     interest_rates: pd.Series  # TODO change this to function which returns discount factor, i.e. delegate DF calc to caller.
     long_term_vol: float
     seasonal_vol: float
-    penalty_weighting: tp.Optional[float]
 
 
 def calibrate_seasonal_three_factor(
-    target_storage: tp.Iterable[StorageCalibrationTarget],
+    storage_targets: tp.Collection[StorageCalibrationTarget],
     bounds: tp.Union[optimize.Bounds, tp.Tuple[tp.Tuple[float, float], tp.Tuple[float, float]]],
     settlement_rule: tp.Callable[[pd.Period], date],
     num_sims: int,
     basis_funcs: str,
-    seed: tp.Optional[int] = None,
+    seed: tp.Optional[int] = None, # TODO make seed mandatory?
     fwd_sim_seed: tp.Optional[int] = None,
     num_inventory_grid_points: int = 100,
     numerical_tolerance: float = 1E-12,
+    penalty_weights: tp.Optional[tp.Collection[float]] = None,
     optimize_method: tp.Optional[str] = None,
     optimize_tol: tp.Optional[float] = None,
     optimize_options: tp.Optional[dict] = None,
     logger_override: tp.Optional[logging.Logger] = None
 ) -> optimize.OptimizeResult:
+
     this_logger = logger if logger_override is None else logger_override
+    num_storage_targets = len(storage_targets)
+    if penalty_weights is not None:
+        if len(penalty_weights) != num_storage_targets:
+            raise ValueError(f'penalty_weights and storage_targets argument should have same length. However, penalty_weights '
+                             f'has length {len(penalty_weights)}, whereas storage_targets as length {num_storage_targets}.')
+        penalty_weights_vector = np.fromiter(penalty_weights, dtype=np.float64, count=len(penalty_weights))
+        penalty_weights_vector = penalty_weights_vector/np.sum(penalty_weights_vector)
+        this_logger.info(f'penalty_weights vector normalised to {np.array_str(penalty_weights_vector)}.')
+    else:  # Default to equal weights
+        penalty_weights_vector = np.repeat(1.0/num_storage_targets, num_storage_targets)
 
     def storage_val_sum_squared_error(spot_factor_params):
         spot_factor_vol, spot_factor_mr_rate = spot_factor_params
-
-
-        pass
+        this_logger.debug(f'Calling objective function with spot_factor_vol {spot_factor_vol} and spot_factor_mr_rate {spot_factor_mr_rate}.')
+        penalty = 0.0
+        for i, storage_target in enumerate(storage_targets):
+            logger.debug(f'Performing valuation of storage {i} of {num_storage_targets} targets.')
+            storage_pv = three_factor_seasonal_value(storage_target.storage, storage_target.val_date, storage_target.inventory,
+                                                 storage_target.fwd_curve, storage_target.interest_rates, settlement_rule,
+                                                 storage_target.long_term_vol, storage_target.seasonal_vol, num_sims, basis_funcs,
+                                                 False, seed, fwd_sim_seed, num_inventory_grid_points=num_inventory_grid_points,
+                                                 numerical_tolerance=numerical_tolerance, sim_data_returned=SimulationDataReturned.NONE).npv
+            pv_diff_to_target = storage_pv - storage_target.target_pv
+            normalised_pv_diff_to_target = pv_diff_to_target/storage_target.notional_volume
+            normalised_pv_diff_to_target_squared = normalised_pv_diff_to_target**2
+            logger.debug(f'PV of storage {i} calculated as {storage_pv} which has diff to target of {pv_diff_to_target}, per unit of '
+                 f'notional diff to target {normalised_pv_diff_to_target}, the square of which is {normalised_pv_diff_to_target_squared}.')
+            penalty += normalised_pv_diff_to_target_squared * penalty_weights_vector[i]
+        this_logger.debug(f'Objective function value of {penalty} returned for spot_factor_vol {spot_factor_vol} and '
+                          f'spot_factor_mr_rate {spot_factor_mr_rate}.')
+        return penalty
 
     optimize_result = optimize.minimize(storage_val_sum_squared_error, bounds=bounds, tol=optimize_tol,
                                          method=optimize_method, options=optimize_options)
