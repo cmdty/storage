@@ -98,5 +98,5 @@ def calibrate_seasonal_three_factor(
 
     optimize_result = optimize.minimize(storage_val_sum_squared_error, bounds=bounds, tol=optimize_tol,
                                          method=optimize_method, options=optimize_options)
-
+    # TODO warning on non-success
     return optimize_result
