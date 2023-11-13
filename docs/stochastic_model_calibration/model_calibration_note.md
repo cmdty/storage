@@ -55,10 +55,56 @@ it is a good enough model to manage the risk of such contracts.
 However, the assumption of the two legs being correlated lognormal 
 could be a sufficiently poor model to explain the variance of the 
 calendar spread to render Vega and Gamma hedging of CSOs with European
-options ineffective.
-
-### Storage Capacity Auction Results
-
+options ineffective. Another reasons could be that European options 
+cannot hedge exposure from cross partial derivative terms like the
+cross-gamma.
 
 ### Calendar Spread Variance
+Even in the absense of a CSO market, the contingency of storage extrinsic
+value on calendar spread variance could still be of use for calibration. The approach would look something like:
 
+* Calculate the theoretical value of a matrix of calendar spread options. This could
+be done using a historical analysis of calendar spread variances.
+* Deduce which calendar spreads upon which the storage extrinsic value is mostly contingent using the basket-of-options approach.
+* Solve for the model parameters which most closely give the calendar
+spread variances estimated in the previous step.
+
+The idea is that a preliminary basket-of-options valuation is used to 
+determine which calendar sprear variances are most import to the storage
+extrinsic value, and hence should be targetted in calibration.
+One complication is that a stochastic model is itelf required for the first
+step, albeit a more simplistic one than to value storage capacity.
+This approach is currently just a rough idea and has not been investigated
+in detail yet.
+
+### Preferred Method: Storage Capacity Auction Results
+The preferred approach is to use the transaction value of actual
+storage deals as the calibration targets. Although a liquid market for
+standardised storage capactity do not exist, the value of storage 
+transactions are available from the results of public auctions.
+
+Specifically for the three-factor seasonal model, the following approach
+has been applied with some success:
+* Decide the long-term and seasonal-factor volatility parameters from
+a historically analysis of forward price data time series, potentially augmented
+with a view of how future fundamentals will affect price dynamics.
+* Find the spot-factor mean reversion rate and volatility parameters
+which minimise the sum of squared differences between the 
+model-calculated storage PV and the observed transaction prices.
+
+A practical example of this approach will be provided at a later date.
+
+One advantage of calibrating the model to the PV at which storage actually
+trades, is that these market prices should factor in real-world aspects 
+which aren't included in the model assumption. Examples
+of such assumptions are transaction costs and unhedgeable risk. Of course
+a certain leap of faith is required to trust that the storage model then
+accurately prices capacity which differs from the calibration targets,
+something which can't be guaranteed. In a way, under this school of thought
+the storage model is used to "interpolate" between observed market PVs. 
+
+Clearly this approach is not suitable for users with the view that the
+capacity auction results do not accurately reflect the actual value of
+storage capacity, and are wishing to use the storage model to "beat" the
+auction by calculating a more accurate value in order to win auctions
+which are undervaluing capacity.
