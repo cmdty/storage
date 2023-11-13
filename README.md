@@ -512,8 +512,8 @@ Documentation on using the add-in will be provided at a later date.
 
 ## Calibration
 See [this page](./docs/stochastic_model_calibration/model_calibration_note.md)
-for some ideas around calibration. Some example Python code for calibrating
-the 3-factor seasonal model will be added to this repo at some point soon.
+for some ideas about calibration. Example Python code for calibrating
+the 3-factor seasonal model will be added to this repo later.
 
 ## Building
 This section describes how to run a scripted build on a cloned repo. Visual Studio 2019 is used for development, and can also be used to build the C# and run unit tests on the C# and Python APIs. However, the scripted build process also creates packages (NuGet and Python), builds the C# samples, and verifies the C# interactive documentation. [Cake](https://github.com/cake-build/cake) is used for running scripted builds. The ability to run a full scripted build on non-Windows is [planned](https://github.com/cmdty/storage/issues/2), but at the moment it can only be done on Windows.
