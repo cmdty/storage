@@ -19,7 +19,7 @@ could be reflected by reducing (by way of a PV reserve) a proportion of
 this premium of full PV over the lower bound.
 
 Unfortunately we do not have experience of storage valuation in natural gas
-markets where a liquid CSO market exists. As such this approach has not been
+markets where a liquid CSO market exists. As such, this approach has not been
 investigated. If this sounds of interest please open a GitHub issue or 
 [get in touch](mailto:jake@cmdty.co.uk?subject=Cmdty%20Storage%20CSO%20Calibration). 
 
@@ -63,7 +63,7 @@ cross-gamma.
 Even in the absense of a CSO market, the contingency of storage extrinsic
 value on calendar spread variance could still be of use for calibration. The approach would look something like:
 
-* Calculate the theoretical value of a matrix of calendar spread options. This could
+* Calculate a matrix of CSO theoretical PVs. This could
 be done using a historical analysis of calendar spread variances.
 * Deduce which calendar spreads upon which the storage extrinsic value is mostly contingent using the basket-of-options approach.
 * Solve for the model parameters which most closely give the calendar
@@ -81,7 +81,9 @@ in detail yet.
 The preferred approach is to use the transaction value of actual
 storage deals as the calibration targets. Although a liquid market for
 standardised storage capactity do not exist, the value of storage 
-transactions are available from the results of public auctions.
+transactions are available from the results of auctions. Energy market
+participants could also have other sources, for example virtual
+storage deals transacted with counterparts.
 
 Specifically for the three-factor seasonal model, the following approach
 has been applied with some success:
@@ -105,6 +107,6 @@ the storage model is used to "interpolate" between observed market PVs.
 
 Clearly this approach is not suitable for users with the view that the
 capacity auction results do not accurately reflect the actual value of
-storage capacity, and are wishing to use the storage model to "beat" the
+storage capacity, and are wishing to use a storage model to "beat" the
 auction by calculating a more accurate value in order to win auctions
 which are undervaluing capacity.
