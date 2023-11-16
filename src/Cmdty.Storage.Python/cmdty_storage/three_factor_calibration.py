@@ -60,8 +60,7 @@ def calibrate_seasonal_three_factor(
     optimize_method: tp.Optional[str] = None,
     optimize_tol: tp.Optional[float] = None,
     optimize_options: tp.Optional[dict] = None,
-    logger_override: tp.Optional[logging.Logger] = None
-) -> optimize.OptimizeResult:
+    logger_override: tp.Optional[logging.Logger] = None) -> optimize.OptimizeResult:
 
     this_logger = logger if logger_override is None else logger_override
     num_storage_targets = len(storage_targets)
