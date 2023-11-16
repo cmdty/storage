@@ -111,8 +111,8 @@ def three_factor_seasonal_value(cmdty_storage: CmdtyStorage,
                                 seed: tp.Optional[int] = None,
                                 fwd_sim_seed: tp.Optional[int] = None,
                                 extra_decisions: tp.Optional[int] = None,
-                                num_inventory_grid_points: int = 100,
-                                numerical_tolerance: float = 1E-12,
+                                num_inventory_grid_points: tp.Optional[int] = 100,
+                                numerical_tolerance: tp.Optional[float] = 1E-12,
                                 on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
                                 sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL # TODO on next major version increment change this to default to NONE
                                 ) -> MultiFactorValuationResults:
@@ -148,8 +148,8 @@ def multi_factor_value(cmdty_storage: CmdtyStorage,
                        seed: tp.Optional[int] = None,
                        fwd_sim_seed: tp.Optional[int] = None,
                        extra_decisions: tp.Optional[int] = None,
-                       num_inventory_grid_points: int = 100,
-                       numerical_tolerance: float = 1E-12,
+                       num_inventory_grid_points: tp.Optional[int] = 100,
+                       numerical_tolerance: tp.Optional[float] = 1E-12,
                        on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
                        sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL # TODO on next major version increment change this to default to NONE
                        ) -> MultiFactorValuationResults:
@@ -180,8 +180,8 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
                     sim_factors_regress: tp.Optional[tp.Iterable[pd.DataFrame]] = None,
                     sim_factors_valuation: tp.Optional[tp.Iterable[pd.DataFrame]] = None,
                     extra_decisions: tp.Optional[int] = None,
-                    num_inventory_grid_points: int = 100,
-                    numerical_tolerance: float = 1E-12,
+                    num_inventory_grid_points: tp.Optional[int] = 100,
+                    numerical_tolerance: tp.Optional[float] = 1E-12,
                     on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
                     sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL # TODO on next major version increment change this to default to NONE
                     ) -> MultiFactorValuationResults:

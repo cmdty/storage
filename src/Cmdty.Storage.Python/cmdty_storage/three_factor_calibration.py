@@ -52,10 +52,10 @@ def calibrate_seasonal_three_factor(
     settlement_rule: tp.Callable[[pd.Period], date],
     num_sims: int,
     basis_funcs: str,
-    seed: tp.Optional[int] = None, # TODO make seed mandatory?
+    seed: int,
     fwd_sim_seed: tp.Optional[int] = None,
-    num_inventory_grid_points: int = 100,
-    numerical_tolerance: float = 1E-12,
+    num_inventory_grid_points: tp.Optional[int] = 100,
+    numerical_tolerance: tp.Optional[float] = 1E-12,
     penalty_weights: tp.Optional[tp.Collection[float]] = None,
     optimize_method: tp.Optional[str] = None,
     optimize_tol: tp.Optional[float] = None,
@@ -81,10 +81,10 @@ def calibrate_seasonal_three_factor(
         penalty = 0.0
         for i, storage_target in enumerate(storage_targets):
             logger.debug(f'Performing valuation of storage {i} of {num_storage_targets} targets.')
-            storage_pv = three_factor_seasonal_value(storage_target.storage, storage_target.val_date, storage_target.inventory,
-                                                 storage_target.fwd_curve, storage_target.interest_rates, settlement_rule,
-                                                 storage_target.long_term_vol, storage_target.seasonal_vol, num_sims, basis_funcs,
-                                                 False, seed, fwd_sim_seed, num_inventory_grid_points=num_inventory_grid_points,
+            storage_pv = three_factor_seasonal_value(cmdty_storage=storage_target.storage, val_date=storage_target.val_date, inventory=storage_target.inventory,
+                                                 fwd_curve=storage_target.fwd_curve, interest_rates=storage_target.interest_rates, settlement_rule=settlement_rule,
+                                                 long_term_vol=storage_target.long_term_vol, seasonal_vol=storage_target.seasonal_vol, num_sims=num_sims, basis_funcs=basis_funcs,
+                                                 discount_deltas=False, seed=seed, fwd_sim_seed=fwd_sim_seed, num_inventory_grid_points=num_inventory_grid_points,
                                                  numerical_tolerance=numerical_tolerance, sim_data_returned=SimulationDataReturned.NONE).npv
             pv_diff_to_target = storage_pv - storage_target.target_pv
             normalised_pv_diff_to_target = pv_diff_to_target/storage_target.notional_volume
