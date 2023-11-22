@@ -59,6 +59,39 @@ options ineffective. Another reasons could be that European options
 cannot hedge exposure from cross partial derivative terms like the
 cross-gamma.
 
+### Models Which Account for Smile
+The above is written in the context of calibrating a lognormal model of forward prices to
+European options, without taking into account volatility smile, hence would use implied 
+volatilities for just a single strike per expiry. A model incorporating local and/or stochastic 
+volatility could be used
+to account for the smile. The cost of such models is a significant overhead in terms of the 
+complexity and performance of both calibration and price simulation. As such it should be 
+considered whether the product being priced has significant value sensitivity to the smile 
+shape and hence parameters for the local/stochastic volatility model.
+
+As already stated, the 
+extrinsic value of storage is derived from the variance of calendar spreads. 
+The sensitivity of calendar spread variance to volatility smile has not been investigated yet. 
+But it’s our feeling that although there will be some sensitivity, it will be small and 
+insignificant compared to the sensitivity to the correlation between the (log of) the forward 
+prices of the two legs of the calendar spread under a purely lognormal model. Any error in PV
+due to correlation estimate (whiich is itself hard to get right) will probably be much larger
+than PV impact of incorporating smile.
+
+Even if it were found that there is sensitivity of storage value to the smile we need to
+consider whether it is practical to manage such risk using European options. If this isn’t
+deemed practical then it makes the case for implementing a stochastic/local volatility even
+less compelling. Our guess is that the transactions costs would make managing smile risk
+impractical.
+
+The conclusion is that it is not worth implementing a stochastic/local volatility model to price 
+storage capacity. It is better to use a simpler model.
+
+A shifted lognormal of forward prices can be used to model smile (in a limited capacity) but in 
+the context of natural gas it makes more sense to use this model to account for negative prices,
+setting the shift parameter based on market prices and fundamentals. It is unlikely that a
+shifted lognormal model will be able to fit market volatility smile.
+
 ### Calendar Spread Variance
 Even in the absense of a CSO market, the contingency of storage extrinsic
 value on calendar spread variance could still be of use for calibration. The approach would look something like:
@@ -110,3 +143,4 @@ capacity auction results do not accurately reflect the actual value of
 storage capacity, and are wishing to use a storage model to "beat" the
 auction by calculating a more accurate value in order to win auctions
 which are undervaluing capacity.
+
