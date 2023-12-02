@@ -125,7 +125,8 @@ in detail yet.
 ### Preferred Method: Storage Capacity Auction Results
 The preferred approach is to use the transaction value of actual
 storage deals as the calibration targets. Although a liquid market for
-standardised storage capactity do not exist, the value of storage 
+standardised storage capactity does not exist in markets we are familiar with, 
+the value of storage 
 transactions are available from the results of auctions. Energy market
 participants could also have other sources, for example virtual
 storage deals transacted with counterparts.
