@@ -64,7 +64,7 @@ it is a good enough model to manage the risk of such contracts.
 However, the assumption of the two legs being correlated lognormal 
 could be a sufficiently poor model to explain the variance of the 
 calendar spread to render Vega and Gamma hedging of CSOs with European
-options ineffective. Another reasons could be that European options 
+options ineffective. Another reasons is that European options 
 cannot hedge exposure from cross partial derivative terms like the
 cross-gamma.
 
@@ -84,7 +84,7 @@ The sensitivity of calendar spread variance to volatility smile has not been inv
 But it’s our feeling that although there will be some sensitivity, it will be small and 
 insignificant compared to the sensitivity to the correlation between the (log of) the forward 
 prices of the two legs of the calendar spread under a purely lognormal model. Any error in PV
-due to correlation estimate (whiich is itself hard to get right) will probably be much larger
+due to correlation estimate (which is itself hard to get right) will probably be much larger
 than PV impact of incorporating smile.
 
 Even if it were found that there is sensitivity of storage value to the smile we need to
@@ -96,14 +96,14 @@ impractical.
 The conclusion is that it is not worth implementing a stochastic/local volatility model to price 
 storage capacity. It is better to use a simpler model.
 
-A shifted lognormal of forward prices can be used to model smile (in a limited capacity) but in 
+A shifted lognormal of forward prices can be used to model Black-76 smile (in a limited capacity) but in 
 the context of natural gas it makes more sense to use this model to account for negative prices,
 setting the shift parameter based on market prices and fundamentals. It is unlikely that a
 shifted lognormal model will be able to fit market volatility smile.
 
 ### Calendar Spread Variance
 Even in the absense of a CSO market, the contingency of storage extrinsic
-value on calendar spread variance could still be of use for calibration. The approach would look something like:
+value on calendar spread variance could still be of used as a calibration strategy. The approach would look something like:
 
 * Calculate a matrix of CSO theoretical PVs. This could
 be done using a historical analysis of calendar spread variances.
@@ -116,6 +116,9 @@ determine which calendar sprear variances are most import to the storage
 extrinsic value, and hence should be targetted in calibration.
 One complication is that a stochastic model is itelf required for the first
 step, albeit a more simplistic one than to value storage capacity.
+Also, the structure of the stochastic model would need to be trusted in order
+to not assign more extrinsic value to different calendar spread variances than those 
+which were calibrated to.
 This approach is currently just a rough idea and has not been investigated
 in detail yet.
 
