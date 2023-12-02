@@ -28,7 +28,8 @@ An obvious calibration approach would be find the model parameters which
 match the implied volatility of European options. Reasonably liquid 
 European option markets exist for many natural gas hubs and often
 represent the only standardised traded contracts which have extrinsic
-value.
+value. Because model calibration to vanilla options is a common approach in financial
+markets when pricing exotic options this might seem like the correct thing to do here.
 
 It is our opinion that calibration to European options is not a good 
 approach for a model to be used for storage valuation. A lower bound for
