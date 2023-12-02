@@ -45,7 +45,15 @@ hedging the storage with European options was effective.
 Why was this not effective? As described above, storage extrinsic 
 value is largely derived from calendar spread optionality. Such CSOs
 can be priced using the implied volality of European options on the
-two underlying delivery months. A historical backtesting experiment
+two underlying delivery months. Assuming that the CSO expiry date is
+very close to the expiry date of the European option on the front leg
+the implied vol for this European option can directly be used. However,
+as the expiry date of the back leg will be after the CSO expiry date, an
+adjusted "off term" volatility of the back leg will need to be used in
+CSO pricing. This off term volatility should be derivable from the standard
+European option implied volatility, hence you can still theoretically see
+the CSO having Vega with respect to the back leg European option implied vol.
+A historical backtesting experiment
 was also performed on the hedging of CSOs with European options. This
 showed similar poor performance to that of hedging storage. Both
 European and calendar spread options were priced with lognormal models
