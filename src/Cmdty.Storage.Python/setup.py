@@ -41,7 +41,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/cmdty/storage',
-    packages=setuptools.find_packages(),
+    packages=['cmdty_storage', 'cmdty_storage.lib'],
     keywords = 'commodities trading storage oil gas power quantitative finance',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -68,11 +68,4 @@ setuptools.setup(
         'pandas>=1.0.0'
         ],
     python_requires='>=3.7, <3.12',
-    package_data={'cmdty_storage' : [
-                        'lib/*.dll',
-                        'lib/*.pdb',
-                        'lib/x86/*.dll',
-                        'lib/x64/*.dll'
-                    ]},
-    include_package_data=True
 )
