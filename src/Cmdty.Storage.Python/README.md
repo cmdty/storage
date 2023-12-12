@@ -191,3 +191,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 ```
 
 The code should be run at the start of any notebook or program.
+
+## Curve Construction Package
+To construct the storage model forward curve inputs see the [curves package](https://pypi.org/project/curves/)
+which provides tools for building commodity forward, swaps, and futures curves.
