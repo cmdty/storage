@@ -19,7 +19,7 @@ error during the valuation.
 more .NET types.
 * For non-Windows OS default to trying .NET (Core), rather than Mono as default runtime.
 
-### 1.4.0 (not yet released)
+### 1.4.0
 * sim_data_returned added to Monte Carlo valuation functions to allow the caller to control which simulation-level
 data is returned.
 
