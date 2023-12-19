@@ -28,7 +28,7 @@ using System.Collections.Generic;
 using Cmdty.Storage;
 using Cmdty.TimePeriodValueTypes;
 using Cmdty.TimeSeries;
-d
+
 const double constantInjectionCost = 0.48;
 const double constantWithdrawalCost = 0.74;
 
