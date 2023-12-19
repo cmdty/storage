@@ -305,6 +305,7 @@ Hence this is also the maximum version with which cmdty-storage works.
 
 
 ## Using the C# API
+This section introduces how to use the C# API. See [/samples/csharp](./samples/csharp/) for a solution containing C# code which can directly be compiled and executed.
 
 ### Creating the Storage Object
 In order for storage capacity to be valued, first an instance of the class CmdtyStorage 
