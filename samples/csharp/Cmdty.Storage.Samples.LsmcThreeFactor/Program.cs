@@ -86,7 +86,7 @@ foreach (var day in new Day(2019, 9, 23).EnumerateTo(storageCapacityEnd))
 
 const double flatInterestRate = 0.055;
 
-// Trinomial tree model parameters
+// 3-Factor Seasonal Model Parameters
 const double longTermVol = 0.17;
 const double seasonalVol = 0.32;
 const double spotFactorVol = 0.7;
@@ -113,7 +113,7 @@ var valuationParameters = new LsmcValuationParameters<Day>.Builder
         Inventory = startingInventory,
         Storage = storage,
         SettleDateRule = deliveryDate => Month.FromDateTime(deliveryDate.Start).Offset(1).First<Day>() + 19, // Settlement on 20th of following month (business days ignore for simplicity),
-        SimulationDataReturned = SimulationDataReturned.AllSpotPrices | SimulationDataReturned.AllFactors
+        SimulationDataReturned = SimulationDataReturned.None
     }
     .SimulateWithMultiFactorModelAndMersenneTwister(threeFactorParameters, numSims, randomSeed)
     .Build();
