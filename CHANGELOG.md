@@ -38,4 +38,4 @@ associated Terminal_val_param argument.
 ## NuGet Package Releases
 ### 1.1.0
 * SimulationDataReturned enum defined and property of this type added to LsmcValuationParameters to allow the caller to control which simulation-level
-data is populated in the return LsmcStorageValuationResults instance.
+data is populated in the returned LsmcStorageValuationResults instance.
