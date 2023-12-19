@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29613.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cmdty.Storage.Samples.Intrinsic", "Cmdty.Storage.Samples.Intrinsic\Cmdty.Storage.Samples.Intrinsic.csproj", "{DCE9B12B-ED10-497A-8145-A25143CF96A7}"
 EndProject
@@ -11,7 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NuGet.config = NuGet.config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cmdty.Storage.Samples.Trinomial", "Cmdty.Storage.Samples.Trinomial\Cmdty.Storage.Samples.Trinomial.csproj", "{7B3DA54B-7FDF-47FB-A18C-6C7A6F745E10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cmdty.Storage.Samples.Trinomial", "Cmdty.Storage.Samples.Trinomial\Cmdty.Storage.Samples.Trinomial.csproj", "{7B3DA54B-7FDF-47FB-A18C-6C7A6F745E10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cmdty.Storage.Samples.LsmcThreeFactor", "Cmdty.Storage.Samples.LsmcThreeFactor\Cmdty.Storage.Samples.LsmcThreeFactor.csproj", "{5B9C997D-EEDF-4B3F-B0DB-71D966BC15B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{7B3DA54B-7FDF-47FB-A18C-6C7A6F745E10}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B3DA54B-7FDF-47FB-A18C-6C7A6F745E10}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B3DA54B-7FDF-47FB-A18C-6C7A6F745E10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B9C997D-EEDF-4B3F-B0DB-71D966BC15B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B9C997D-EEDF-4B3F-B0DB-71D966BC15B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B9C997D-EEDF-4B3F-B0DB-71D966BC15B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B9C997D-EEDF-4B3F-B0DB-71D966BC15B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
