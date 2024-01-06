@@ -199,7 +199,9 @@ namespace Cmdty.Storage.Test
                     DiscountFactors = StorageHelper.CreateAct65ContCompDiscounter(flatInterestRate),
                     GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(_simpleDailyStorage, NumInventorySpacePoints),
                     BasisFunctions = BasisFunctionsBuilder.Ones +
-                                     BasisFunctionsBuilder.AllMarkovFactorAllPositiveIntegerPowersUpTo(RegressMaxDegree, 2)
+                                     BasisFunctionsBuilder.AllMarkovFactorAllPositiveIntegerPowersUpTo(RegressMaxDegree, 2) + 
+                                     BasisFunctionsBuilder.SpotPricePower(1) +
+                                     BasisFunctionsBuilder.SpotPricePower(2)
             };
         }
 
@@ -663,7 +665,7 @@ namespace Cmdty.Storage.Test
             LsmcStorageValuationResults<Day> lsmcResults = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
-            const double percentageTol = 0.0001; // 0.01%
+            const double percentageTol = 0.00001; // 0.001%
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
@@ -679,7 +681,7 @@ namespace Cmdty.Storage.Test
             LsmcStorageValuationResults<Day> lsmcResults = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
-            const double percentageTol = 0.0004; // 0.01%
+            const double percentageTol = 0.00001; // 0.001%
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
         }
 
