@@ -160,8 +160,9 @@ namespace Cmdty.Storage.Test
                 return baseForwardPrice + Math.Sin(2.0 * Math.PI / 365.0 * daysForward) * forwardSeasonalFactor;
             });
 
-            _oneFactorBasisFunctions = BasisFunctionsBuilder.Ones + 
-                                       BasisFunctionsBuilder.AllMarkovFactorAllPositiveIntegerPowersUpTo(RegressMaxDegree, 1);
+            _oneFactorBasisFunctions = BasisFunctionsBuilder.Ones +
+                                       BasisFunctionsBuilder.SpotPricePower(1) + BasisFunctionsBuilder.SpotPricePower(2)
+                                       + BasisFunctionsBuilder.SpotPricePower(3);
 
             _1FactorParamsBuilder = new LsmcValuationParameters<Day>.Builder
             {
@@ -444,7 +445,7 @@ namespace Cmdty.Storage.Test
             _testOutputHelper.WriteLine(treeResults.NetPresentValue.ToString(CultureInfo.InvariantCulture));
             _testOutputHelper.WriteLine("LSMC");
             _testOutputHelper.WriteLine(lsmcResults.Npv.ToString(CultureInfo.InvariantCulture));
-            const double percentageTol = 0.005; // 0.5%
+            const double percentageTol = 0.0003; // 0.03%
             TestHelper.AssertWithinPercentTol(treeResults.NetPresentValue, lsmcResults.Npv, percentageTol);
         }
 
@@ -474,7 +475,7 @@ namespace Cmdty.Storage.Test
             _testOutputHelper.WriteLine(treeResults.NetPresentValue.ToString(CultureInfo.InvariantCulture));
             _testOutputHelper.WriteLine("LSMC");
             _testOutputHelper.WriteLine(lsmcResults.Npv.ToString(CultureInfo.InvariantCulture));
-            const double percentageTol = 0.006; // 0.6%
+            const double percentageTol = 0.001; // 0.1%
             TestHelper.AssertWithinPercentTol(treeResults.NetPresentValue, lsmcResults.Npv, percentageTol);
         }
 
@@ -527,18 +528,18 @@ namespace Cmdty.Storage.Test
         [Trait("Category", "Lsmc.LikeIntrinsic")]
         public void Calculate_OneFactorZeroMeanReversionSimpleStorage_NpvApproximatelyEqualsIntrinsicNpv()
         {
-            const int regressPolyDegree = 5;  // Test requires a higher poly degree than the others
             var builder = _1FactorParamsBuilder.Clone();
             builder.Storage = _simpleDailyStorage;
             builder.SimulateWithMultiFactorModelAndMersenneTwister(MultiFactorParameters.For1Factor(0.0, _oneFactorFlatSpotVols), NumSims, RandomSeed);
             builder.BasisFunctions = BasisFunctionsBuilder.Ones +
-                                     BasisFunctionsBuilder.AllMarkovFactorAllPositiveIntegerPowersUpTo(regressPolyDegree, 1);
+                                     BasisFunctionsBuilder.SpotPricePower(1) + BasisFunctionsBuilder.SpotPricePower(2)
+                                     + BasisFunctionsBuilder.SpotPricePower(3);
 
             LsmcValuationParameters<Day> lsmcParams = builder.Build();
             LsmcStorageValuationResults<Day> lsmcResults = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
-            const double percentageTol = 0.04; // 4%
+            const double percentageTol = 0.03; // 3%
             _testOutputHelper.WriteLine(intrinsicResults.Npv.ToString(CultureInfo.InvariantCulture));
             _testOutputHelper.WriteLine(lsmcResults.Npv.ToString(CultureInfo.InvariantCulture));
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
@@ -548,18 +549,19 @@ namespace Cmdty.Storage.Test
         [Trait("Category", "Lsmc.LikeIntrinsic")]
         public void Calculate_OneFactorZeroMeanReversionStorageWithRatchets_NpvApproximatelyEqualsIntrinsicNpv()
         {
-            const int regressPolyDegree = 5;  // Test requires a higher poly degree than the others
             var builder = _1FactorParamsBuilder.Clone();
             builder.Storage = _dailyStorageWithRatchets;
             builder.SimulateWithMultiFactorModelAndMersenneTwister(MultiFactorParameters.For1Factor(0.0, _oneFactorFlatSpotVols), NumSims, RandomSeed);
             builder.BasisFunctions = BasisFunctionsBuilder.Ones +
-                                     BasisFunctionsBuilder.AllMarkovFactorAllPositiveIntegerPowersUpTo(regressPolyDegree, 1);
+                                     BasisFunctionsBuilder.SpotPricePower(1) 
+                                     + BasisFunctionsBuilder.SpotPricePower(2)
+                                     + BasisFunctionsBuilder.SpotPricePower(3);
 
             LsmcValuationParameters<Day> lsmcParams = builder.Build();
             LsmcStorageValuationResults<Day> lsmcResults = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
             IntrinsicStorageValuationResults<Day> intrinsicResults = CalcIntrinsic(lsmcParams);
 
-            const double percentageTol = 0.04; // 4%
+            const double percentageTol = 0.03; // 3%
             _testOutputHelper.WriteLine(intrinsicResults.Npv.ToString(CultureInfo.InvariantCulture));
             _testOutputHelper.WriteLine(lsmcResults.Npv.ToString(CultureInfo.InvariantCulture));
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
