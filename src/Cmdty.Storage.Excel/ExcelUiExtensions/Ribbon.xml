@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>
+	<contextMenus>
+		<contextMenu idMso='ContextMenuCell'>
+			<menu id='CmdtyStorageMenu' label='Cmdty.Storage' insertBeforeMso='Cut' >
+				<button id='Menu1ButtonCancelStorage' label='Cancel Execution' imageMso='X' onAction='CancelExecution'/>
+			</menu>
+			<menuSeparator id='MySeparator' insertBeforeMso='Cut' />
+		</contextMenu>
+	</contextMenus>
+</customUI>

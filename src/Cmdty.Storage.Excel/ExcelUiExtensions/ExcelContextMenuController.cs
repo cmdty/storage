@@ -27,6 +27,7 @@ using ExcelDna.Integration;
 using ExcelDna.Integration.CustomUI;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Cmdty.Storage.Excel.ExcelUiExtensions;
 using Microsoft.Office.Interop.Excel;
 using Application = Microsoft.Office.Interop.Excel.Application;
 
@@ -37,17 +38,7 @@ namespace Cmdty.Storage.Excel
     {
         public override string GetCustomUI(string ribbonId)
         {
-            return @"
-<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>
-    <contextMenus>
-        <contextMenu idMso=""ContextMenuCell"">
-            <menu id=""CmdtyStorageMenu"" label=""Cmdty.Storage"" insertBeforeMso=""Cut"" >
-                <button id=""Menu1ButtonCancelStorage"" label=""Cancel Execution"" imageMso=""X"" onAction=""CancelExecution""/>
-            </menu>
-            <menuSeparator id=""MySeparator"" insertBeforeMso=""Cut"" />
-        </contextMenu>
-    </contextMenus>
-</customUI>";
+            return RibbonResources.Ribbon;
         }
 
         public void CancelExecution(IRibbonControl ribbonControl)

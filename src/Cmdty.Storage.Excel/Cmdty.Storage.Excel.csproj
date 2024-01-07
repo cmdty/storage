@@ -26,9 +26,24 @@
     <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="ExcelUiExtensions\RibbonResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>RibbonResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="ExcelUiExtensions\RibbonResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>RibbonResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
     <Target Name="PackedReferences" AfterTargets="AfterBuild" BeforeTargets="ExcelDnaBuild">
 	    <ItemGroup>
-		    <References Include="$(OutDir)*.dll" Exclude="$(OutDir)$(TargetFileName)"/>
+		    <References Include="$(OutDir)*.dll" Exclude="$(OutDir)$(TargetFileName)" />
 	    </ItemGroup>
 	    <PropertyGroup>
 		    <ExcelAddInInclude>@(References)</ExcelAddInInclude>
