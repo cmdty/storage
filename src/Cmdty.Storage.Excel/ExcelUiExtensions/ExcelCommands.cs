@@ -37,11 +37,9 @@ namespace Cmdty.Storage.Excel
             int numCalcsCancelled = 0;
             foreach (string objectHandle in ObjectCache.Instance.Handles)
             {
-                object cachedObject;
-                if (ObjectCache.Instance.TryGetObject(objectHandle, out cachedObject))
+                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
                 {
-                    ExcelCalcWrapper calcWrapper = cachedObject as ExcelCalcWrapper;
-                    if (calcWrapper != null)
+                    if (cachedObject is ExcelCalcWrapper calcWrapper)
                         if (calcWrapper.Status == CalcStatus.Running)
                         {
                             calcWrapper.Cancel();
@@ -53,6 +51,28 @@ namespace Cmdty.Storage.Excel
                 numCalcsCancelled + " calculations have been cancelled.";
             MessageBox.Show(message, "Cmdty.Storage", MessageBoxButtons.OK);
         }
+
+        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Start All Pending")] // TODO delete and replace with ribbon button
+        public static void StartAllPendingCalculations()
+        {
+            foreach (string objectHandle in ObjectCache.Instance.Handles)
+            {
+                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
+                {
+                    if (cachedObject is ExcelCalcWrapper calcWrapper)
+                        if (calcWrapper.Status == CalcStatus.Pending) // TODO thread synchronisation required, or does this always run on same thread?
+                            calcWrapper.CalcTask.Start();
+                }
+            }
+        }
+
+        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Toggle Calc Mode")] // TODO delete and replace with ribbon radio button
+        public static void ToggleCalcMode()
+        {
+            CurrentAddInState.CalcMode = CurrentAddInState.CalcMode == CalcMode.Blocking ? CalcMode.Async : CalcMode.Blocking;
+        }
+
+
 
     }
 }

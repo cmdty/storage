@@ -25,6 +25,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
 using ExcelDna.Integration;
@@ -64,62 +65,85 @@ namespace Cmdty.Storage.Excel
                                 interestRateCurve, spotVol, spotMeanReversion, longTermVol, seasonalVol,
                                 discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn, fwdSimSeedIn,
                                 numGlobalGridPointsIn, numericalTolerance, extraDecisions };
-
-                return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
+                if (CurrentAddInState.CalcMode == CalcMode.Blocking)
                 {
-                    return ExcelCalcWrapper.CreateCancellable((cancellationToken, onProgress) =>
+                    return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
+                        RunLsmcStorageValuation(storageHandle, valuationDate, currentInventory, forwardCurve, interestRateCurve, spotVol,
+                            spotMeanReversion, longTermVol, seasonalVol, discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn,
+                            fwdSimSeedIn, numGlobalGridPointsIn, numericalTolerance, extraDecisions, CancellationToken.None, null)); // TODO check if CancellationToken.None, null can be removed
+                }
+                if (CurrentAddInState.CalcMode == CalcMode.Async)
+                {
+                    return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
                     {
-                        CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
-                        
-                        // TODO provide alternative method for interpolating interest rates
-                        Func<Day, double> interpolatedInterestRates =
-                            StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
-
-                        Func<Day, Day, double> discountFunc = StorageHelper.CreateAct65ContCompDiscounter(interpolatedInterestRates);
-                        Day valDate = Day.FromDateTime(valuationDate);
-                        Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
-
-                        int numGlobalGridPoints = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numGlobalGridPointsIn, ExcelArg.NumGridPoints.Default,
-                                                                        ExcelArg.NumGridPoints.Name);
-
-                        string basisFunctionsText = basisFunctionsIn.Replace("x_st", "x0").Replace("x_lt", "x1").Replace("x_sw", "x2");
-
-                        var lsmcParamsBuilder = new LsmcValuationParameters<Day>.Builder
-                        {
-                            Storage = storage,
-                            CurrentPeriod = valDate,
-                            Inventory = currentInventory,
-                            ForwardCurve = StorageExcelHelper.CreateDoubleTimeSeries<Day>(forwardCurve, ExcelArg.ForwardCurve.Name),
-                            DiscountFactors = discountFunc,
-                            DiscountDeltas = discountDeltas,
-                            BasisFunctions = BasisFunctionsBuilder.Parse(basisFunctionsText),
-                            ExtraDecisions = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(extraDecisions, 0, ExcelArg.ExtraDecisions.Name),
-                            CancellationToken = cancellationToken,
-                            OnProgressUpdate = onProgress,
-                            GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(storage, numGlobalGridPoints),
-                            NumericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalTolerance, LsmcValuationParameters<Day>.Builder.DefaultNumericalTolerance, ExcelArg.NumericalTolerance.Description),
-                            SettleDateRule = settleDateRule,
-                            SimulationDataReturned = SimulationDataReturned.All // All for backward compatibility
-                            // TODO: populate SimulationDataReturned based on Excel argument
-                        };
-
-                        // TODO test that this works with expired storage
-                        Day endDate = new[] { valDate, storage.EndPeriod }.Max();
-                        var threeFactorParams =
-                            MultiFactorParameters.For3FactorSeasonal(spotMeanReversion, spotVol, longTermVol, seasonalVol, valDate, endDate);
-
-                        // TODO better error messages if seedIn and fwdSimSeedIn cannot be cast
-                        int? seed = StorageExcelHelper.IsExcelEmptyOrMissing(seedIn) ? (int?)null : (int)(double)seedIn;
-                        int? fwdSimSeed = StorageExcelHelper.IsExcelEmptyOrMissing(fwdSimSeedIn) ? (int?)null : (int)(double)fwdSimSeedIn;
-
-                        lsmcParamsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(threeFactorParams, numSims, seed, fwdSimSeed);
-
-                        return LsmcStorageValuation.WithNoLogger.Calculate(lsmcParamsBuilder.Build());
+                        return ExcelCalcWrapper.CreatePending((cancellationToken, onProgress) =>
+                            RunLsmcStorageValuation(storageHandle, valuationDate, currentInventory, forwardCurve, interestRateCurve, spotVol,
+                                spotMeanReversion, longTermVol, seasonalVol, discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn,
+                                fwdSimSeedIn, numGlobalGridPointsIn, numericalTolerance, extraDecisions, cancellationToken, onProgress));
                     });
-                });
+                }
+                throw new Exception($"CalcMode enum symbol {CurrentAddInState.CalcMode} not recognised.");
             });
         }
 
+        private static LsmcStorageValuationResults<Day> RunLsmcStorageValuation(string storageHandle, DateTime valuationDate, double currentInventory,
+            object forwardCurve, object interestRateCurve, double spotVol, double spotMeanReversion, double longTermVol, double seasonalVol,
+            bool discountDeltas, object settleDatesIn, int numSims, string basisFunctionsIn, object seedIn, object fwdSimSeedIn, object numGlobalGridPointsIn,
+            object numericalTolerance, object extraDecisions, CancellationToken cancellationToken, Action<double> onProgress)
+        {
+            CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
+
+            // TODO provide alternative method for interpolating interest rates
+            Func<Day, double> interpolatedInterestRates =
+                StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
+
+            Func<Day, Day, double> discountFunc = StorageHelper.CreateAct65ContCompDiscounter(interpolatedInterestRates);
+            Day valDate = Day.FromDateTime(valuationDate);
+            Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
+
+            int numGlobalGridPoints = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numGlobalGridPointsIn, ExcelArg.NumGridPoints.Default,
+                ExcelArg.NumGridPoints.Name);
+
+            string basisFunctionsText = basisFunctionsIn.Replace("x_st", "x0").Replace("x_lt", "x1").Replace("x_sw", "x2");
+
+            var lsmcParamsBuilder = new LsmcValuationParameters<Day>.Builder
+            {
+                Storage = storage,
+                CurrentPeriod = valDate,
+                Inventory = currentInventory,
+                ForwardCurve = StorageExcelHelper.CreateDoubleTimeSeries<Day>(forwardCurve, ExcelArg.ForwardCurve.Name),
+                DiscountFactors = discountFunc,
+                DiscountDeltas = discountDeltas,
+                BasisFunctions = BasisFunctionsBuilder.Parse(basisFunctionsText),
+                ExtraDecisions = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(extraDecisions, 0, ExcelArg.ExtraDecisions.Name),
+                CancellationToken = cancellationToken,
+                OnProgressUpdate = onProgress,
+                GridCalc = FixedSpacingStateSpaceGridCalc.CreateForFixedNumberOfPointsOnGlobalInventoryRange(storage, numGlobalGridPoints),
+                NumericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalTolerance,
+                    LsmcValuationParameters<Day>.Builder.DefaultNumericalTolerance, ExcelArg.NumericalTolerance.Description),
+                SettleDateRule = settleDateRule,
+                SimulationDataReturned = SimulationDataReturned.All // All for backward compatibility
+                // TODO: populate SimulationDataReturned based on Excel argument
+            };
+
+            // TODO test that this works with expired storage
+            Day endDate = new[] { valDate, storage.EndPeriod }.Max();
+            var threeFactorParams =
+                MultiFactorParameters.For3FactorSeasonal(spotMeanReversion, spotVol, longTermVol, seasonalVol, valDate, endDate);
+
+            // TODO better error messages if seedIn and fwdSimSeedIn cannot be cast
+            int? seed = StorageExcelHelper.IsExcelEmptyOrMissing(seedIn) ? (int?)null : (int)(double)seedIn;
+            int? fwdSimSeed = StorageExcelHelper.IsExcelEmptyOrMissing(fwdSimSeedIn) ? (int?)null : (int)(double)fwdSimSeedIn;
+
+            lsmcParamsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(threeFactorParams, numSims, seed, fwdSimSeed);
+
+            return LsmcStorageValuation.WithNoLogger.Calculate(lsmcParamsBuilder.Build());
+        }
+
+        private static LsmcStorageValuationResults<Day> RunLsmcStorageValuation(Action<double> progress, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

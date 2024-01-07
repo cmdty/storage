@@ -42,10 +42,7 @@ namespace Cmdty.Storage.Excel
 
         public static ObjectCache Instance { get; } = new ObjectCache();
 
-        public ICollection<string> Handles 
-        { 
-            get { return _objects.Keys; }
-        }
+        public ICollection<string> Handles => _objects.Keys;
 
         public object CacheObjectAndGetHandle(string handleType, object[] parameters, Func<object> createObject)
         {
@@ -64,8 +61,7 @@ namespace Cmdty.Storage.Excel
 
         public T GetObject<T>(string handle)
         {
-            object cachedObject;
-            if (!_objects.TryGetValue(handle, out cachedObject))
+            if (!_objects.TryGetValue(handle, out object cachedObject))
                 throw new ArgumentException($"No cached object with handled {handle}.");
             if (!(cachedObject is T))
                 throw new ArgumentException($"Cached object with handle {handle} is not of expected " +
@@ -76,22 +72,19 @@ namespace Cmdty.Storage.Excel
         public void Remove(string handle)
         {
             if (_objects.TryRemove(handle, out object value))
-            {
-                var disposable = value as IDisposable;
-                if (disposable != null)
+                if (value is IDisposable disposable)
                     disposable.Dispose();
-            }
         }
 
         private sealed class ObjectHandleObservable : IExcelObservable, IDisposable
         {
-            ObjectCache _handler;
-            string _handle;
-            IExcelObserver _observer;
+            private readonly ObjectCache _objectCache;
+            private readonly string _handle;
+            private IExcelObserver _observer;
 
-            public ObjectHandleObservable(ObjectCache handler, string handle)
+            public ObjectHandleObservable(ObjectCache objectCache, string handle)
             {
-                _handler = handler;
+                _objectCache = objectCache;
                 _handle = handle;
             }
 
@@ -99,11 +92,11 @@ namespace Cmdty.Storage.Excel
             {
                 // We know this will only be called once, so we take some adventurous shortcuts (like returning 'this')
                 _observer = observer;
-                _observer.OnNext(_handle);
+                _observer.OnNext(_handle); // _handle text will be displayed in Excel 
                 return this;
             }
 
-            public void Dispose() => _handler.Remove(_handle);
+            public void Dispose() => _objectCache.Remove(_handle);  // Remove object from cache
 
         }
     }
