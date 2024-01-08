@@ -70,7 +70,7 @@ namespace Cmdty.Storage.Excel
                             RunLsmcStorageValuation(storageHandle, valuationDate, currentInventory, forwardCurve, interestRateCurve, spotVol,
                                 spotMeanReversion, longTermVol, seasonalVol, discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn,
                                 fwdSimSeedIn, numGlobalGridPointsIn, numericalTolerance, extraDecisions, cancellationToken, onProgress),
-                        CurrentAddInState.CalcMode));
+                        AddIn.CalcMode));
             });
         }
 
@@ -126,11 +126,6 @@ namespace Cmdty.Storage.Excel
             lsmcParamsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(threeFactorParams, numSims, seed, fwdSimSeed);
 
             return LsmcStorageValuation.WithNoLogger.Calculate(lsmcParamsBuilder.Build());
-        }
-
-        private static LsmcStorageValuationResults<Day> RunLsmcStorageValuation(Action<double> progress, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
 
     }

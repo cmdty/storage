@@ -69,7 +69,7 @@ namespace Cmdty.Storage.Excel
         [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Toggle Calc Mode")] // TODO delete and replace with ribbon radio button
         public static void ToggleCalcMode()
         {
-            CurrentAddInState.CalcMode = CurrentAddInState.CalcMode == CalcMode.Blocking ? CalcMode.Async : CalcMode.Blocking;
+            AddIn.CalcMode = AddIn.CalcMode == CalcMode.Blocking ? CalcMode.Async : CalcMode.Blocking;
         }
 
 

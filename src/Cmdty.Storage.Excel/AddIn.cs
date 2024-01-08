@@ -23,11 +23,31 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
+using ExcelDna.Integration;
+using Microsoft.Office.Interop.Excel;
+
 namespace Cmdty.Storage.Excel
 {
-    internal class AddIn
+    public enum CalcMode
+    {
+        Blocking,
+        Async
+    }
+
+    internal class AddIn : IExcelAddIn
     {
         public const string ExcelFunctionNamePrefix = "cmdty.";
         public const string ExcelFunctionCategory = "Cmdty.Storage";
+        public void AutoOpen()
+        {
+            Application app = (Application)ExcelDnaUtil.Application;
+            CalcMode = app.Calculation == XlCalculation.xlCalculationManual ? CalcMode.Blocking : CalcMode.Async;
+        }
+
+        public void AutoClose()
+        {
+        }
+
+        public static CalcMode CalcMode { get; set; }
     }
 }

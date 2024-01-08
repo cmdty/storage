@@ -48,14 +48,14 @@ namespace Cmdty.Storage.Excel
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = true, IsVolatile = false, IsExceptionSafe = true)]
         public static object LinearAlgebraProvider(object trigger)
         {
-            return StorageExcelHelper.ExecuteExcelFunction(() => StorageHelper.LinearAlgebraProvider());
+            return StorageExcelHelper.ExecuteExcelFunction(StorageHelper.LinearAlgebraProvider);
         }
 
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(GetCalcStatus),
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(GetCalcMode),
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = true, IsVolatile = false, IsExceptionSafe = true)] // TODO delete when Ribbon radio button working
-        public static object GetCalcStatus(object trigger)
+        public static object GetCalcMode(object trigger)
         {
-            return StorageExcelHelper.ExecuteExcelFunction(() => CurrentAddInState.CalcMode.ToString("G"));
+            return StorageExcelHelper.ExecuteExcelFunction(() => AddIn.CalcMode.ToString("G"));
         }
 
     }

@@ -29,17 +29,6 @@ using System.Threading.Tasks;
 
 namespace Cmdty.Storage.Excel
 {
-    public enum CalcMode
-    {
-        Blocking,
-        Async
-    }
-
-    public static class CurrentAddInState
-    {
-        public static CalcMode CalcMode { get; set; }
-
-    }
 
     public enum CalcStatus
     {
