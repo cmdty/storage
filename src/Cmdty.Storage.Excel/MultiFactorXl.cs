@@ -61,28 +61,16 @@ namespace Cmdty.Storage.Excel
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
-                var args = new object[] {storageHandle, valuationDate, currentInventory, forwardCurve,
+                object[] args = {storageHandle, valuationDate, currentInventory, forwardCurve,
                                 interestRateCurve, spotVol, spotMeanReversion, longTermVol, seasonalVol,
                                 discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn, fwdSimSeedIn,
                                 numGlobalGridPointsIn, numericalTolerance, extraDecisions };
-                if (CurrentAddInState.CalcMode == CalcMode.Blocking)
-                {
-                    return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
-                        RunLsmcStorageValuation(storageHandle, valuationDate, currentInventory, forwardCurve, interestRateCurve, spotVol,
-                            spotMeanReversion, longTermVol, seasonalVol, discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn,
-                            fwdSimSeedIn, numGlobalGridPointsIn, numericalTolerance, extraDecisions, CancellationToken.None, null)); // TODO check if CancellationToken.None, null can be removed
-                }
-                if (CurrentAddInState.CalcMode == CalcMode.Async)
-                {
-                    return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
-                    {
-                        return ExcelCalcWrapper.CreatePending((cancellationToken, onProgress) =>
+                return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
+                    ExcelCalcWrapper.Create((cancellationToken, onProgress) =>
                             RunLsmcStorageValuation(storageHandle, valuationDate, currentInventory, forwardCurve, interestRateCurve, spotVol,
                                 spotMeanReversion, longTermVol, seasonalVol, discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn,
-                                fwdSimSeedIn, numGlobalGridPointsIn, numericalTolerance, extraDecisions, cancellationToken, onProgress));
-                    });
-                }
-                throw new Exception($"CalcMode enum symbol {CurrentAddInState.CalcMode} not recognised.");
+                                fwdSimSeedIn, numGlobalGridPointsIn, numericalTolerance, extraDecisions, cancellationToken, onProgress),
+                        CurrentAddInState.CalcMode));
             });
         }
 

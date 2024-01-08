@@ -29,10 +29,18 @@ namespace Cmdty.Storage.Excel
     sealed class CalcWrapperStatusObservable : CalcWrapperObservableBase
     {
         public CalcWrapperStatusObservable(ExcelCalcWrapper calcWrapper) : base(calcWrapper)    
-            => calcWrapper.CalcTask.ContinueWith(task => TaskStatusUpdate(_calcWrapper.Status));
+            => _calcWrapper.OnStatusUpdate += CalcStatusUpdate;
         
+        private void CalcStatusUpdate(CalcStatus calcStatus) => _observer?.OnNext(calcStatus.ToString("G"));
+
         private void TaskStatusUpdate(CalcStatus calcStatus) => _observer?.OnNext(calcStatus.ToString("G"));
         
         protected override void OnSubscribe() => TaskStatusUpdate(_calcWrapper.Status); // TODO could be synchronizations issues, might need to lock
+
+        protected override void OnDispose()
+        {
+            _calcWrapper.OnStatusUpdate -= CalcStatusUpdate;
+            base.OnDispose();
+        }
     }
 }

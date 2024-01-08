@@ -61,7 +61,7 @@ namespace Cmdty.Storage.Excel
                 {
                     if (cachedObject is ExcelCalcWrapper calcWrapper)
                         if (calcWrapper.Status == CalcStatus.Pending) // TODO thread synchronisation required, or does this always run on same thread?
-                            calcWrapper.CalcTask.Start();
+                            calcWrapper.Start();
                 }
             }
         }

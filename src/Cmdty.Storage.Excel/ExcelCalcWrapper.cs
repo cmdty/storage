@@ -53,11 +53,12 @@ namespace Cmdty.Storage.Excel
     public sealed class ExcelCalcWrapper : IDisposable
     {
         public event Action<double> OnProgressUpdate;
+        public event Action<CalcStatus> OnStatusUpdate;
         public double Progress { get; private set; }
         public Task<object> CalcTask { get; private set; }
         public Type ResultType { get; }
         public bool CancellationSupported { get; }
-        public CalcStatus Status { get; private set; }
+        public CalcStatus Status { get; private set; } // TODO can this be removed and replaced with CalcTask.Status?
         private readonly CancellationTokenSource _cancellationTokenSource;
         private bool _isDisposed;
 
@@ -70,15 +71,47 @@ namespace Cmdty.Storage.Excel
             Status = calcStatus;
         }
         
-        public static ExcelCalcWrapper CreatePending<TResult>(Func<CancellationToken, Action<double>, TResult> calculation)
+        public static ExcelCalcWrapper Create<TResult>(Func<CancellationToken, Action<double>, TResult> calculation, CalcMode calcMode)
         {
-            var cancellationTokenSource = new CancellationTokenSource();
-            Type resultType = typeof(TResult);
-            var calcTaskWrapper = new ExcelCalcWrapper(null, resultType, cancellationTokenSource, CalcStatus.Pending);
-            void OnProgress(double progress) => UpdateProgress(calcTaskWrapper, progress);
-            calcTaskWrapper.CalcTask = new Task<object>(() => calculation(cancellationTokenSource.Token, OnProgress), cancellationTokenSource.Token);
-            calcTaskWrapper.CalcTask.ContinueWith(task => calcTaskWrapper.UpdateStatus(task)); // Don't pass cancellation token as want this to run even if cancelled
-            return calcTaskWrapper;
+            if (calcMode == CalcMode.Blocking)
+            {
+                try
+                {
+                    TResult result = calculation(CancellationToken.None, null /*progress*/); // This will block
+                    return CreateCompletedSuccessfully(result);
+                }
+                catch (Exception e)
+                {
+                    return CreateCompletedError<TResult>(e);
+                }
+            }
+
+            if (calcMode == CalcMode.Async)
+            {
+                var cancellationTokenSource = new CancellationTokenSource();
+                Type resultType = typeof(TResult);
+                var calcTaskWrapper = new ExcelCalcWrapper(null, resultType, cancellationTokenSource, CalcStatus.Pending);
+                void OnProgress(double progress) => UpdateProgress(calcTaskWrapper, progress);
+                calcTaskWrapper.CalcTask =
+                    new Task<object>(() => calculation(cancellationTokenSource.Token, OnProgress), cancellationTokenSource.Token);
+                calcTaskWrapper.CalcTask.ContinueWith(task =>
+                    calcTaskWrapper.UpdateStatus(task)); // Don't pass cancellation token as want this to run even if cancelled
+                return calcTaskWrapper;
+            }
+
+            throw new Exception($"CalcMode enum symbol {calcMode} not recognised.");
+        }
+
+        private static ExcelCalcWrapper CreateCompletedSuccessfully<TResult>(TResult results)
+        {
+            Task<object> completedTask = Task.FromResult((object)results);
+            return new ExcelCalcWrapper(completedTask, typeof(TResult), new CancellationTokenSource(), CalcStatus.Success);
+        }
+
+        private static ExcelCalcWrapper CreateCompletedError<TResult>(Exception exception)
+        {
+            Task<object> completedTask = Task.FromException<object>(exception);
+            return new ExcelCalcWrapper(completedTask, typeof(TResult), new CancellationTokenSource(), CalcStatus.Error);
         }
 
         private static void UpdateProgress(ExcelCalcWrapper calcWrapper, double progress)
@@ -96,20 +129,34 @@ namespace Cmdty.Storage.Excel
         
         private void UpdateStatus(Task task)
         {
+            CalcStatus calcStatus;
             switch (task.Status)
             {
                 case TaskStatus.RanToCompletion:
-                    Status = CalcStatus.Success;
+                    calcStatus = CalcStatus.Success;
                     break;
                 case TaskStatus.Canceled:
-                    Status = CalcStatus.Cancelled;
+                    calcStatus = CalcStatus.Cancelled;
                     break;
                 case TaskStatus.Faulted:
-                    Status = CalcStatus.Error;
+                    calcStatus = CalcStatus.Error;
                     break;
                 default:
                     throw new ApplicationException($"Task status {task.Status} not supported.");
             }
+            UpdateStatus(calcStatus);
+        }
+
+        private void UpdateStatus(CalcStatus calcStatus)
+        {
+            Status = calcStatus;
+            OnStatusUpdate?.Invoke(calcStatus);
+        }
+
+        public void Start()
+        {
+            UpdateStatus(CalcStatus.Running);
+            CalcTask.Start();
         }
 
         public void Dispose()

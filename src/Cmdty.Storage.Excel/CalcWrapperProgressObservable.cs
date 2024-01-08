@@ -30,7 +30,7 @@ namespace Cmdty.Storage.Excel
         public CalcWrapperProgressObservable(ExcelCalcWrapper calcWrapper) : base(calcWrapper)
                     => _calcWrapper.OnProgressUpdate += ProgressUpdate;
         
-        internal void ProgressUpdate(double progress) => _observer?.OnNext(progress);
+        private void ProgressUpdate(double progress) => _observer?.OnNext(progress);
 
         protected override void OnSubscribe() => _observer.OnNext(_calcWrapper.Progress);
 

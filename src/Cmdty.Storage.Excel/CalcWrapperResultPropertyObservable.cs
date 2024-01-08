@@ -33,7 +33,7 @@ namespace Cmdty.Storage.Excel
     sealed class CalcWrapperResultPropertyObservable : CalcWrapperObservableBase
     {
         private readonly object _returnedWhilstWaiting;
-        private static readonly object[] GetterParams = new object[0];
+        private static readonly object[] GetterParams = Array.Empty<object>();
         private readonly MethodInfo _propertyGetter;
         
         public CalcWrapperResultPropertyObservable(ExcelCalcWrapper calcWrapper, string resultPropertyName, object returnedWhilstWaiting) : base(calcWrapper)

@@ -126,7 +126,7 @@ namespace Cmdty.Storage.Excel
             });
         }
 
-        private static readonly object[] GetterParams = new object[0];
+        private static readonly object[] GetterParams = Array.Empty<object>();
 
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(GetObjectProperty),
 //            Description = "TODO.", // TODO
