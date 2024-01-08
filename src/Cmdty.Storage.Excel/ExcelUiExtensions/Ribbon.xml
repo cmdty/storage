@@ -1,5 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>
+	<ribbon>
+		<tabs>
+			<tab id='cmdtyStorageTab' label='Cmdty.Storage'>
+				<group id='calculationGroup' label='Calculate'>
+					<button id='calcPendingButton' label='Calculate All Pending' size='large' onAction='CalculateAllPending' imageMso='Calculator'/>
+					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelExecution' imageMso='X'/>
+				</group>
+				<group id='calcModeGroupButton' label='Calculation Mode'>
+					<toggleButton id='asyncCalcModelButton' label='Async' size='large'/>
+					<toggleButton id='blockingCalcModelButton' label='Blocking' size='large'/>
+				</group>
+			</tab>
+		</tabs>
+	</ribbon>
 	<contextMenus>
 		<contextMenu idMso='ContextMenuCell'>
 			<menu id='CmdtyStorageMenu' label='Cmdty.Storage' insertBeforeMso='Cut' >

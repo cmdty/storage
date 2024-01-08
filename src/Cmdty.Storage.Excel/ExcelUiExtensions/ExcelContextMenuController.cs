@@ -63,5 +63,18 @@ namespace Cmdty.Storage.Excel
             MessageBox.Show(numCalcsCancelled + $" calculation{pluralS} cancelled.");
         }
 
+        public void CalculateAllPending(IRibbonControl ribbonControl)
+        {
+            foreach (string objectHandle in ObjectCache.Instance.Handles)
+            {
+                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
+                {
+                    if (cachedObject is ExcelCalcWrapper calcWrapper)
+                        if (calcWrapper.Status == CalcStatus.Pending) // TODO thread synchronisation required, or does this always run on same thread?
+                            calcWrapper.Start();
+                }
+            }
+        }
+
     }
 }
