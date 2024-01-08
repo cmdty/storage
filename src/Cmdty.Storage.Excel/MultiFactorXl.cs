@@ -81,10 +81,10 @@ namespace Cmdty.Storage.Excel
         {
             CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
 
-            Func<Day, Day, double> discountFunc =
-                StorageExcelHelper.CreateLogLinearInterpolatedDiscountFactors(interestRateCurve, ExcelArg.InterestRateCurve.Name);
-
             Day valDate = Day.FromDateTime(valuationDate);
+            Func<Day, Day, double> discountFunc =
+                StorageExcelHelper.CreateLogLinearInterpolatedDiscountFactors(interestRateCurve, ExcelArg.InterestRateCurve.Name, valDate);
+
             Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
 
             int numGlobalGridPoints = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numGlobalGridPointsIn, ExcelArg.NumGridPoints.Default,

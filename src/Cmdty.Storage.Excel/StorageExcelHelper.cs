@@ -318,7 +318,7 @@ namespace Cmdty.Storage.Excel
             return builder.Build();
         }
 
-        public static Func<Day, Day, double> CreateLogLinearInterpolatedDiscountFactors(object excelValues, string excelArgumentName)
+        public static Func<Day, Day, double> CreateLogLinearInterpolatedDiscountFactors(object excelValues, string excelArgumentName, Day valuationDate)
         {
             if (excelValues is ExcelMissing || excelValues is ExcelEmpty)
                 throw new ArgumentException(excelArgumentName + " hasn't been specified.");
@@ -347,13 +347,13 @@ namespace Cmdty.Storage.Excel
             if (interestRatePoints.Count < 2)
                 throw new ArgumentException(excelArgumentName + " must contain at least two points.");
 
-            Day firstDate = interestRatePoints.Min(curvePoint => curvePoint.Date);
+            //Day firstDate = interestRatePoints.Min(curvePoint => curvePoint.Date);
             var maturitiesToInterpolate = new double[interestRatePoints.Count];
             var discountFactorsToInterpolate = new double[interestRatePoints.Count];
 
             for (int i = 0; i < maturitiesToInterpolate.Length; i++)
             {
-                double yearFraction = interestRatePoints[i].Date.OffsetFrom(firstDate) / 365.0; // TODO use valuation date not first point
+                double yearFraction = interestRatePoints[i].Date.OffsetFrom(valuationDate) / 365.0;
                 maturitiesToInterpolate[i] = yearFraction;
                 discountFactorsToInterpolate[i] = Math.Exp(-interestRatePoints[i].InterestRate * yearFraction);
             }
@@ -362,11 +362,12 @@ namespace Cmdty.Storage.Excel
 
             Day lastDate = interestRatePoints.Max(curvePoint => curvePoint.Date);
 
-            double InterpolatedDiscountFactorCurve(Day valuationDate, Day cashFlowDate)
+            // TODO bit odd that we have valDate and valuationDate. Could these ever be different?
+            double InterpolatedDiscountFactorCurve(Day valDate, Day cashFlowDate)
             {
-                if (cashFlowDate < valuationDate || cashFlowDate > lastDate)
+                if (cashFlowDate < valDate || cashFlowDate > lastDate)
                     throw new ArgumentException($"Interest rate for future cash flow {cashFlowDate} cannot be interpolated, as this date is outside of the bounds of the input rates curve.");
-                double maturity = (cashFlowDate - valuationDate) / 365.0;
+                double maturity = (cashFlowDate - valDate) / 365.0;
                 return logLinear.Interpolate(maturity);
             }
             

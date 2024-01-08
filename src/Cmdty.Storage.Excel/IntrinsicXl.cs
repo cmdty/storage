@@ -56,8 +56,9 @@ namespace Cmdty.Storage.Excel
                     double numericalTolerance = StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numericalToleranceIn, 1E-10,
                                                                     "Numerical_tolerance");
 
+                    Day valDate = Day.FromDateTime(valuationDate);
                     Func<Day, Day, double> discountFunc =
-                        StorageExcelHelper.CreateLogLinearInterpolatedDiscountFactors(interestRateCurve, ExcelArg.InterestRateCurve.Name);
+                        StorageExcelHelper.CreateLogLinearInterpolatedDiscountFactors(interestRateCurve, ExcelArg.InterestRateCurve.Name, valDate);
                     Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
 
                     var storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
@@ -66,7 +67,6 @@ namespace Cmdty.Storage.Excel
 
                     int numGridPoints =
                         StorageExcelHelper.DefaultIfExcelEmptyOrMissing(numGlobalGridPointsIn, ExcelArg.NumGridPoints.Default, ExcelArg.NumGridPoints.Name);
-                    Day valDate = Day.FromDateTime(valuationDate);
 
                     IntrinsicStorageValuationResults<Day> valuationResults = IntrinsicStorageValuation<Day>
                         .ForStorage(storage)
