@@ -136,15 +136,15 @@ namespace Cmdty.Storage.Excel
             public const string Description = "Handle to cached storage object.";
         }
 
-        internal static class SpotMeanReversion
+        internal static class SpotFactorMeanReversion
         {
-            public const string Name = "Spot_mean_reversion";
-            public const string Description = "Mean reversion of the spot factor of a three-factor seasonal process."; // TODO change this if decided to automatically multiply by 365.25
+            public const string Name = "Spot_factor_mr";
+            public const string Description = "Mean reversion rate of the spot factor of a three-factor seasonal process."; // TODO change this if decided to automatically multiply by 365.25
         }
 
-        internal static class SpotVol
+        internal static class SpotFactorVol
         {
-            public const string Name = "Spot_vol";
+            public const string Name = "Spot_factor_vol";
             public const string Description = "Volatility of the spot factor of a three-factor seasonal process.";
         }
 
