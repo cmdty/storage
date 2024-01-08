@@ -124,8 +124,8 @@ namespace Cmdty.Storage.Excel
 
             double timeDelta = 1.0 / 365.0; // TODO remove this hard coding
 
-            Func<Day, double> interpolatedInterestRates =
-                StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
+            Func<Day, Day, double> discountFunc =
+                StorageExcelHelper.CreateLogLinearInterpolatedDiscountFactors(interestRateCurve, ExcelArg.InterestRateCurve.Name);
 
             TreeStorageValuationResults<T> valuationResults = TreeStorageValuation<T>
                         .ForStorage(storage)
@@ -134,7 +134,7 @@ namespace Cmdty.Storage.Excel
                         .WithForwardCurve(forwardCurve)
                         .WithOneFactorTrinomialTree(spotVolatilityCurve, meanReversion, timeDelta)
                         .WithCmdtySettlementRule(period => period.First<Day>()) // TODO get rid if this
-                        .WithAct365ContinuouslyCompoundedInterestRate(interpolatedInterestRates)
+                        .WithDiscountFactorFunc(discountFunc)
                         .WithFixedNumberOfPointsOnGlobalInventoryRange(numGridPoints)
                         .WithLinearInventorySpaceInterpolation()
                         .WithNumericalTolerance(numericalTolerance)
@@ -175,8 +175,8 @@ namespace Cmdty.Storage.Excel
             int numGridPoints =
                 StorageExcelHelper.DefaultIfExcelEmptyOrMissing<int>(numGlobalGridPointsIn, 100, "Num_global_grid_points");
 
-            Func<Day, double> interpolatedInterestRates =
-                StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
+            Func<Day, Day, double> discountFunc =
+                StorageExcelHelper.CreateLogLinearInterpolatedDiscountFactors(interestRateCurve, ExcelArg.InterestRateCurve.Name);
 
             TreeStorageValuationResults<T> valuationResults = TreeStorageValuation<T>
                         .ForStorage(storage)
@@ -185,7 +185,7 @@ namespace Cmdty.Storage.Excel
                         .WithForwardCurve(forwardCurve)
                         .WithIntrinsicTree()
                         .WithCmdtySettlementRule(period => period.First<Day>()) // TODO get rid if this
-                        .WithAct365ContinuouslyCompoundedInterestRate(interpolatedInterestRates)
+                        .WithDiscountFactorFunc(discountFunc)
                         .WithFixedNumberOfPointsOnGlobalInventoryRange(numGridPoints)
                         .WithLinearInventorySpaceInterpolation()
                         .WithNumericalTolerance(numericalTolerance)

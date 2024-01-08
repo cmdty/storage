@@ -81,11 +81,9 @@ namespace Cmdty.Storage.Excel
         {
             CmdtyStorage<Day> storage = ObjectCache.Instance.GetObject<CmdtyStorage<Day>>(storageHandle);
 
-            // TODO provide alternative method for interpolating interest rates
-            Func<Day, double> interpolatedInterestRates =
-                StorageExcelHelper.CreateLinearInterpolatedInterestRateFunc(interestRateCurve, ExcelArg.InterestRateCurve.Name);
+            Func<Day, Day, double> discountFunc =
+                StorageExcelHelper.CreateLogLinearInterpolatedDiscountFactors(interestRateCurve, ExcelArg.InterestRateCurve.Name);
 
-            Func<Day, Day, double> discountFunc = StorageHelper.CreateAct65ContCompDiscounter(interpolatedInterestRates);
             Day valDate = Day.FromDateTime(valuationDate);
             Func<Day, Day> settleDateRule = StorageExcelHelper.CreateSettlementRule(settleDatesIn, ExcelArg.SettleDates.Name);
 

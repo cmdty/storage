@@ -114,7 +114,7 @@ namespace Cmdty.Storage.Excel
         internal static class InterestRateCurve
         {
             public const string Name = "Ir_curve";
-            public const string Description = "Interest rate curve used to discount cash flows to present value, following Act/365 day count and continuous compounding. Any gaps in the curve are linearly interpolated.";
+            public const string Description = "Interest rate curve used to discount cash flows to present value, following Act/365 day count and continuous compounding. Log-linear interpolation of discount factor is used to fill any gaps.";
         }
 
         internal static class NumGridPoints
