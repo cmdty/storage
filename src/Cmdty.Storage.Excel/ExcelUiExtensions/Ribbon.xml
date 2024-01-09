@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>
+<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui' onLoad='OnRibbonLoad'>
 	<ribbon>
 		<tabs>
 			<tab id='cmdtyStorageTab' label='Cmdty.Storage'>
@@ -8,8 +8,8 @@
 					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelExecution' imageMso='X'/>
 				</group>
 				<group id='calcModeGroupButton' label='Calculation Mode'>
-					<toggleButton id='asyncCalcModelButton' label='Async' size='large'/>
-					<toggleButton id='blockingCalcModelButton' label='Blocking' size='large'/>
+					<toggleButton id='asyncCalcModelButton' label='Async' size='large' onAction='AsyncModePressed' getPressed='IsAsyncModePressed'/>
+					<toggleButton id='blockingCalcModelButton' label='Blocking' size='large' onAction='BlockingModePressed' getPressed='IsBlockingModePressed'/>
 				</group>
 			</tab>
 		</tabs>

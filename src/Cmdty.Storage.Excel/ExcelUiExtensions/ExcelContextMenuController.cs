@@ -36,6 +36,8 @@ namespace Cmdty.Storage.Excel
     [ComVisible(true)]
     public class ExcelContextMenuController : ExcelRibbon
     {
+        private IRibbonUI _ribbonUi;
+
         public override string GetCustomUI(string ribbonId)
         {
             return RibbonResources.Ribbon;
@@ -74,6 +76,33 @@ namespace Cmdty.Storage.Excel
                             calcWrapper.Start();
                 }
             }
+        }
+
+        public void OnRibbonLoad(IRibbonUI ribbonUi)
+        {
+            _ribbonUi = ribbonUi;
+        }
+
+        public void AsyncModePressed(IRibbonControl ribbonControl, bool pressed)
+        {
+            AddIn.CalcMode = pressed ? CalcMode.Async : CalcMode.Blocking;
+            _ribbonUi.InvalidateControl("blockingCalcModelButton"); // Unselect Blocking Mode toggle button
+        }
+
+        public void BlockingModePressed(IRibbonControl ribbonControl, bool pressed)
+        {
+            AddIn.CalcMode = pressed ? CalcMode.Blocking : CalcMode.Async;
+            _ribbonUi.InvalidateControl("asyncCalcModelButton");  // Unselect Async Mode toggle button
+        }
+
+        public bool IsAsyncModePressed(IRibbonControl ribbonControl)
+        {
+            return AddIn.CalcMode == CalcMode.Async;
+        }
+
+        public bool IsBlockingModePressed(IRibbonControl ribbonControl)
+        {
+            return AddIn.CalcMode == CalcMode.Blocking;
         }
 
     }
