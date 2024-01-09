@@ -87,12 +87,18 @@ namespace Cmdty.Storage.Excel
         {
             AddIn.CalcMode = pressed ? CalcMode.Async : CalcMode.Blocking;
             _ribbonUi.InvalidateControl("blockingCalcModelButton"); // Unselect Blocking Mode toggle button
+            // Enabled buttons for use in async mode
+            _ribbonUi.InvalidateControl("calcPendingButton"); 
+            _ribbonUi.InvalidateControl("cancelAll");
         }
 
         public void BlockingModePressed(IRibbonControl ribbonControl, bool pressed)
         {
             AddIn.CalcMode = pressed ? CalcMode.Blocking : CalcMode.Async;
             _ribbonUi.InvalidateControl("asyncCalcModelButton");  // Unselect Async Mode toggle button
+            // Disable buttons for use in async mode
+            _ribbonUi.InvalidateControl("calcPendingButton");
+            _ribbonUi.InvalidateControl("cancelAll");
         }
 
         public bool IsAsyncModePressed(IRibbonControl ribbonControl)

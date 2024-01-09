@@ -4,8 +4,8 @@
 		<tabs>
 			<tab id='cmdtyStorageTab' label='Cmdty.Storage'>
 				<group id='calculationGroup' label='Calculate'>
-					<button id='calcPendingButton' label='Calculate All Pending' size='large' onAction='CalculateAllPending' imageMso='Calculator'/>
-					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelExecution' imageMso='X'/>
+					<button id='calcPendingButton' label='Calculate All Pending' size='large' onAction='CalculateAllPending' imageMso='Calculator' getEnabled='IsAsyncModePressed'/>
+					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelExecution' imageMso='X' getEnabled='IsAsyncModePressed'/>
 				</group>
 				<group id='calcModeGroupButton' label='Calculation Mode'>
 					<toggleButton id='asyncCalcModelButton' label='Async' size='large' onAction='AsyncModePressed' getPressed='IsAsyncModePressed'/>
