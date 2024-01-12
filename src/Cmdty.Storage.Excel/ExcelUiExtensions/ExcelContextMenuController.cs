@@ -50,9 +50,7 @@ namespace Cmdty.Storage.Excel
 
             int numCalcsCancelled = 0;
             foreach (dynamic cell in selectedRange.Cells)
-            {
-                string cellValue = cell.Value2 as string;
-                if (cellValue != null)
+                if (cell.Value2 is string cellValue)
                     if (ObjectCache.Instance.TryGetObject(cellValue, out object cachedObject))
                         if (cachedObject is ExcelCalcWrapper excelCalcWrapper)
                             if (excelCalcWrapper.Status == CalcStatus.Running)
@@ -60,22 +58,14 @@ namespace Cmdty.Storage.Excel
                                 excelCalcWrapper.Cancel();
                                 numCalcsCancelled++;
                             }
-            }
+            
             string pluralS = numCalcsCancelled == 1 ? "" : "s";
             MessageBox.Show(numCalcsCancelled + $" calculation{pluralS} cancelled.");
         }
 
         public void CalculateAllPending(IRibbonControl ribbonControl)
         {
-            foreach (string objectHandle in ObjectCache.Instance.Handles)
-            {
-                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
-                {
-                    if (cachedObject is ExcelCalcWrapper calcWrapper)
-                        if (calcWrapper.Status == CalcStatus.Pending) // TODO thread synchronisation required, or does this always run on same thread?
-                            calcWrapper.Start();
-                }
-            }
+            AsyncCalcHelper.CalculateAllPending();
         }
 
         public void OnRibbonLoad(IRibbonUI ribbonUi)

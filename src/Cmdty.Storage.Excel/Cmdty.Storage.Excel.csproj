@@ -11,7 +11,8 @@
 	    <ExcelAddInName>Cmdty.Storage</ExcelAddInName>
 		<ExcelDnaPack32BitXllName>Cmdty.Storage-x86</ExcelDnaPack32BitXllName>
 		<ExcelDnaPack64BitXllName>Cmdty.Storage-x64</ExcelDnaPack64BitXllName>
-    </PropertyGroup>
+		<ExcelAddInComServer>true</ExcelAddInComServer>
+	</PropertyGroup>
 
 	<ItemGroup>
     <ProjectReference Include="..\Cmdty.Storage\Cmdty.Storage.csproj" />

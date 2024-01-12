@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright (c) 2019 Jake Fowler
+// Copyright (c) 2024 Jake Fowler
 //
 // Permission is hereby granted, free of charge, to any person 
 // obtaining a copy of this software and associated documentation 
@@ -23,38 +23,26 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using ExcelDna.ComInterop;
-using ExcelDna.Integration;
+using System.Runtime.InteropServices;
+
+[assembly: ComVisible(false)]
 
 namespace Cmdty.Storage.Excel
 {
-    public enum CalcMode
+    [ComVisible(true)]
+    [ClassInterface(ClassInterfaceType.AutoDual)] // TODO change this.
+    public class AsyncCalcManager
     {
-        Blocking,
-        Async
-    }
 
-    internal class AddIn : IExcelAddIn
-    {
-        public const string ExcelFunctionNamePrefix = "cmdty.";
-        public const string ExcelFunctionCategory = "Cmdty.Storage";
-        public void AutoOpen()
+        public void CalculateAllPending()
         {
-            //dynamic app = (Application)ExcelDnaUtil.Application;
-            //dynamic calcMode = app.Calculation;
-            //CalcMode = app.Calculation == XlCalculation.xlCalculationManual ? CalcMode.Blocking : CalcMode.Async;
-            //if (app.Calculation == XlCalculation.xlCalculationManual)
-            //    CalcMode = CalcMode.Blocking;
-            //else
-            //    CalcMode = CalcMode.Async;
-            ComServer.DllRegisterServer();
+            AsyncCalcHelper.CalculateAllPending();
         }
 
-        public void AutoClose()
+        public void CancelAllRunning()
         {
-            ComServer.DllUnregisterServer();
+            AsyncCalcHelper.CancelAllRunning(true);
         }
 
-        public static CalcMode CalcMode { get; set; }
     }
 }

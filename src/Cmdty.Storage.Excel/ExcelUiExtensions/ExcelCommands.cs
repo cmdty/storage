@@ -31,48 +31,17 @@ namespace Cmdty.Storage.Excel
     public static class ExcelCommands
     {
 
-        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Cancel All")]
+        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Cancel All")] // TODO set up shortcut key for this, or can shortcut be added to Ribbon xml context menu items
         public static void CancelAllCalculations()
         {
-            int numCalcsCancelled = 0;
-            foreach (string objectHandle in ObjectCache.Instance.Handles)
-            {
-                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
-                {
-                    if (cachedObject is ExcelCalcWrapper calcWrapper)
-                        if (calcWrapper.Status == CalcStatus.Running)
-                        {
-                            calcWrapper.Cancel();
-                            numCalcsCancelled++;
-                        }
-                }
-            }
-            string message = numCalcsCancelled == 1 ? "1 calculation has been cancelled." :
-                numCalcsCancelled + " calculations have been cancelled.";
-            MessageBox.Show(message, "Cmdty.Storage", MessageBoxButtons.OK);
+            AsyncCalcHelper.CancelAllRunning(true);
         }
 
-        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Start All Pending")] // TODO delete and replace with ribbon button
+        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Start All Pending")] // TODO set up shortcut key for this, or can shortcut be added to Ribbon xml context menu items
         public static void StartAllPendingCalculations()
         {
-            foreach (string objectHandle in ObjectCache.Instance.Handles)
-            {
-                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
-                {
-                    if (cachedObject is ExcelCalcWrapper calcWrapper)
-                        if (calcWrapper.Status == CalcStatus.Pending) // TODO thread synchronisation required, or does this always run on same thread?
-                            calcWrapper.Start();
-                }
-            }
+            AsyncCalcHelper.CalculateAllPending();
         }
-
-        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Toggle Calc Mode")] // TODO delete and replace with ribbon radio button
-        public static void ToggleCalcMode()
-        {
-            AddIn.CalcMode = AddIn.CalcMode == CalcMode.Blocking ? CalcMode.Async : CalcMode.Blocking;
-        }
-
-
 
     }
 }
