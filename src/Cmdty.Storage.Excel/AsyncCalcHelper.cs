@@ -24,6 +24,9 @@
 #endregion
 
 using System.Windows.Forms;
+using ExcelDna.Integration;
+using Microsoft.Office.Interop.Excel;
+using Application = Microsoft.Office.Interop.Excel.Application;
 
 namespace Cmdty.Storage.Excel
 {
@@ -33,14 +36,49 @@ namespace Cmdty.Storage.Excel
         public static void CalculateAllPending()
         {
             foreach (string objectHandle in ObjectCache.Instance.Handles)
-            {
                 if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
-                {
                     if (cachedObject is ExcelCalcWrapper calcWrapper)
                         if (calcWrapper.Status == CalcStatus.Pending) // TODO thread synchronisation required, or does this always run on same thread?
                             calcWrapper.Start();
-                }
+        }
+
+        public static void CalculateSelected()
+        {
+            Range selectedRange = GetSelectedRange();
+            foreach (dynamic cell in selectedRange.Cells)
+                if (cell.Value2 is string cellValue)
+                    if (ObjectCache.Instance.TryGetObject(cellValue, out object cachedObject))
+                        if (cachedObject is ExcelCalcWrapper excelCalcWrapper)
+                            if (excelCalcWrapper.Status == CalcStatus.Pending)
+                                excelCalcWrapper.Start();
+        }
+
+        public static void CancelSelected(bool showMsgBox)
+        {
+            Range selectedRange = GetSelectedRange();
+
+            int numCalcsCancelled = 0;
+            foreach (dynamic cell in selectedRange.Cells)
+                if (cell.Value2 is string cellValue)
+                    if (ObjectCache.Instance.TryGetObject(cellValue, out object cachedObject))
+                        if (cachedObject is ExcelCalcWrapper excelCalcWrapper)
+                            if (excelCalcWrapper.Status == CalcStatus.Running)
+                            {
+                                excelCalcWrapper.Cancel();
+                                numCalcsCancelled++;
+                            }
+
+            if (showMsgBox)
+            {
+                string pluralS = numCalcsCancelled == 1 ? "" : "s";
+                MessageBox.Show(numCalcsCancelled + $" calculation{pluralS} cancelled.");
             }
+        }
+
+        private static Range GetSelectedRange()
+        {
+            Application app = (Application)ExcelDnaUtil.Application;
+            return (Range)app.Selection;
         }
 
         public static void CancelAllRunning(bool showMsgBox)

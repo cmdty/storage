@@ -43,31 +43,21 @@ namespace Cmdty.Storage.Excel
             return RibbonResources.Ribbon;
         }
 
-        public void CancelExecution(IRibbonControl ribbonControl)
+        public void CancelSelected(IRibbonControl ribbonControl)
         {
-            Application app = (Application)ExcelDnaUtil.Application;
-            Range selectedRange = (Range)app.Selection;
-
-            int numCalcsCancelled = 0;
-            foreach (dynamic cell in selectedRange.Cells)
-                if (cell.Value2 is string cellValue)
-                    if (ObjectCache.Instance.TryGetObject(cellValue, out object cachedObject))
-                        if (cachedObject is ExcelCalcWrapper excelCalcWrapper)
-                            if (excelCalcWrapper.Status == CalcStatus.Running)
-                            {
-                                excelCalcWrapper.Cancel();
-                                numCalcsCancelled++;
-                            }
-            
-            string pluralS = numCalcsCancelled == 1 ? "" : "s";
-            MessageBox.Show(numCalcsCancelled + $" calculation{pluralS} cancelled.");
+            AsyncCalcHelper.CancelSelected(true);
         }
-
+        
         public void CalculateAllPending(IRibbonControl ribbonControl)
         {
             AsyncCalcHelper.CalculateAllPending();
         }
 
+        public void CalculateSelected(IRibbonControl ribbonControl)
+        {
+            AsyncCalcHelper.CalculateSelected();
+        }
+        
         public void OnRibbonLoad(IRibbonUI ribbonUi)
         {
             _ribbonUi = ribbonUi;
