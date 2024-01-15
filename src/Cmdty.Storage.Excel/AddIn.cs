@@ -23,9 +23,6 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using ExcelDna.ComInterop;
-using ExcelDna.Integration;
-
 namespace Cmdty.Storage.Excel
 {
     public enum CalcMode
@@ -34,26 +31,10 @@ namespace Cmdty.Storage.Excel
         Async
     }
 
-    internal class AddIn : IExcelAddIn
+    internal class AddIn
     {
         public const string ExcelFunctionNamePrefix = "cmdty.";
         public const string ExcelFunctionCategory = "Cmdty.Storage";
-        public void AutoOpen()
-        {
-            //dynamic app = (Application)ExcelDnaUtil.Application;
-            //dynamic calcMode = app.Calculation;
-            //CalcMode = app.Calculation == XlCalculation.xlCalculationManual ? CalcMode.Blocking : CalcMode.Async;
-            //if (app.Calculation == XlCalculation.xlCalculationManual)
-            //    CalcMode = CalcMode.Blocking;
-            //else
-            //    CalcMode = CalcMode.Async;
-            ComServer.DllRegisterServer();
-        }
-
-        public void AutoClose()
-        {
-            ComServer.DllUnregisterServer();
-        }
 
         public static CalcMode CalcMode { get; set; }
     }
