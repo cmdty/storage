@@ -35,7 +35,5 @@ namespace Cmdty.Storage.Excel
     {
         public const string ExcelFunctionNamePrefix = "cmdty.";
         public const string ExcelFunctionCategory = "Cmdty.Storage";
-
-        public static CalcMode CalcMode { get; set; }
     }
 }

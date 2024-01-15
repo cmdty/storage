@@ -23,73 +23,25 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using ExcelDna.Integration;
 using ExcelDna.Integration.CustomUI;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using Cmdty.Storage.Excel.ExcelUiExtensions;
-using Microsoft.Office.Interop.Excel;
-using Application = Microsoft.Office.Interop.Excel.Application;
 
 namespace Cmdty.Storage.Excel
 {
     [ComVisible(true)]
     public class ExcelContextMenuController : ExcelRibbon
     {
-        private IRibbonUI _ribbonUi;
+        public override string GetCustomUI(string ribbonId) =>
+            RibbonResources.Ribbon;
 
-        public override string GetCustomUI(string ribbonId)
-        {
-            return RibbonResources.Ribbon;
-        }
-
-        public void CancelSelected(IRibbonControl ribbonControl)
-        {
+        public void CancelSelected(IRibbonControl ribbonControl) =>
             AsyncCalcHelper.CancelSelected(true);
-        }
         
-        public void CalculateAllPending(IRibbonControl ribbonControl)
-        {
+        public void CalculateAllPending(IRibbonControl ribbonControl) =>
             AsyncCalcHelper.CalculateAllPending();
-        }
 
-        public void CalculateSelected(IRibbonControl ribbonControl)
-        {
+        public void CalculateSelected(IRibbonControl ribbonControl) =>
             AsyncCalcHelper.CalculateSelected();
-        }
-        
-        public void OnRibbonLoad(IRibbonUI ribbonUi)
-        {
-            _ribbonUi = ribbonUi;
-        }
-
-        public void AsyncModePressed(IRibbonControl ribbonControl, bool pressed)
-        {
-            AddIn.CalcMode = pressed ? CalcMode.Async : CalcMode.Blocking;
-            _ribbonUi.InvalidateControl("blockingCalcModelButton"); // Unselect Blocking Mode toggle button
-            // Enabled buttons for use in async mode
-            _ribbonUi.InvalidateControl("calcPendingButton"); 
-            _ribbonUi.InvalidateControl("cancelAll");
-        }
-
-        public void BlockingModePressed(IRibbonControl ribbonControl, bool pressed)
-        {
-            AddIn.CalcMode = pressed ? CalcMode.Blocking : CalcMode.Async;
-            _ribbonUi.InvalidateControl("asyncCalcModelButton");  // Unselect Async Mode toggle button
-            // Disable buttons for use in async mode
-            _ribbonUi.InvalidateControl("calcPendingButton");
-            _ribbonUi.InvalidateControl("cancelAll");
-        }
-
-        public bool IsAsyncModePressed(IRibbonControl ribbonControl)
-        {
-            return AddIn.CalcMode == CalcMode.Async;
-        }
-
-        public bool IsBlockingModePressed(IRibbonControl ribbonControl)
-        {
-            return AddIn.CalcMode == CalcMode.Blocking;
-        }
-
     }
 }

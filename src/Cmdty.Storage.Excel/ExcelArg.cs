@@ -27,6 +27,12 @@ namespace Cmdty.Storage.Excel
 {
     internal static class ExcelArg
     {
+        internal static class CalcMode
+        {
+            public const string Name = "Calc_mode";
+            public const string Description = "Calculation mode. Either 'Blocking' or 'Async'"; // TODO add 'Auto' calc mode?
+        }
+
         internal static class CachedObjectName
         {
             public const string Name = "Name";
@@ -41,14 +47,14 @@ namespace Cmdty.Storage.Excel
 
         internal static class StorageStart
         {
-            public const string Name = "Storage_start";
-            public const string Description = "Date-time on which storage facility first becomes active.";
+            public const string Name = "Start";
+            public const string Description = "Date on which storage facility first becomes active.";
         }
 
         internal static class StorageEnd
         {
-            public const string Name = "Storage_end";
-            public const string Description = "Date-time on which storage facility ceases being active. Injections/withdrawal are only allowed on time periods before the end.";
+            public const string Name = "End";
+            public const string Description = "Date on which storage facility ceases being active. Injections/withdrawal are only allowed on time periods before the end.";
         }
 
         internal static class Ratchets
@@ -59,7 +65,7 @@ namespace Cmdty.Storage.Excel
 
         internal static class RatchetInterpolation
         {
-            public const string Name = "Ratchet_interpolation";
+            public const string Name = "Ratchet_interp";
             public const string Description = "Text which determines how injection/withdrawal rates are interpolated by inventory. Must be either 'PiecewiseLinear', 'Polynomial', or 'Step'.";
         }
 
@@ -126,7 +132,7 @@ namespace Cmdty.Storage.Excel
 
         internal static class NumericalTolerance
         {
-            public const string Name = "[Numerical_tolerance]";
+            public const string Name = "[Numerical_tol]";
             public const string Description = "Optional parameter specifying the numerical tolerance. This should be small number used as a tolerance in numerical routines when comparing two floating point numbers. Defaults to 1E-10 if omitted.";
         }
 

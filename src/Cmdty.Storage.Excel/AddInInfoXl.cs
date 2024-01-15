@@ -51,12 +51,5 @@ namespace Cmdty.Storage.Excel
             return StorageExcelHelper.ExecuteExcelFunction(StorageHelper.LinearAlgebraProvider);
         }
 
-        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(GetCalcMode),
-            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = true, IsVolatile = false, IsExceptionSafe = true)] // TODO delete when Ribbon radio button working
-        public static object GetCalcMode(object trigger)
-        {
-            return StorageExcelHelper.ExecuteExcelFunction(() => AddIn.CalcMode.ToString("G"));
-        }
-
     }
 }

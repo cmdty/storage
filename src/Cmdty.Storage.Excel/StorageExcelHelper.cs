@@ -496,5 +496,14 @@ namespace Cmdty.Storage.Excel
             throw new NotImplementedException($"Returning objects of type {objType.Name} not supported yet.");
         }
 
+        public static CalcMode ParseCalcMode(string calcModeText)
+        {
+            if (calcModeText == "Async")
+                return CalcMode.Async;
+            if (calcModeText == "Blocking")
+                return CalcMode.Blocking;
+            throw new ArgumentException($"Excel argument {ExcelArg.CalcMode.Name} must have a value of either 'Async' or 'Blocking'. An incorrect value of {calcModeText} was provided.");
+        }
+
     }
 }

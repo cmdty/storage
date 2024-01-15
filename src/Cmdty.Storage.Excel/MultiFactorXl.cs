@@ -40,6 +40,7 @@ namespace Cmdty.Storage.Excel
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true)]
         public static object StorageValueThreeFactor(
             [ExcelArgument(Name = ExcelArg.CachedObjectName.Name, Description = ExcelArg.CachedObjectName.Description)] string name,
+            [ExcelArgument(Name = ExcelArg.CalcMode.Name, Description = ExcelArg.CalcMode.Description)] string calcModeIn,
             [ExcelArgument(Name = ExcelArg.StorageHandle.Name, Description = ExcelArg.StorageHandle.Description)] string storageHandle,
             [ExcelArgument(Name = ExcelArg.ValDate.Name, Description = ExcelArg.ValDate.Description)] DateTime valuationDate,
             [ExcelArgument(Name = ExcelArg.Inventory.Name, Description = ExcelArg.Inventory.Description)] double currentInventory,
@@ -51,7 +52,7 @@ namespace Cmdty.Storage.Excel
             [ExcelArgument(Name = ExcelArg.SeasonalVol.Name, Description = ExcelArg.SeasonalVol.Description)] double seasonalVol,
             [ExcelArgument(Name = ExcelArg.DiscountDeltas.Name, Description = ExcelArg.DiscountDeltas.Description)] bool discountDeltas,
             [ExcelArgument(Name = ExcelArg.SettleDates.Name, Description = ExcelArg.SettleDates.Description)] object settleDatesIn,
-            [ExcelArgument(Name = ExcelArg.NumSims.Name, Description = ExcelArg.NumSims.Description)] int numSims,
+            [ExcelArgument(Name = ExcelArg.NumSims.Name, Description = ExcelArg.NumSims.Description)] int numSims, // TODO ability to specify different number of paths for regression and valuation sims.
             [ExcelArgument(Name = ExcelArg.BasisFunctions.Name, Description = ExcelArg.BasisFunctions.Description)] string basisFunctionsIn,
             [ExcelArgument(Name = ExcelArg.Seed.Name, Description = ExcelArg.Seed.Description)] object seedIn,
             [ExcelArgument(Name = ExcelArg.ForwardSimSeed.Name, Description = ExcelArg.ForwardSimSeed.Description)] object fwdSimSeedIn,
@@ -61,16 +62,19 @@ namespace Cmdty.Storage.Excel
         {
             return StorageExcelHelper.ExecuteExcelFunction(() =>
             {
-                object[] args = {storageHandle, valuationDate, currentInventory, forwardCurve,
+                object[] args = {calcModeIn, storageHandle, valuationDate, currentInventory, forwardCurve,
                                 interestRateCurve, spotVol, spotMeanReversion, longTermVol, seasonalVol,
                                 discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn, fwdSimSeedIn,
                                 numGlobalGridPointsIn, numericalTolerance, extraDecisions };
                 return ObjectCache.Instance.CacheObjectAndGetHandle(name, args, () =>
-                    ExcelCalcWrapper.Create((cancellationToken, onProgress) =>
+                {
+                    CalcMode calcMode = StorageExcelHelper.ParseCalcMode(calcModeIn);
+                    return ExcelCalcWrapper.Create((cancellationToken, onProgress) =>
                             RunLsmcStorageValuation(storageHandle, valuationDate, currentInventory, forwardCurve, interestRateCurve, spotVol,
                                 spotMeanReversion, longTermVol, seasonalVol, discountDeltas, settleDatesIn, numSims, basisFunctionsIn, seedIn,
                                 fwdSimSeedIn, numGlobalGridPointsIn, numericalTolerance, extraDecisions, cancellationToken, onProgress),
-                        AddIn.CalcMode));
+                            calcMode);
+                });
             });
         }
 

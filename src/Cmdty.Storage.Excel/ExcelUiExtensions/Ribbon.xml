@@ -1,15 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui' onLoad='OnRibbonLoad'>
+<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>
 	<ribbon>
 		<tabs>
 			<tab id='cmdtyStorageTab' label='Cmdty.Storage' keytip='S'>
 				<group id='calculationGroup' label='Calculate'>
-					<button id='calcPendingButton' label='Calculate All Pending' size='large' onAction='CalculateAllPending' imageMso='Calculator' keytip='C' getEnabled='IsAsyncModePressed'/>
-					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelExecution' imageMso='X' getEnabled='IsAsyncModePressed'/>
-				</group>
-				<group id='calcModeGroupButton' label='Calculation Mode'>
-					<toggleButton id='asyncCalcModelButton' label='Async' size='large' onAction='AsyncModePressed' getPressed='IsAsyncModePressed'/>
-					<toggleButton id='blockingCalcModelButton' label='Blocking' size='large' onAction='BlockingModePressed' getPressed='IsBlockingModePressed'/>
+					<button id='calcPendingButton' label='Calculate All Pending' size='large' onAction='CalculateAllPending' imageMso='Calculator' keytip='C'/>
+					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelExecution' imageMso='X'/>
 				</group>
 			</tab>
 		</tabs>
