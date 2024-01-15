@@ -33,6 +33,25 @@ namespace Cmdty.Storage.Excel
 {
     public static class CachedObjectsXl
     {
+
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(StartPending),
+            Description = "Starts a pending calculation. Returned boolean indicates whether calculation was started. Generally this function will be used from VBA, rather than Excel.", 
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe = true)]
+        public static object StartPending(
+            [ExcelArgument(Name = "Pending_calc_handle", Description = "Handle to cached object in pending calculation state.")] string objectHandle)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
+                    if (cachedObject is ExcelCalcWrapper { Status: CalcStatus.Pending } excelCalcWrapper)
+                    {
+                        excelCalcWrapper.Start();
+                        return true;
+                    }
+                return false;
+            });
+        }
+
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeProgress),
 //            Description = "TODO.", // TODO
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe = true)]

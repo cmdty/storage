@@ -24,13 +24,13 @@
 #endregion
 
 using ExcelDna.Integration;
-using System.Windows.Forms;
+using ExcelDna.Logging;
 
 namespace Cmdty.Storage.Excel
 {
     public static class ExcelCommands
     {
-
+        // TODO convert the two commands below to purely shortcut
         [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Cancel All")] // TODO set up shortcut key for this, or can shortcut be added to Ribbon xml context menu items
         public static void CancelAllCalculations()
         {
@@ -41,6 +41,12 @@ namespace Cmdty.Storage.Excel
         public static void StartAllPendingCalculations()
         {
             AsyncCalcHelper.CalculateAllPending();
+        }
+
+        [ExcelCommand(Description = "Displays Excel-DNA Logging", ShortCut = "^L" /* Ctrl+Shift+L */, Name = "DisplayExcelDnaLogScreen")]
+        public static void DisplayExcelDnaLogScreen()
+        {
+            LogDisplay.Show();
         }
 
     }
