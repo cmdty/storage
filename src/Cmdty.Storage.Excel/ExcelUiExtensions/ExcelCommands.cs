@@ -30,24 +30,25 @@ namespace Cmdty.Storage.Excel
 {
     public static class ExcelCommands
     {
-        // TODO convert the two commands below to purely shortcut
-        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Cancel All")] // TODO set up shortcut key for this, or can shortcut be added to Ribbon xml context menu items
-        public static void CancelAllCalculations()
-        {
-            AsyncCalcHelper.CancelAllRunning(true);
-        }
-
-        [ExcelCommand(MenuName = "Cmdty.Storage", MenuText = "Start All Pending")] // TODO set up shortcut key for this, or can shortcut be added to Ribbon xml context menu items
-        public static void StartAllPendingCalculations()
-        {
+        [ExcelCommand(ShortCut = "^A")]
+        public static void StartAllPendingCalculations() =>
             AsyncCalcHelper.CalculateAllPending();
-        }
 
-        [ExcelCommand(Description = "Displays Excel-DNA Logging", ShortCut = "^L" /* Ctrl+Shift+L */, Name = "DisplayExcelDnaLogScreen")]
-        public static void DisplayExcelDnaLogScreen()
-        {
+        [ExcelCommand(ShortCut = "^S")]
+        public static void StartSelectedPendingCalculations() =>
+            AsyncCalcHelper.CalculateSelected();
+        
+        [ExcelCommand(ShortCut = "^X")]
+        public static void CancelAllCalculations() =>
+            AsyncCalcHelper.CancelAllRunning(true);
+
+        [ExcelCommand(ShortCut = "^C")]
+        public static void CancelSelectedCalculations() =>
+            AsyncCalcHelper.CancelSelected(true);
+        
+        [ExcelCommand(ShortCut = "^L" /* Ctrl+Shift+L */)]
+        public static void DisplayExcelDnaLogScreen() =>
             LogDisplay.Show();
-        }
 
     }
 }
