@@ -42,7 +42,7 @@ namespace Cmdty.Storage.Excel
                             calcWrapper.Start();
         }
 
-        public static void CalculateSelected()
+        public static void CalculateSelectedPending()
         {
             Range selectedRange = GetSelectedRange();
             foreach (dynamic cell in selectedRange.Cells)
@@ -53,7 +53,7 @@ namespace Cmdty.Storage.Excel
                                 excelCalcWrapper.Start();
         }
 
-        public static void CancelSelected(bool showMsgBox)
+        public static void CancelSelectedRunning(bool showMsgBox)
         {
             Range selectedRange = GetSelectedRange();
 

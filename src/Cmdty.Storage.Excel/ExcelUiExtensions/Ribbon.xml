@@ -3,10 +3,10 @@
 	<ribbon>
 		<tabs>
 			<tab id='cmdtyStorageTab' label='Cmdty.Storage' keytip='S'>
-				<group id='calculationGroup' label='Calculate'>
+				<group id='calculationGroup' label='Async Calculations'>
 					<button id='calcPendingButton' label='Calculate All Pending' size='large' onAction='CalculateAllPending' imageMso='Calculator' keytip='C' 
 					        supertip='Ctrl+Shift+A'/>
-					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelExecution' imageMso='X' supertip='Ctrl+Shift+X'/>
+					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelAllRunning' imageMso='X' keytip='X' supertip='Ctrl+Shift+X'/>
 				</group>
 			</tab>
 		</tabs>
@@ -14,8 +14,8 @@
 	<contextMenus>
 		<contextMenu idMso='ContextMenuCell'>
 			<menu id='CmdtyStorageMenu' label='Cmdty.Storage' insertBeforeMso='Cut' >
-				<button id='calculateSelectedMenuButton' label='Calculate Selected   Ctrl+Shift+S' imageMso='Calculator' onAction='CalculateSelected'/>
-				<button id='cancelSelectedMenuButton' label='Cancel Selected       Ctrl+Shift+C' imageMso='X' onAction='CancelSelected'/>
+				<button id='calculateSelectedMenuButton' label='Calculate Selected   Ctrl+Shift+S' imageMso='Calculator' onAction='CalculateSelectedRunning'/>
+				<button id='cancelSelectedMenuButton' label='Cancel Selected       Ctrl+Shift+C' imageMso='X' onAction='CancelSelectedRunning'/>
 			</menu>
 			<menuSeparator id='MySeparator' insertBeforeMso='Cut' />
 		</contextMenu>

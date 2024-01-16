@@ -36,7 +36,7 @@ namespace Cmdty.Storage.Excel
 
         [ExcelCommand(ShortCut = "^S")]
         public static void StartSelectedPendingCalculations() =>
-            AsyncCalcHelper.CalculateSelected();
+            AsyncCalcHelper.CalculateSelectedPending();
         
         [ExcelCommand(ShortCut = "^X")]
         public static void CancelAllCalculations() =>
@@ -44,7 +44,7 @@ namespace Cmdty.Storage.Excel
 
         [ExcelCommand(ShortCut = "^C")]
         public static void CancelSelectedCalculations() =>
-            AsyncCalcHelper.CancelSelected(true);
+            AsyncCalcHelper.CancelSelectedRunning(true);
         
         [ExcelCommand(ShortCut = "^L" /* Ctrl+Shift+L */)]
         public static void DisplayExcelDnaLogScreen() =>

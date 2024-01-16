@@ -34,14 +34,18 @@ namespace Cmdty.Storage.Excel
     {
         public override string GetCustomUI(string ribbonId) =>
             RibbonResources.Ribbon;
-
-        public void CancelSelected(IRibbonControl ribbonControl) =>
-            AsyncCalcHelper.CancelSelected(true);
         
         public void CalculateAllPending(IRibbonControl ribbonControl) =>
             AsyncCalcHelper.CalculateAllPending();
 
-        public void CalculateSelected(IRibbonControl ribbonControl) =>
-            AsyncCalcHelper.CalculateSelected();
+        public void CalculateSelectedRunning(IRibbonControl ribbonControl) =>
+            AsyncCalcHelper.CalculateSelectedPending();
+
+        public void CancelAllRunning(IRibbonControl ribbonControl) =>
+            AsyncCalcHelper.CancelAllRunning(true);
+
+        public void CancelSelectedRunning(IRibbonControl ribbonControl) =>
+            AsyncCalcHelper.CancelSelectedRunning(true);
+        
     }
 }
