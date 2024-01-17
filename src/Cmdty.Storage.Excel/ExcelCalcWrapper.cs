@@ -45,17 +45,18 @@ namespace Cmdty.Storage.Excel
         public event Action<CalcStatus> OnStatusUpdate;
         public event Action<AggregateException> OnException; 
         public double Progress { get; private set; }
-        public Task<object> CalcTask { get; private set; }
+        private Task<object> _calcTask;
+        public object Result => _calcTask.Result;
         public Type ResultType { get; }
         public bool CancellationSupported { get; }
-        public CalcStatus Status { get; private set; } // TODO can this be removed and replaced with CalcTask.Status?
+        public CalcStatus Status { get; private set; } // TODO can this be removed and replaced with _calcTask.Status?
         private CancellationTokenSource _cancellationTokenSource;
         private Func<CancellationToken, Action<double>, object> _calculation;
         private bool _isDisposed;
 
         private ExcelCalcWrapper(Task<object> calcTask, Type resultType, CancellationTokenSource cancellationTokenSource, CalcStatus calcStatus)
         {
-            CalcTask = calcTask;
+            _calcTask = calcTask;
             ResultType = resultType;
             _cancellationTokenSource = cancellationTokenSource;
             CancellationSupported = true;
@@ -84,7 +85,7 @@ namespace Cmdty.Storage.Excel
                 Type resultType = typeof(TResult);
                 var calcTaskWrapper = new ExcelCalcWrapper(null, resultType, cancellationTokenSource, CalcStatus.Pending);
                 calcTaskWrapper._calculation = calculation;
-                calcTaskWrapper.CalcTask = CreateRunTask(calcTaskWrapper);
+                calcTaskWrapper._calcTask = CreateRunTask(calcTaskWrapper);
                 return calcTaskWrapper;
             }
 
@@ -157,7 +158,7 @@ namespace Cmdty.Storage.Excel
         public void Start()
         {
             UpdateStatus(CalcStatus.Running);
-            CalcTask.Start();
+            _calcTask.Start();
         }
 
         // Not thread safe
@@ -166,7 +167,7 @@ namespace Cmdty.Storage.Excel
             if (Status == CalcStatus.Cancelled)
             {
                 _cancellationTokenSource = new CancellationTokenSource();
-                CalcTask = CreateRunTask(this);
+                _calcTask = CreateRunTask(this);
                 UpdateStatus(CalcStatus.Pending);
                 UpdateProgress(0.0);
                 return true;

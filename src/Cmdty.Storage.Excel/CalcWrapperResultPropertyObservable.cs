@@ -71,7 +71,7 @@ namespace Cmdty.Storage.Excel
 
         private void PropertyValueUpdate()
         {
-            object propertyValue = GetPropertyValueToReturn(_propertyGetter, _calcWrapper.CalcTask.Result); 
+            object propertyValue = GetPropertyValueToReturn(_propertyGetter, _calcWrapper.Result); 
             _observer?.OnNext(propertyValue);
         }
 
