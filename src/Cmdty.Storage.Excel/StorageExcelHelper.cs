@@ -35,7 +35,7 @@ using MathNet.Numerics.Interpolation;
 
 namespace Cmdty.Storage.Excel
 {
-    public static class StorageExcelHelper
+    internal static class StorageExcelHelper
     {
         private static readonly HashSet<Type> ReturnableAsObject;
 

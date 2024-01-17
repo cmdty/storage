@@ -30,7 +30,7 @@ using Application = Microsoft.Office.Interop.Excel.Application;
 
 namespace Cmdty.Storage.Excel
 {
-    public static class AsyncCalcHelper
+    internal static class AsyncCalcHelper
     {
 
         public static void CalculateAllPending()
@@ -102,6 +102,24 @@ namespace Cmdty.Storage.Excel
                     : numCalcsCancelled + " calculations have been cancelled.";
                 MessageBox.Show(message, "Cmdty.Storage", MessageBoxButtons.OK);
             }
+        }
+
+        public static void ResetAllCancelled()
+        {
+            foreach (string objectHandle in ObjectCache.Instance.Handles)
+                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
+                    if (cachedObject is ExcelCalcWrapper { Status: CalcStatus.Cancelled } calcWrapper)
+                        calcWrapper.Reset();
+        }
+
+        public static void ResetSelectedCancelled()
+        {
+            Range selectedRange = GetSelectedRange();
+            foreach (dynamic cell in selectedRange.Cells)
+                if (cell.Value2 is string cellValue)
+                    if (ObjectCache.Instance.TryGetObject(cellValue, out object cachedObject))
+                        if (cachedObject is ExcelCalcWrapper { Status: CalcStatus.Cancelled } excelCalcWrapper)
+                            excelCalcWrapper.Reset();
         }
 
     }

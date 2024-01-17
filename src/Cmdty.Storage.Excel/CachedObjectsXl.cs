@@ -52,6 +52,39 @@ namespace Cmdty.Storage.Excel
             });
         }
 
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(CancelRunning),
+            Description = "Cancels a running calculation. Returned boolean indicates whether calculation was cancelled. Generally this function should be used from VBA, rather than Excel.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe = true)]
+        public static object CancelRunning(
+            [ExcelArgument(Name = "Pending_calc_handle", Description = "Handle to cached object in running calculation state.")] string objectHandle)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
+                    if (cachedObject is ExcelCalcWrapper { Status: CalcStatus.Running } excelCalcWrapper)
+                    {
+                        excelCalcWrapper.Cancel();
+                        return true;
+                    }
+                return false;
+            });
+        }
+
+        [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(ResetCancelled),
+            Description = "Resets a cancelled calculation to a Pending state. Returned boolean indicates whether calculation was reset. Generally this function should be used from VBA, rather than Excel.",
+            Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe = true)]
+        public static object ResetCancelled(
+            [ExcelArgument(Name = "Pending_calc_handle", Description = "Handle to cached object in running calculation state.")] string objectHandle)
+        {
+            return StorageExcelHelper.ExecuteExcelFunction(() =>
+            {
+                if (ObjectCache.Instance.TryGetObject(objectHandle, out object cachedObject))
+                    if (cachedObject is ExcelCalcWrapper { Status: CalcStatus.Cancelled } excelCalcWrapper)
+                        return excelCalcWrapper.Reset();
+                return false;
+            });
+        }
+
         [ExcelFunction(Name = AddIn.ExcelFunctionNamePrefix + nameof(SubscribeProgress),
 //            Description = "TODO.", // TODO
             Category = AddIn.ExcelFunctionCategory, IsThreadSafe = false, IsVolatile = false, IsExceptionSafe = true, IsClusterSafe = true)]

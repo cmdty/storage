@@ -46,6 +46,12 @@ namespace Cmdty.Storage.Excel
 
         public void CancelSelectedRunning(IRibbonControl ribbonControl) =>
             AsyncCalcHelper.CancelSelectedRunning(true);
+
+        public void ResetAllCancelled(IRibbonControl ribbonControl) =>
+            AsyncCalcHelper.ResetAllCancelled();
         
+        public void ResetSelectedCancelled(IRibbonControl ribbonControl) =>
+            AsyncCalcHelper.ResetSelectedCancelled();
+
     }
 }

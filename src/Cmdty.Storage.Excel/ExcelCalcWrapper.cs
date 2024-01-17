@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 namespace Cmdty.Storage.Excel
 {
 
-    public enum CalcStatus
+    internal enum CalcStatus
     {
         Running,
         Error,
@@ -39,16 +39,18 @@ namespace Cmdty.Storage.Excel
         Pending
     }
 
-    public sealed class ExcelCalcWrapper : IDisposable
+    internal sealed class ExcelCalcWrapper : IDisposable
     {
         public event Action<double> OnProgressUpdate;
         public event Action<CalcStatus> OnStatusUpdate;
+        public event Action<AggregateException> OnException; 
         public double Progress { get; private set; }
         public Task<object> CalcTask { get; private set; }
         public Type ResultType { get; }
         public bool CancellationSupported { get; }
         public CalcStatus Status { get; private set; } // TODO can this be removed and replaced with CalcTask.Status?
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _cancellationTokenSource;
+        private Func<CancellationToken, Action<double>, object> _calculation;
         private bool _isDisposed;
 
         private ExcelCalcWrapper(Task<object> calcTask, Type resultType, CancellationTokenSource cancellationTokenSource, CalcStatus calcStatus)
@@ -61,6 +63,7 @@ namespace Cmdty.Storage.Excel
         }
         
         public static ExcelCalcWrapper Create<TResult>(Func<CancellationToken, Action<double>, TResult> calculation, CalcMode calcMode)
+            where TResult : class // Necessary for getting resetting to work
         {
             if (calcMode == CalcMode.Blocking)
             {
@@ -80,15 +83,24 @@ namespace Cmdty.Storage.Excel
                 var cancellationTokenSource = new CancellationTokenSource();
                 Type resultType = typeof(TResult);
                 var calcTaskWrapper = new ExcelCalcWrapper(null, resultType, cancellationTokenSource, CalcStatus.Pending);
-                void OnProgress(double progress) => UpdateProgress(calcTaskWrapper, progress);
-                calcTaskWrapper.CalcTask =
-                    new Task<object>(() => calculation(cancellationTokenSource.Token, OnProgress), cancellationTokenSource.Token);
-                calcTaskWrapper.CalcTask.ContinueWith(task =>
-                    calcTaskWrapper.UpdateStatus(task)); // Don't pass cancellation token as want this to run even if cancelled
+                calcTaskWrapper._calculation = calculation;
+                calcTaskWrapper.CalcTask = CreateRunTask(calcTaskWrapper);
                 return calcTaskWrapper;
             }
 
             throw new Exception($"CalcMode enum symbol {calcMode} not recognised.");
+        }
+
+        private static Task<object> CreateRunTask(ExcelCalcWrapper calcWrapper)
+        {
+            void OnProgress(double progress) => UpdateProgress(calcWrapper, progress);
+            CancellationToken cancellationToken = calcWrapper._cancellationTokenSource.Token;
+            Task<object> task =
+                new Task<object>(() => calcWrapper._calculation(cancellationToken, OnProgress), cancellationToken);
+            task.ContinueWith(calcWrapper.UpdateStatus); // Don't pass cancellation token as want this to run even if cancelled
+            task.ContinueWith(t => 
+                calcWrapper.OnException?.Invoke(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            return task;
         }
 
         private static ExcelCalcWrapper CreateCompletedSuccessfully<TResult>(TResult results)
@@ -146,6 +158,20 @@ namespace Cmdty.Storage.Excel
         {
             UpdateStatus(CalcStatus.Running);
             CalcTask.Start();
+        }
+
+        // Not thread safe
+        public bool Reset() // TODO make thread safe?
+        {
+            if (Status == CalcStatus.Cancelled)
+            {
+                _cancellationTokenSource = new CancellationTokenSource();
+                CalcTask = CreateRunTask(this);
+                UpdateStatus(CalcStatus.Pending);
+                UpdateProgress(0.0);
+                return true;
+            }
+            return false;
         }
 
         public void Dispose()

@@ -26,7 +26,6 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Cmdty.Storage.Excel
 {
@@ -46,11 +45,14 @@ namespace Cmdty.Storage.Excel
             _propertyGetter = propertyInfo.GetMethod;
 
             _returnedWhilstWaiting = returnedWhilstWaiting;
-            calcWrapper.CalcTask.ContinueWith(task =>
-                {
-                    if (task.Status == TaskStatus.RanToCompletion)
-                        PropertyValueUpdate();
-                });
+            calcWrapper.OnStatusUpdate += OnStatusUpdate;
+
+        }
+
+        private void OnStatusUpdate(CalcStatus status)
+        {
+            if (status == CalcStatus.Success)
+                PropertyValueUpdate();
         }
 
         private static object GetPropertyValueToReturn(MethodInfo propertyGetter, object resultObject)
@@ -71,6 +73,12 @@ namespace Cmdty.Storage.Excel
         {
             object propertyValue = GetPropertyValueToReturn(_propertyGetter, _calcWrapper.CalcTask.Result); 
             _observer?.OnNext(propertyValue);
+        }
+
+        protected override void OnDispose()
+        {
+            _calcWrapper.OnStatusUpdate -= OnStatusUpdate;
+            base.OnDispose();
         }
 
     }

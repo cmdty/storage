@@ -7,6 +7,7 @@
 					<button id='calcPendingButton' label='Calculate All Pending' size='large' onAction='CalculateAllPending' imageMso='Calculator' keytip='C' 
 					        supertip='Ctrl+Shift+A'/>
 					<button id='cancelAll' label='Cancel All Running' size='large' onAction='CancelAllRunning' imageMso='X' keytip='X' supertip='Ctrl+Shift+X'/>
+					<button id='resetAllCancelled' label='Reset All Cancelled' size='large' onAction='ResetAllCancelled' imageMso='ObjectRotateFree' keytip='X' supertip='Ctrl+Shift+P'/>
 				</group>
 			</tab>
 		</tabs>
@@ -16,6 +17,7 @@
 			<menu id='CmdtyStorageMenu' label='Cmdty.Storage' insertBeforeMso='Cut' >
 				<button id='calculateSelectedMenuButton' label='Calculate Selected   Ctrl+Shift+S' imageMso='Calculator' onAction='CalculateSelectedRunning'/>
 				<button id='cancelSelectedMenuButton' label='Cancel Selected       Ctrl+Shift+C' imageMso='X' onAction='CancelSelectedRunning'/>
+				<button id='resetSelectedMenuButton' label='Reset Selected          Ctrl+Shift+R' imageMso='ObjectRotateFree' onAction='ResetSelectedCancelled'/>
 			</menu>
 			<menuSeparator id='MySeparator' insertBeforeMso='Cut' />
 		</contextMenu>

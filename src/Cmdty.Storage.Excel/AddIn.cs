@@ -25,7 +25,7 @@
 
 namespace Cmdty.Storage.Excel
 {
-    public enum CalcMode
+    internal enum CalcMode
     {
         Blocking,
         Async

@@ -45,7 +45,15 @@ namespace Cmdty.Storage.Excel
         [ExcelCommand(ShortCut = "^C")]
         public static void CancelSelectedCalculations() =>
             AsyncCalcHelper.CancelSelectedRunning(true);
-        
+
+        [ExcelCommand(ShortCut = "^P")]
+        public static void ResetAllCancelled() =>
+            AsyncCalcHelper.ResetAllCancelled();
+
+        [ExcelCommand(ShortCut = "^R")]
+        public static void ResetSelectedCancelled() =>
+            AsyncCalcHelper.ResetSelectedCancelled();
+
         [ExcelCommand(ShortCut = "^L" /* Ctrl+Shift+L */)]
         public static void DisplayExcelDnaLogScreen() =>
             LogDisplay.Show();

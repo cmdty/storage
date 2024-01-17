@@ -34,16 +34,13 @@ namespace Cmdty.Storage.Excel
         private AggregateException _taskException;
 
         public CalcWrapperExceptionObservable(ExcelCalcWrapper calcWrapper) : base(calcWrapper)
-            => calcWrapper.CalcTask.ContinueWith(task => ProcessTaskForExceptions(task), 
-                TaskContinuationOptions.OnlyOnFaulted);
+            => calcWrapper.OnException += CalcWrapperOnOnException;
 
-        private void ProcessTaskForExceptions(Task task)
+        private void CalcWrapperOnOnException(AggregateException exception)
         {
-            _taskException = task.Exception;
-            // For some reason _observer.OnError doesn't work as expected
-            _observer?.OnNext(task.Exception.InnerExceptions[0].Message);
-        }
-
+            _taskException = exception;
+            _observer?.OnNext(exception.InnerExceptions[0].Message); // TODO remember why this isn't just exception.Message
+        }        
         protected override void OnSubscribe()
         {
             if (_taskException != null)
@@ -51,5 +48,12 @@ namespace Cmdty.Storage.Excel
             else
                 _observer.OnNext(ExcelError.ExcelErrorNA);
         }
+
+        protected override void OnDispose()
+        {
+            _calcWrapper.OnException -= CalcWrapperOnOnException;
+            base.OnDispose();
+        }
+
     }
 }

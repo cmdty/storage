@@ -31,7 +31,7 @@ using System.Threading;
 
 namespace Cmdty.Storage.Excel
 {
-    public sealed class ObjectCache
+    internal sealed class ObjectCache
     {
         private readonly ConcurrentDictionary<string, object> _objects = new ConcurrentDictionary<string, object>();
         private long _handleIndex = 1;

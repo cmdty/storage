@@ -36,10 +36,6 @@ namespace Cmdty.Storage.Excel
         protected CalcWrapperObservableBase(ExcelCalcWrapper calcWrapper)
         {
             _calcWrapper = calcWrapper;
-            _calcWrapper.CalcTask.ContinueWith(task =>
-            {
-                _observer?.OnCompleted(); // TODO this could not get called if invoked before Subscribe. Does this matter?
-            });
         }
 
         public IDisposable Subscribe(IExcelObserver excelObserver)
