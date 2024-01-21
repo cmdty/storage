@@ -24,6 +24,7 @@
   <ItemGroup>
 	<PackageReference Include="ExcelDna.AddIn" Version="1.6.0" />
     <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
+	<PackageReference Include="Cmdty.Curves" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

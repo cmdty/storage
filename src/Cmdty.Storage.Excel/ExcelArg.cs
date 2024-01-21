@@ -236,5 +236,29 @@ namespace Cmdty.Storage.Excel
             public const string Description = "The inventory at which this storage property is evaluated.";
         }
 
+        internal static class ForwardPrices
+        {
+            public const string Name = "Forward_prices";
+            public const string Description = "Non-overlapping forward prices. If using spline interpolation cannot be lower than monthly granularity.";
+        }
+
+        internal static class FwdInterpolationType
+        {
+            public const string Name = "Interpolation_type";
+            public const string Description = "Type of interpolation to use. Must be either 'Flat' or 'Spline'.";
+        }
+
+        internal static class DailyFwdShapingFactors
+        {
+            public const string Name = "Daily_shaping_factors";
+            public const string Description = "Vector of 7 multiplicative shaping factors, one for each daily of the week.";
+        }
+
+        internal static class Tension
+        {
+            public const string Name = "[Tension]";
+            public const string Description = "Optional tension parameter to spline parameter. A higher value could reduce oscillations. This is an experimental feature.";
+        }
+
     }
 }

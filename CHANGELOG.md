@@ -37,6 +37,7 @@ associated Terminal_val_param argument.
 ### 0.3.0 (Not yet released)
 * Async and blocking modes for calculation.
 * Log-linear interpolation of discount factors.
+* Forward curve interpolation.
 
 ---
 ## NuGet Package Releases

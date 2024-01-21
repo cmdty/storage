@@ -78,21 +78,6 @@ namespace Cmdty.Storage.Excel
             }
         }
 
-        public static async Task<object> ExecuteExcelFunctionAsync(Func<Task<object>> functionBody)
-        {
-            if (ExcelDnaUtil.IsInFunctionWizard())
-                return "Currently in Function Wizard.";
-
-            try
-            {
-                return await functionBody();
-            }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
-        }
-
         public static T DefaultIfExcelEmptyOrMissing<T>(object excelArgument, T defaultValue, string argumentName)
         {
             if (IsExcelEmptyOrMissing(excelArgument))
@@ -160,21 +145,13 @@ namespace Cmdty.Storage.Excel
 
             InterpolationType interpolationType;
             if (ratchetInterpolationIn == "PiecewiseLinear")
-            {
                 interpolationType = InterpolationType.PiecewiseLinear;
-            }
             else if (ratchetInterpolationIn == "Polynomial")
-            {
                 interpolationType = InterpolationType.PolynomialWithParams(numericalTolerance);
-            }
             else if (ratchetInterpolationIn == "Step")
-            {
                 interpolationType = InterpolationType.Step;
-            }
             else
-            {
                 throw new ArgumentException($"Value of Inject_withdraw_interpolation '{ratchetInterpolationIn}' not recognised. Must be either 'PiecewiseLinear', 'Polynomial' or 'Step'.");
-            }
 
             IAddTerminalStorageState<T> addTerminalStorageState = CmdtyStorage<T>.Builder
                     .WithActiveTimePeriod(storageStart, storageEnd)
@@ -211,38 +188,34 @@ namespace Cmdty.Storage.Excel
             return storage;
         }
 
-        private static IEnumerable<object[]> TakeWhileNotEmptyOrError(object[,] excelInput)
+        internal static IEnumerable<object[]> TakeWhileNotEmptyOrError(object[,] excelInput)
         {
             int numColumns = excelInput.GetLength(1);
             for (int i = 0; i < excelInput.GetLength(0); i++)
             {
                 if (excelInput[i, 0] is ExcelEmpty || excelInput[i, 0] is ExcelError)
                     yield break;
-
                 var slice = new object[numColumns];
                 for (int j = 0; j < numColumns; j++)
-                {
                     slice[j] = excelInput[i, j];
-                }
-
                 yield return slice;
             }
         }
 
+        internal static bool TryCreateDouble(object excelInput, out double inputAsDouble)
+        {
+            if (!(excelInput is double d))
+            {
+                inputAsDouble = 0.0;
+                return false;
+            }
+            inputAsDouble = d;
+            return true;
+        }
 
-        public static TimeSeries<TIndex, double> CreateDoubleTimeSeries<TIndex>(object excelValues, string excelArgumentName)
+        internal static TimeSeries<TIndex, double> CreateDoubleTimeSeries<TIndex>(object excelValues, string excelArgumentName)
             where TIndex : ITimePeriod<TIndex>
         {
-            bool TryCreateDouble(object excelInput, out double inputAsDouble)
-            {
-                if (!(excelInput is double d))
-                {
-                    inputAsDouble = 0.0;
-                    return false;
-                }
-                inputAsDouble = d;
-                return true;
-            }
             return CreateTimeSeries<TIndex, double>(excelValues, excelArgumentName, TryCreateDouble);
         }
 
@@ -347,7 +320,6 @@ namespace Cmdty.Storage.Excel
             if (interestRatePoints.Count < 2)
                 throw new ArgumentException(excelArgumentName + " must contain at least two points.");
 
-            //Day firstDate = interestRatePoints.Min(curvePoint => curvePoint.Date);
             var maturitiesToInterpolate = new double[interestRatePoints.Count];
             var discountFactorsToInterpolate = new double[interestRatePoints.Count];
 
@@ -374,18 +346,17 @@ namespace Cmdty.Storage.Excel
             return InterpolatedDiscountFactorCurve;
         }
         
-        private static double ObjectToDouble(object excelNumber, string messageOneFail)
+        internal static double ObjectToDouble(object excelNumber, string messageOneFail)
         {
             if (!(excelNumber is double doubleNumber))
                 throw new ArgumentException(messageOneFail);
             return doubleNumber;
         }
 
-        private static DateTime ObjectToDateTime(object excelDateTime, string errorMessage)
+        internal static DateTime ObjectToDateTime(object excelDateTime, string errorMessage)
         {
             if (!(excelDateTime is double doubleValue))
                 throw new ArgumentException(errorMessage);
-
             try
             {
                 DateTime dateTime = DateTime.FromOADate(doubleValue);
@@ -395,8 +366,10 @@ namespace Cmdty.Storage.Excel
             {
                 throw new ArgumentException(errorMessage);
             }
-
         }
+
+        internal static Day ObjectToDay(object excelDateTime, string errorMessage) =>
+            Day.FromDateTime(ObjectToDateTime(excelDateTime, errorMessage));
 
         public static object[,] TimeSeriesToExcelReturnValues<TIndex>(TimeSeries<TIndex, double> timeSeries, bool indicesAsText)
             where TIndex : ITimePeriod<TIndex>
