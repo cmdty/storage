@@ -251,7 +251,7 @@ namespace Cmdty.Storage.Excel
         internal static class DailyFwdShapingFactors
         {
             public const string Name = "Daily_shaping_factors";
-            public const string Description = "Vector of 7 multiplicative shaping factors, one for each daily of the week.";
+            public const string Description = "Vector of 7 multiplicative shaping factors, one for each day of the week, starting with Monday.";
         }
 
         internal static class Tension

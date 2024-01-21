@@ -24,7 +24,9 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Cmdty.Curves;
 using Cmdty.TimeSeries;
 using Cmdty.TimePeriodValueTypes;
 using ExcelDna.Integration;
@@ -57,10 +59,62 @@ namespace Cmdty.Storage.Excel
             });
         }
 
-        private static TimeSeries<Day, double> SplineInterpolateToDaily((Day day, double fwdPrice)[] inputForwardData, Day endDay, object dailyShapingFactors, object tension)
+        private static TimeSeries<Day, double> SplineInterpolateToDaily((Day day, double fwdPrice)[] inputForwardData, Day endDay, object dailyShapingFactorsIn, object tensionIn)
         {
-            // Check no larger gaps then one months
-            throw new NotImplementedException();
+            Day[] boundaryDays = inputForwardData.Skip(1).Select(p => p.day).Concat(new[] { endDay }).ToArray();
+            ISplineAddOptionalParameters<Day> curveBuilder = new MaxSmoothnessSplineCurveBuilder<Day>();
+            for (int i = 0; i < inputForwardData.Length; i++)
+            {
+                (Day contractStart, double contractPrice) = inputForwardData[i];
+                Day contractEnd = boundaryDays[i] - 1;
+                if (contractStart.First<Month>() != contractEnd.First<Month>())
+                    throw new ArgumentException("When interpolating with spline, input contracts cannot straddle more than one month.");
+                curveBuilder.AddContract(contractStart, contractEnd, contractPrice);
+            }
+            
+            if (!StorageExcelHelper.IsExcelEmptyOrMissing(dailyShapingFactorsIn))
+            {
+                Dictionary<DayOfWeek, double> dailyShapingFactors = ExtractDailyShapingFactors(dailyShapingFactorsIn);
+                curveBuilder.WithMultiplySeasonalAdjustment(day => dailyShapingFactors[day.DayOfWeek]);
+            }
+
+            if (!StorageExcelHelper.IsExcelEmptyOrMissing(tensionIn))
+                if (StorageExcelHelper.TryCreateDouble(tensionIn, out double tension))
+                    curveBuilder.WithTensionParameter(tension);
+                else
+                    throw new ArgumentException($"Provided {ExcelArg.Tension.Name} parameter value must be numeric value.");
+            
+            return curveBuilder.BuildCurve().Curve;
+        }
+
+        private const string DailyForwardShapingFactorErrorText =
+            "Argument " + ExcelArg.DailyFwdShapingFactors.Name + " has been incorrectly entered. Should be single column with 7 rows.";
+
+        private static Dictionary<DayOfWeek, double> ExtractDailyShapingFactors(object dailyShapingFactorsIn)
+        {
+            if (!(dailyShapingFactorsIn is object[,] dailyShapingFactorsExcel))
+                throw new ArgumentException(DailyForwardShapingFactorErrorText);
+            if (dailyShapingFactorsExcel.GetLength(0) != 7)
+                throw new ArgumentException(DailyForwardShapingFactorErrorText);
+            if (dailyShapingFactorsExcel.GetLength(1) != 1)
+                throw new ArgumentException(DailyForwardShapingFactorErrorText);
+
+            for (int i = 0; i < 7; i++)
+                if (!(dailyShapingFactorsExcel[i, 0] is double))
+                    throw new ArgumentException($"Element {i} of argument {ExcelArg.DailyFwdShapingFactors.Name} is not a numeric value.");
+
+            var shapingDictionary = new Dictionary<DayOfWeek, double>()
+            {
+                { DayOfWeek.Monday, (double)dailyShapingFactorsExcel[0, 0]},
+                { DayOfWeek.Tuesday, (double)dailyShapingFactorsExcel[1, 0]},
+                { DayOfWeek.Wednesday, (double)dailyShapingFactorsExcel[2, 0]},
+                { DayOfWeek.Thursday, (double)dailyShapingFactorsExcel[3, 0]},
+                { DayOfWeek.Friday, (double)dailyShapingFactorsExcel[4, 0]},
+                { DayOfWeek.Saturday, (double)dailyShapingFactorsExcel[5, 0]},
+                { DayOfWeek.Sunday, (double)dailyShapingFactorsExcel[6, 0]},
+            };
+
+            return shapingDictionary;
         }
 
         private static TimeSeries<Day, double> PiecewiseFlatInterpolateToDaily((Day day, double fwdPrice)[] inputForwardData, Day endDay)
