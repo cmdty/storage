@@ -510,6 +510,9 @@ namespace Cmdty.Storage
                 storageProfiles[periodIndex] = new StorageProfile(expectedInventory, sumOverSimsInjectWithdrawVolumes/numSims,
                     sumOverSimsCmdtyConsumed/numSims, sumOverSimsInventoryLoss/numSims, sumOverSimsPv/numSims);
                 double forwardPrice = lsmcParams.ForwardCurve[period];
+                // Pathwise differentiation calculation makes assumption that simulated spot price is calculated as forward prices times some stochastic term.
+                // This is fine for the multifactor model in Cmdty.Core, but will not be the case for all models, e.g. a shifted lognormal model to account for 
+                // negative prices. TODO figure out best way to handle this, and/or document, or just abandon pathwise differentiation as delta calculation method
                 double periodDelta = (sumSpotPriceTimesVolume / forwardPrice / numSims) * discountForDeltas;
                 deltas[periodIndex] = periodDelta;
                 progress += forwardStepProgressPcnt;
