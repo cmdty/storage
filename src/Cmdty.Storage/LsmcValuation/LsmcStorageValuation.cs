@@ -318,9 +318,9 @@ namespace Cmdty.Storage
                                                                    discountFactorFromCmdtySettlement;
                             double immediateNpv = injectWithdrawNpv - injectWithdrawCostNpvs[decisionIndex] + cmdtyUsedForInjectWithdrawNpv;
 
-                            double continuationValue = regressionContinuationValueByDecisionSet[decisionIndex][simIndex]; // TODO potentially this array lookup could be quite costly
+                            double continuationValue = regressionContinuationValueByDecisionSet[decisionIndex][simIndex];
 
-                            double totalNpv = immediateNpv + continuationValue - inventoryCostNpv; // TODO IMPORTANT check if inventoryCostNpv should be subtracted;
+                            double totalNpv = immediateNpv + continuationValue - inventoryCostNpv;
                             decisionNpvsRegress[decisionIndex] = totalNpv;
                         }
                         (double optimalRegressDecisionNpv, int indexOfOptimalDecision) = StorageHelper.MaxValueAndIndex(decisionNpvsRegress);
@@ -469,7 +469,7 @@ namespace Cmdty.Storage
 
                         double injectWithdrawCostNpv = InjectWithdrawCostNpv(lsmcParams.Storage, decisionVolume, period, inventory, DiscountToCurrentDay);
 
-                        double immediateNpv = injectWithdrawNpv - injectWithdrawCostNpv + cmdtyUsedForInjectWithdrawNpv - inventoryCostNpv; // TODO IMPORTANT check if inventoryCostNpv should be subtracted
+                        double immediateNpv = injectWithdrawNpv - injectWithdrawCostNpv + cmdtyUsedForInjectWithdrawNpv - inventoryCostNpv;
 
                         double continuationValue =
                             InterpolateContinuationValue(inventoryAfterDecision, nextPeriodInventorySpaceGrid, regressContinuationValues, simIndex, lsmcParams.NumericalTolerance);
