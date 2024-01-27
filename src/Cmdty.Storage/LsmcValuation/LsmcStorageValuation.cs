@@ -56,6 +56,7 @@ namespace Cmdty.Storage
         public LsmcStorageValuationResults<T> Calculate<T>(LsmcValuationParameters<T> lsmcParams)
             where T : ITimePeriod<T>
         {
+            // TODO split this very long method up into several called sub-methods
             var stopwatches = new Stopwatches();
             stopwatches.All.Start();
 
@@ -129,8 +130,8 @@ namespace Cmdty.Storage
             }
             
             // Calculate discount factor function
-            Day dayToDiscountTo = lsmcParams.CurrentPeriod.First<Day>(); // TODO IMPORTANT, this needs to change
-            
+            Day dayToDiscountTo = lsmcParams.CurrentPeriod.First<Day>(); // TODO add valuation date to LsmcValuationParameters?
+
             // Memoize the discount factor
             var discountFactorCache = new Dictionary<Day, double>(); // TODO do this in more elegant way and share with intrinsic calc
             double DiscountToCurrentDay(Day cashFlowDate)
@@ -157,7 +158,7 @@ namespace Cmdty.Storage
             var regressCoeffsBuilder = new TimeSeries<T, Panel<int, double>>.Builder(periodsForResultsTimeSeries.Length - 1);
 
             int backCounter = numPeriods - 2;
-            Vector<double> numSimsMemoryBuffer = Vector<double>.Build.Dense(numSims); // Performance optimisation: heap memory that will be reused
+            Vector<double> numSimsMemoryBuffer = Vector<double>.Build.Dense(numSims); // Heap memory that will be reused
             double progress = 0.0;
             double backStepProgressPcnt = BackwardPcntTime / (periodsForResultsTimeSeries.Length - 1);
 
@@ -184,7 +185,7 @@ namespace Cmdty.Storage
                 else
                 {
                     // TODO option to use SVD rather than QR for regression. Will be slower, but will function with design matrix collinearity.
-                    // TODO normalise regressors for better stability
+                    // TODO normalise mean and standard deviation of regressors for better stability
                     // TODO perform regression by direct call to Intel MKL dgels/dgelss, 
                     PopulateDesignMatrix(designMatrix, period, regressionSpotSims, basisFunctionList);
                     stopwatches.PseudoInverse.Start();
@@ -374,12 +375,11 @@ namespace Cmdty.Storage
             Span<double> thisPeriodInventories = returnSimInventory ? inventoryBySim[0] : inventoryBuffer1;
             Span<double> nextPeriodInventories = returnSimInventory ? inventoryBySim[1] : inventoryBuffer2;
 
-            //Span<double> startingInventories = inventoryBySim[0];
             for (int i = 0; i < thisPeriodInventories.Length; i++)
                 thisPeriodInventories[i] = lsmcParams.Inventory;
 
             // Trigger price variables
-            int numTriggerPriceVolumes = 10; // TODO move to parameters?
+            int numTriggerPriceVolumes = 10; // TODO move to parameters
             var triggerVolumeProfilesArray = new TriggerPriceVolumeProfiles[periodsForResultsTimeSeries.Length - 1];
             var triggerPricesArray = new TriggerPrices[periodsForResultsTimeSeries.Length - 1];
 
@@ -408,7 +408,6 @@ namespace Cmdty.Storage
                     Panel<int, double> regressCoeffsThisPeriod = regressCoeffs[period];
                     for (int i = 0; i < nextPeriodInventorySpaceGrid.Length; i++)
                     {
-                        // TODO add own MKL wrapping to do matrix multiplication on Span<double>
                         Span<double> regressCoeffsSpan = regressCoeffsThisPeriod[i];
                         var regressCoeffsVector = Vector<double>.Build.DenseOfArray(regressCoeffsSpan.ToArray());
                         regressContinuationValues[i] = designMatrix * regressCoeffsVector;
@@ -628,8 +627,6 @@ namespace Cmdty.Storage
             var storageProfileSeries = new TimeSeries<T, StorageProfile>(periodsForResultsTimeSeries[0], storageProfiles);
             var triggerPriceVolumeProfiles = new TimeSeries<T, TriggerPriceVolumeProfiles>(periodsForResultsTimeSeries.First(), triggerVolumeProfilesArray);
             var triggerPrices = new TimeSeries<T, TriggerPrices>(periodsForResultsTimeSeries.First(), triggerPricesArray);
-
-            // TODO make the returning of factors and spot prices optional so client can save memory
 
             Panel<T, double> regressionSpotPricePanel = returnSimSpotPriceForRegress ? ExtractSpotSims(regressionSpotSims) : Panel<T, double>.CreateEmpty();
             Panel<T, double> valuationSpotPricePanel = returnSimSpotPriceForValuation ? ExtractSpotSims(valuationSpotSims) : Panel<T, double>.CreateEmpty();
