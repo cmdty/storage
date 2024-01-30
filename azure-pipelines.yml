@@ -89,7 +89,7 @@ steps:
       flattenFolders: true
 
   - task: DotNetCoreCLI@2
-    enabled: true
+    enabled: false
     displayName: Publish NuGet package to cmdty feed
     inputs:
       command: 'push'
