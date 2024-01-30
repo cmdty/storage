@@ -38,6 +38,7 @@ associated Terminal_val_param argument.
 * Async and blocking modes for calculation.
 * Log-linear interpolation of discount factors.
 * Forward curve interpolation.
+* Upgrade Excel-DNA to version 1.7.0.
 
 ---
 ## NuGet Package Releases

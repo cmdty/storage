@@ -70,7 +70,7 @@ steps:
     displayName: 'Twine Authenticate'
 
   - script: 'twine upload -r cmdty --config-file $(PYPIRC_PATH) src/Cmdty.Storage.Python/dist/**'
-    enabled: true
+    enabled: false
     displayName: 'Upload Python package to Azure Artifacts Cmdty Feed'
 
   - task: CopyFiles@2
