@@ -616,7 +616,8 @@ Calculated storage NPV: 24,799.09
 Each release of the Excel add-in should include at least one sample spreadsheet which can
 be downloaded as an example of how to use the Excel add-in.
 
-Documentation on using the add-in will be provided at a later date.
+Documentation on using the add-in will be provided at a later date. In the meantime, the 
+main functionality can be found by viewing the example spreadsheet [/samples/excel/three_factor_storage.xlsm ](./samples/excel/three_factor_storage.xlsm ).
 
 ## Calibration
 See [this page](./docs/stochastic_model_calibration/model_calibration_note.md)
