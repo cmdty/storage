@@ -35,7 +35,7 @@ Python and Excel.
 * [Using the Excel Add-In](#using-the-excel-add-in)
     * [Excel Calculation Modes](#excel-calculation-modes)
         * [Blocking Calculation Mode](#blocking-calculation-mode)
-        * [Async Calculation Mode](#blocking-calculation-mode)
+        * [Async Calculation Mode](#async-calculation-mode)
             * [Launching and Cancelling Calculations in Async Mode](#launching-and-cancelling-calculations-in-async-mode)
     * [Example Spreadsheet](#example-spreadsheet)
 * [Calibration](#calibration)
