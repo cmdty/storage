@@ -33,6 +33,11 @@ Python and Excel.
         * [Calculating the Extrinsic Value: Least Squares Monte Carlo with Three-Factor Model](#calculating-the-extrinsic-value-least-squares-monte-carlo-with-three-factor-model)
         * [Calculating the Extrinsic Value: One-Factor Trinomial Tree](#calculating-the-extrinsic-value-one-factor-trinomial-tree)
 * [Using the Excel Add-In](#using-the-excel-add-in)
+    * [Excel Calculation Modes](#excel-calculation-modes)
+        * [Blocking Calculation Mode](#blocking-calculation-mode)
+        * [Async Calculation Mode](#blocking-calculation-mode)
+            * [Launching and Cancelling Calculations in Async Mode](#launching-and-cancelling-calculations-in-async-mode)
+    * [Example Spreadsheet](#example-spreadsheet)
 * [Calibration](#calibration)
 * [Building](#building)
     * [Build on Windows](#building-on-windows)
@@ -616,11 +621,56 @@ Calculated storage NPV: 24,799.09
 ```
 
 ## Using the Excel Add-In
-Each release of the Excel add-in should include at least one sample spreadsheet which can
-be downloaded as an example of how to use the Excel add-in.
+Add Excel functions included in the add-in have a "cmdty." prefix to their names. All functions
+can also be seen under the category "Cmdty.Storage" in the Excel function Wizard/
 
-Documentation on using the add-in will be provided at a later date. In the meantime, the 
-main functionality can be found by viewing the example spreadsheet [/samples/excel/three_factor_storage.xlsm ](./samples/excel/three_factor_storage.xlsm).
+The folder [/samples/excel/](./samples/excel/) of this repo contains some sample spreadsheets
+which can be used to learn the the functionality.
+
+### Excel Calculation Modes
+There are two modes under which the Monte Carlo valuation functions 
+(currently just cmdty.StorageValueThreeFactor) run: async and blocking. The argument
+Calc_mode of these functions control which mode is used for execution.
+
+#### Blocking Calculation Mode
+Blocking mode results in the valuation functions behaving like typical Excel functions, with all
+other operations in Excel freezing until the functions return. If calculating functions with
+blocking mode then the Excel application calculation mode should be set to manual, otherwise each time any input is 
+changed the storagevaluation calculations will be kicked off, freezing Excel.
+
+#### Async Calculation Mode
+Under async mode the Excel function returns immediately upon calculation and the cell is set to
+Pending status. When the valuation is started, using one of the methods described below,
+the calculation is performed in the background with no freezing of the Excel UI during
+calculation. Excel-DNA RTD functionality is used to notify Excel when calculations are complete
+with the resulting figures pushed to the UI.
+
+Generally async mode gives a more slick user experience with the following additional 
+characteristics:
+* Progress updates via the cmdty.SubscribeProgress function. Progress bars in Excel cells can
+be achieved [using conditional formatting data bars](https://www.statology.org/excel-progress-bars/).
+* Cancellation of storage calculations before they have completed.
+* Parallel valuation of multiple storage facilities.
+
+It is recommended to have the Excel application calculation mode set to Automatic if using 
+async mode, otherwise you will have to keep press F9 (calculate) to check progress and whether the completed status.
+
+##### Launching and Cancelling Calculations in Async Mode
+Buttons in the Cmdty.Storage Excel ribbon can be used to calculate all pending, cancel all
+running, and reset all cancelled calculations in the current Excel instance.
+![Excel Ribbon](./assets/excel_ribbon.png)
+
+Similarly Excel context menu items can be used to perform the same operations, but specifically
+on the selected cells.
+![Excel Context Menu](./assets/excel_context_menu.png)
+
+The Excel functions cmdty.StartPending, cmdty.CancelRunning and cmdty.ResetCancelled can be
+used to perform the same operations. These were included with the intention to be called
+from VBA. COM wrapped C# classes, the conventional approach to provide VBA-callable
+code, was not used due to complications experienced during development.
+
+### Example Spreadsheet
+An example of async calculation mode can be see in [/samples/excel/three_factor_storage.xlsm ](./samples/excel/three_factor_storage.xlsm).
 
 ## Calibration
 See [this page](./docs/stochastic_model_calibration/model_calibration_note.md)
