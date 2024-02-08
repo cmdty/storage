@@ -94,7 +94,10 @@ you how to do this.
     * If your Excel is 64-bit, download Cmdty.Storage-x64.zip.
 * Create a folder on your local drive to hold the add-in files. You might want to create 
 this within a folder specifically to hold Excel add-ins.
-* Unzip the contents of the zip file into the folder created in the previous step.
+* Unzip the contents of the zip file into the folder created in the previous step. Some issues 
+have been observed during development with anti-malware software flagging the .xll as malicious.
+A similar warning could occur at this step of installation. Please raise an issue in this 
+repo if this happens.
 * Open Excel and go to the File > Options dialogue box.
 * Open the Add-ins tab on the left. At the bottom there is “Manage:” label next to a drop-down which 
 should be selected to “Excel Add-ins”. Press the Go button next to this. A new dialogue box will 
@@ -617,7 +620,7 @@ Each release of the Excel add-in should include at least one sample spreadsheet 
 be downloaded as an example of how to use the Excel add-in.
 
 Documentation on using the add-in will be provided at a later date. In the meantime, the 
-main functionality can be found by viewing the example spreadsheet [/samples/excel/three_factor_storage.xlsm ](./samples/excel/three_factor_storage.xlsm ).
+main functionality can be found by viewing the example spreadsheet [/samples/excel/three_factor_storage.xlsm ](./samples/excel/three_factor_storage.xlsm).
 
 ## Calibration
 See [this page](./docs/stochastic_model_calibration/model_calibration_note.md)
