@@ -35,6 +35,7 @@ using Cmdty.TimeSeries;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Factorization;
+using MathNet.Numerics.Statistics;
 using Microsoft.Extensions.Logging;
 
 namespace Cmdty.Storage
@@ -614,6 +615,7 @@ namespace Cmdty.Storage
             _logger?.LogInformation("Starting calculations of optimal decisions by simulation forward in time.");
 
             double forwardNpv = pvBySim.Average();
+            double standardError = pvBySim.StandardDeviation() / Math.Sqrt(numSims);
             _logger?.LogInformation("Forward Pv: " + forwardNpv.ToString("N", CultureInfo.InvariantCulture));
 
             // Calculate NPVs for first active period using current inventory
@@ -649,7 +651,7 @@ namespace Cmdty.Storage
                 _logger.LogInformation(Environment.NewLine + profilingReport);
             }
 
-            return new LsmcStorageValuationResults<T>(forwardNpv, deltasSeries, storageProfileSeries, regressionSpotPricePanel,
+            return new LsmcStorageValuationResults<T>(forwardNpv, standardError, deltasSeries, storageProfileSeries, regressionSpotPricePanel,
                 valuationSpotPricePanel, inventoryBySim, injectWithdrawVolumeBySim, cmdtyConsumedBySim, inventoryLossBySim, netVolumeBySim, 
                 triggerPrices, triggerPriceVolumeProfiles, pvByPeriodAndSim, pvBySim, regressionMarkovFactors, valuationMarkovFactors);
         }
