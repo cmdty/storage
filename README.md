@@ -308,7 +308,7 @@ The code should be run at the start of any notebook or program.
 The cmdty-storage package should be compatible with the Python interpreter up to **version 3.11**.
 
 Limitations on the Python version which the cmdty-storage package can be used
-are largely driven by the [pythonnet](https://github.com/pythonnet/pythonnet) package dependency. The latest version of curves (1.2.0) depends on
+are largely driven by the [pythonnet](https://github.com/pythonnet/pythonnet) package dependency. The latest version depends on
 pythonnet version 3.0.1, which itself works with Python up to version 3.11.
 Hence this is also the maximum version with which cmdty-storage works.
 
