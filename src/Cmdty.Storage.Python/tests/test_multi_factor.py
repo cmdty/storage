@@ -100,6 +100,7 @@ class TestMultiFactorValue(unittest.TestCase):
         self.assertEqual(progresses[-1], 1.0)
         self.assertEqual(245, len(progresses))
         self.assertEqual(1703773.0757192627, multi_factor_val.intrinsic_npv)
+        self.assertEqual(21405.33891571013, multi_factor_val.val_sim_standard_error)
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_regress.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_valuation.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_inventory.shape)
@@ -259,6 +260,7 @@ class TestMultiFactorValue(unittest.TestCase):
         self.assertEqual(progresses[-1], 1.0)
         self.assertEqual(245, len(progresses))
         self.assertEqual(1703773.0757192627, multi_factor_val.intrinsic_npv)
+        self.assertEqual(18459.69670786117, multi_factor_val.val_sim_standard_error)
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_regress.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_spot_valuation.shape)
         self.assertEqual((123, num_sims), multi_factor_val.sim_inventory.shape)
@@ -302,6 +304,7 @@ class TestMultiFactorValue(unittest.TestCase):
         df = pd.read_csv(file_path, index_col=0, parse_dates=True)
         df.index = df.index.to_period('D')
         return df
+
 
 if __name__ == '__main__':
     unittest.main()

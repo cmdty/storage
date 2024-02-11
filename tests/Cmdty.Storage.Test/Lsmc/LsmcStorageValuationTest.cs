@@ -40,6 +40,7 @@ namespace Cmdty.Storage.Test
 {
     // TODO test:
     // Call option test with two factors
+    // Standard error
 
     public sealed class LsmcStorageValuationTest
     {
