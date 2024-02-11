@@ -54,6 +54,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'License :: OSI Approved :: MIT License',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
@@ -64,10 +65,10 @@ setuptools.setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'pythonnet==3.0.1',
+        'pythonnet==3.0.3',
         'pandas>=1.0.0'
         ],
-    python_requires='>=3.7, <3.12',
+    python_requires='>=3.7, <3.13',
     package_data={'cmdty_storage' : [
                         'lib/*.dll',
                         'lib/*.pdb',
