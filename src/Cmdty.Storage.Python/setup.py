@@ -65,8 +65,8 @@ setuptools.setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'pythonnet==3.0.3',
-        'pandas>=1.0.0'
+        'pythonnet>=3.0.1, <=3.0.3',
+        'pandas>=1.0.0, <=2.2.0'
         ],
     python_requires='>=3.7, <3.13',
     package_data={'cmdty_storage' : [
