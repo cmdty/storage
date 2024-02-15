@@ -24,7 +24,7 @@ more .NET types.
 data is returned.
 
 ### 1.5.0
-* Update pythonnet dependency to <3.1.0. This allows the latest version 3.0.3 with is compatible with Python up to version 3.12.
+* Update pythonnet dependency to <3.1.0. This allows reference to the latest version (3.0.3) which is compatible with Python up to version 3.12.
 * Add standard error to results.
 
 ---
