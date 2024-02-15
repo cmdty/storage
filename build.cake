@@ -271,7 +271,7 @@ var publishPyPiTask = Task("Publish-PyPI")
 {
     string pyPiPassword = GetEnvironmentVariable("PYPI_PASSWORD");
     StartProcessThrowOnError(pythonCommand, "-m twine upload src/Cmdty.Storage.Python/dist/*",
-                                        "--username cmdty", "--password " + pyPiPassword);
+                                        "--username __token__", "--password " + pyPiPassword);
 });
 
 if (!publishWithoutBuild)
