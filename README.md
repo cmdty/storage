@@ -101,7 +101,8 @@ you how to do this.
 this within a folder specifically to hold Excel add-ins.
 * Unzip the contents of the zip file into the folder created in the previous step. Some issues 
 have been observed during development with anti-malware software flagging the .xll as malicious.
-A similar warning could occur at this step of installation. Please raise an issue in this 
+A similar warning could occur at this step of installation. This is a [known issue with 
+Excel-DNA](https://groups.google.com/g/exceldna/c/rOlDAMeeM6s/m/vwSbAVQyBQAJ). Please raise an issue in this 
 repo if this happens.
 * Open Excel and go to the File > Options dialogue box.
 * Open the Add-ins tab on the left. At the bottom there is “Manage:” label next to a drop-down which 
