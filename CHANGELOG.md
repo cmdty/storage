@@ -23,8 +23,8 @@ more .NET types.
 * sim_data_returned added to Monte Carlo valuation functions to allow the caller to control which simulation-level
 data is returned.
 
-### 1.5.0 (not yet released)
-* Update pythonnet dependency from 3.0.1 to 3.0.3 to allow compatibility with Python up to version 3.12.
+### 1.5.0
+* Update pythonnet dependency to <3.1.0. This allows the latest version 3.0.3 with is compatible with Python up to version 3.12.
 * Add standard error to results.
 
 ---
