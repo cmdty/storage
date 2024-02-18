@@ -45,7 +45,7 @@ associated Terminal_val_param argument.
 * Upgrade Excel-DNA to version 1.7.0.
 
 ### 0.3.1 (not yet released)
-* Binaries not packed into the add-in xll file due to xll getting flagged as malicious.
+* Binaries not packed into the add-in xll file, due to xll getting flagged as malicious.
 * Standard error included in results and sample spreadsheet.
 
 ---
