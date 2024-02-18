@@ -177,27 +177,6 @@ Task("Pack-Python")
     Information("Python package file copied to /artifacts directory");
 });
 
-Task("Copy-Bins")
-    .Does(setupContext =>
-{
-    //Information("Copying files from " + vsBuildOutputDirectory + "/*.dll" + " to " +vsBuildOutputDirectory + "/x86/" );
-    string x86Folder = System.IO.Path.Combine(vsBuildOutputDirectory, "x86");
-    string x64Folder = System.IO.Path.Combine(vsBuildOutputDirectory, "x64");
-    string allDllsGlob = System.IO.Path.Combine(vsBuildOutputDirectory, "*.dll");
-    string allPdbsGlob = System.IO.Path.Combine(vsBuildOutputDirectory, "*.pdb");
-
-    CopyFiles(allDllsGlob , x86Folder);
-    CopyFiles(allDllsGlob , x64Folder);
-    CopyFiles(allPdbsGlob , x86Folder);
-    CopyFiles(allPdbsGlob , x64Folder);
-    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn.xll"), x86Folder);
-    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn.dna"), x86Folder);
-    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn64.xll"), x64Folder);
-    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn64.dna"), x64Folder);
-
-
-});
-
 Task("Pack-Excel")
 	.IsDependentOn("Test-C#")
     .Does(setupContext =>
@@ -211,29 +190,16 @@ Task("Pack-Excel")
     Information("x64 Excel add-in zip file has been created.");
 });
 
-private void WriteFileToZip(ZipArchive zipArchive, string filePath, string zipEntryName)
-{
-    byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
-    ZipArchiveEntry entry = zipArchive.CreateEntry(zipEntryName);
-    using (Stream entryStream = entry.Open())
-        entryStream.Write(fileBytes);
-}
-
 private void CreateAddInZipFile(string platform, string artifactsDirectory, string vsBuildOutputDirectory)
 {
-    string xllName = $"Cmdty.Storage-{platform}.xll";
-    string zipFileName = $"Cmdty.Storage-{platform}.zip";
-    string addInZipFilePath = System.IO.Path.Combine(artifactsDirectory, zipFileName);
-    string vsPublishDirectory = System.IO.Path.Combine(vsBuildOutputDirectory, "publish");
-    using (System.IO.FileStream fileStream = System.IO.File.Create(addInZipFilePath))
-    using (ZipArchive zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create))
-    {
-        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.dll"), "Cmdty.Storage.dll");
-        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.pdb"), "Cmdty.Storage.pdb");
-        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, platform, "libiomp5md.dll"), "libiomp5md.dll");
-        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsBuildOutputDirectory, platform, "MathNet.Numerics.MKL.dll"), "MathNet.Numerics.MKL.dll");
-        WriteFileToZip(zipArchive, System.IO.Path.Combine(vsPublishDirectory, xllName), xllName);
-    }
+    string folderToZip = System.IO.Path.Combine(vsBuildOutputDirectory, platform);
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "*.dll"), folderToZip);
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "*.pdb"), folderToZip);
+    string addInName = "Cmdty.Storage-" + platform;
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, addInName + ".xll"), folderToZip);    
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, addInName + ".dna"), folderToZip);    
+    string addInZipFilePath = System.IO.Path.Combine(artifactsDirectory, addInName + ".zip");
+    ZipFile.CreateFromDirectory(folderToZip, addInZipFilePath);
 }
 
 private string GetEnvironmentVariable(string envVariableName)
