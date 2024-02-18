@@ -3,14 +3,21 @@
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
     <SignAssembly>false</SignAssembly>
+	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
     <!--Excel-DNA Properties-->
 	<PropertyGroup>
-	    <RunExcelDnaPack>true</RunExcelDnaPack>
+	    <RunExcelDnaPack>false</RunExcelDnaPack>
 	    <ExcelAddInName>Cmdty.Storage</ExcelAddInName>
-		<ExcelDnaPack32BitXllName>Cmdty.Storage-x86</ExcelDnaPack32BitXllName>
-		<ExcelDnaPack64BitXllName>Cmdty.Storage-x64</ExcelDnaPack64BitXllName>
+		<ExcelAddInFileName>Cmdty.Storage</ExcelAddInFileName>
+		<ExcelDna32BitAddInSuffix>-x86</ExcelDna32BitAddInSuffix>
+		<ExcelDna64BitAddInSuffix>-x64</ExcelDna64BitAddInSuffix>
+		<RunExcelDnaClean>true</RunExcelDnaClean>
+		<ExcelAddInExplicitExports>true</ExcelAddInExplicitExports>
+		<!--TODO how to include pdb-->
+		<!--<ExcelDnaPack32BitXllName>Cmdty.Storage-x86</ExcelDnaPack32BitXllName>
+		<ExcelDnaPack64BitXllName>Cmdty.Storage-x64</ExcelDnaPack64BitXllName>-->
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -42,23 +49,30 @@
     </EmbeddedResource>
   </ItemGroup>
 
-    <Target Name="PackedReferences" AfterTargets="AfterBuild" BeforeTargets="ExcelDnaBuild">
+    <!--<Target Name="PackedReferences" AfterTargets="AfterBuild" BeforeTargets="ExcelDnaBuild">
 	    <ItemGroup>
 		    <References Include="$(OutDir)*.dll" Exclude="$(OutDir)$(TargetFileName)" />
 	    </ItemGroup>
 	    <PropertyGroup>
 		    <ExcelAddInInclude>@(References)</ExcelAddInInclude>
 	    </PropertyGroup>
-	</Target>
+	</Target>-->
 	
 	<!--Copy all add-in files for debugging purposes-->
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(Configuration) == 'Debug'">
+		<!--<Copy SourceFiles="$(OutDir)\*.dll" DestinationFolder="$(OutDir)\x86\" />
+		<Copy SourceFiles="$(OutDir)\*.pdb" DestinationFolder="$(OutDir)\x86\" />
+		<Copy SourceFiles="$(OutDir)\*.dll" DestinationFolder="$(OutDir)\x64\" />
+		<Copy SourceFiles="$(OutDir)\*.pdb" DestinationFolder="$(OutDir)\x64\" />
+
+
 		<Copy SourceFiles="$(OutDir)\publish\Cmdty.Storage-x64.xll" DestinationFolder="$(OutDir)\x64\" />
-		<Copy SourceFiles="$(OutDir)\publish\Cmdty.Storage-x86.xll" DestinationFolder="$(OutDir)\x86\" />
-		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.dll" DestinationFolder="$(OutDir)\x86\" />
+		<Copy SourceFiles="$(OutDir)\publish\Cmdty.Storage-x86.xll" DestinationFolder="$(OutDir)\x86\" />-->
+		
+		<!--<Copy SourceFiles="$(OutDir)\Cmdty.Storage.dll" DestinationFolder="$(OutDir)\x86\" />
 		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.dll" DestinationFolder="$(OutDir)\x64\" />
 		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.pdb" DestinationFolder="$(OutDir)\x86\" />
-		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.pdb" DestinationFolder="$(OutDir)\x64\" />
+		<Copy SourceFiles="$(OutDir)\Cmdty.Storage.pdb" DestinationFolder="$(OutDir)\x64\" />-->
 	</Target>
 	
 </Project>

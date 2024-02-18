@@ -14,6 +14,7 @@
     <Description>Valuation and optimisation of commodity storage facilities.</Description>
     <PackageTags>commodities;trading;oil;gas;power;quantitative;finance</PackageTags>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>

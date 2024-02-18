@@ -177,6 +177,27 @@ Task("Pack-Python")
     Information("Python package file copied to /artifacts directory");
 });
 
+Task("Copy-Bins")
+    .Does(setupContext =>
+{
+    //Information("Copying files from " + vsBuildOutputDirectory + "/*.dll" + " to " +vsBuildOutputDirectory + "/x86/" );
+    string x86Folder = System.IO.Path.Combine(vsBuildOutputDirectory, "x86");
+    string x64Folder = System.IO.Path.Combine(vsBuildOutputDirectory, "x64");
+    string allDllsGlob = System.IO.Path.Combine(vsBuildOutputDirectory, "*.dll");
+    string allPdbsGlob = System.IO.Path.Combine(vsBuildOutputDirectory, "*.pdb");
+
+    CopyFiles(allDllsGlob , x86Folder);
+    CopyFiles(allDllsGlob , x64Folder);
+    CopyFiles(allPdbsGlob , x86Folder);
+    CopyFiles(allPdbsGlob , x64Folder);
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn.xll"), x86Folder);
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn.dna"), x86Folder);
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn64.xll"), x64Folder);
+    CopyFiles(System.IO.Path.Combine(vsBuildOutputDirectory, "Cmdty.Storage.Excel-AddIn64.dna"), x64Folder);
+
+
+});
+
 Task("Pack-Excel")
 	.IsDependentOn("Test-C#")
     .Does(setupContext =>
