@@ -37,6 +37,7 @@ namespace Cmdty.Storage
         public double Npv { get; }
         public double ValuationSimStandardError { get; }
         public DoubleTimeSeries<T> Deltas {get;}
+        public DoubleTimeSeries<T> DeltasStandardErrors { get; }
         public TimeSeries<T, StorageProfile> ExpectedStorageProfile { get; }
         public Panel<T, double> RegressionSpotPriceSim { get; }
         public Panel<T, double> ValuationSpotPriceSim { get; }
@@ -52,8 +53,8 @@ namespace Cmdty.Storage
         public IReadOnlyList<Panel<T, double>> RegressionMarkovFactors { get; }
         public IReadOnlyList<Panel<T, double>> ValuationMarkovFactors { get; }
         
-        public LsmcStorageValuationResults(double npv, double valuationSimStandardError, DoubleTimeSeries<T> deltas, TimeSeries<T, StorageProfile> expectedStorageProfile, 
-            Panel<T, double> regressionSpotPriceSim, Panel<T, double> valuationSpotPriceSim,
+        public LsmcStorageValuationResults(double npv, double valuationSimStandardError, DoubleTimeSeries<T> deltas, DoubleTimeSeries<T> deltasStandardErrors, 
+            TimeSeries<T, StorageProfile> expectedStorageProfile, Panel<T, double> regressionSpotPriceSim, Panel<T, double> valuationSpotPriceSim,
             Panel<T, double> inventoryBySim, Panel<T, double> injectWithdrawVolumeBySim, Panel<T, double> cmdtyConsumedBySim, 
             Panel<T, double> inventoryLossBySim, Panel<T, double> netVolumeBySim, TimeSeries<T, TriggerPrices> triggerPrices,
             TimeSeries<T, TriggerPriceVolumeProfiles> triggerPriceVolumeProfiles, Panel<T, double> pvByPeriodAndSim, 
@@ -63,6 +64,7 @@ namespace Cmdty.Storage
             Npv = npv;
             ValuationSimStandardError = valuationSimStandardError;
             Deltas = deltas;
+            DeltasStandardErrors = deltasStandardErrors;
             ExpectedStorageProfile = expectedStorageProfile;
             RegressionSpotPriceSim = regressionSpotPriceSim;
             ValuationSpotPriceSim = valuationSpotPriceSim;
@@ -81,7 +83,8 @@ namespace Cmdty.Storage
 
         public static LsmcStorageValuationResults<T> CreateExpiredResults()
         {
-            return new LsmcStorageValuationResults<T>(0.0, 0.0, DoubleTimeSeries<T>.Empty, TimeSeries<T, StorageProfile>.Empty,
+            return new LsmcStorageValuationResults<T>(0.0, 0.0, DoubleTimeSeries<T>.Empty, DoubleTimeSeries<T>.Empty, 
+                TimeSeries<T, StorageProfile>.Empty,
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),
@@ -92,7 +95,8 @@ namespace Cmdty.Storage
 
         public static LsmcStorageValuationResults<T> CreateEndPeriodResults(double npv)
         {
-            return new LsmcStorageValuationResults<T>(npv, 0.0, DoubleTimeSeries<T>.Empty, TimeSeries<T, StorageProfile>.Empty,
+            return new LsmcStorageValuationResults<T>(npv, 0.0, DoubleTimeSeries<T>.Empty, 
+                DoubleTimeSeries<T>.Empty, TimeSeries<T, StorageProfile>.Empty,
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(), 
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),
                 Panel<T, double>.CreateEmpty(), Panel<T, double>.CreateEmpty(),

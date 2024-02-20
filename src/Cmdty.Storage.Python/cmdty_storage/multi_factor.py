@@ -75,6 +75,7 @@ class MultiFactorValuationResults(tp.NamedTuple):
     npv: float
     val_sim_standard_error: float
     deltas: pd.Series
+    deltas_standard_errors: pd.Series
     expected_profile: pd.DataFrame
     intrinsic_npv: float
     intrinsic_profile: pd.DataFrame
@@ -264,6 +265,7 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     logger.info('Calculation of LSMC value complete.')
 
     deltas = utils.net_time_series_to_pandas_series(net_val_results.Deltas, cmdty_storage.freq)
+    deltas_standard_errors = utils.net_time_series_to_pandas_series(net_val_results.DeltasStandardErrors, cmdty_storage.freq)
     expected_profile = cs_intrinsic.profile_to_data_frame(cmdty_storage.freq, net_val_results.ExpectedStorageProfile)
     trigger_prices = _trigger_prices_to_data_frame(cmdty_storage.freq, net_val_results.TriggerPrices)
     trigger_profiles = _trigger_profiles_to_data_frame(cmdty_storage.freq, net_val_results.TriggerPriceVolumeProfiles)
@@ -278,8 +280,8 @@ def _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, 
     sim_factors_regress = _net_panel_enumerable_to_data_frame_tuple(net_val_results.RegressionMarkovFactors, cmdty_storage.freq)
     sim_factors_valuation = _net_panel_enumerable_to_data_frame_tuple(net_val_results.ValuationMarkovFactors, cmdty_storage.freq)
 
-    return MultiFactorValuationResults(net_val_results.Npv, net_val_results.ValuationSimStandardError, deltas, expected_profile,
-                                       intrinsic_result.npv, intrinsic_result.profile, sim_spot_regress,
+    return MultiFactorValuationResults(net_val_results.Npv, net_val_results.ValuationSimStandardError, deltas, deltas_standard_errors,
+                                       expected_profile, intrinsic_result.npv, intrinsic_result.profile, sim_spot_regress,
                                        sim_spot_valuation, sim_factors_regress, sim_factors_valuation,
                                        sim_inventory, sim_inject_withdraw,
                                        sim_cmdty_consumed, sim_inventory_loss, sim_net_volume, sim_pv,
