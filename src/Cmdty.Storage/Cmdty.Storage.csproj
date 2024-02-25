@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cmdty.Core" Version="0.1.0" />
+    <PackageReference Include="Cmdty.Core" Version="0.2.0" />
     <PackageReference Include="MathNet.Numerics.MKL.Win" Version="2.4.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.4.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
