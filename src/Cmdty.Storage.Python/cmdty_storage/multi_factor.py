@@ -185,14 +185,15 @@ def value_from_sims(cmdty_storage: CmdtyStorage,
                     num_inventory_grid_points: int = 100,
                     numerical_tolerance: float = 1E-12,
                     on_progress_update: tp.Optional[tp.Callable[[float], None]] = None,
-                    sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL # TODO on next major version increment change this to default to NONE
+                    sim_data_returned: tp.Optional[SimulationDataReturned] = SimulationDataReturned.ALL, # TODO on next major version increment change this to default to NONE
+                    val_sim_antithetic: tp.Optional[bool] = False
                     ) -> MultiFactorValuationResults:
     time_period_type = utils.FREQ_TO_PERIOD_TYPE[cmdty_storage.freq]
     net_sim_results_regress = _create_net_spot_sim_results(sim_spot_regress, sim_factors_regress, time_period_type)
     net_sim_results_valuation = _create_net_spot_sim_results(sim_spot_valuation, sim_factors_valuation, time_period_type)
 
     def add_sim_results(net_lsmc_params_builder):
-        net_lsmc_params_builder.UseSpotSimResults(net_sim_results_regress, net_sim_results_valuation)
+        net_lsmc_params_builder.UseSpotSimResults(net_sim_results_regress, net_sim_results_valuation, val_sim_antithetic)
 
     return _net_multi_factor_calc(cmdty_storage, fwd_curve, interest_rates, inventory, add_sim_results,
                                   num_inventory_grid_points, numerical_tolerance, on_progress_update,

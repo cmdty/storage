@@ -373,8 +373,7 @@ namespace Cmdty.Storage
 
             Span<double> inventoryBuffer1 = returnSimInventory ? Span<double>.Empty : new double[numSims];
             Span<double> inventoryBuffer2 = returnSimInventory ? Span<double>.Empty : new double[numSims];
-
-
+            
             Span<double> thisPeriodInventories = returnSimInventory ? inventoryBySim[0] : inventoryBuffer1;
             Span<double> nextPeriodInventories = returnSimInventory ? inventoryBySim[1] : inventoryBuffer2;
 
@@ -385,6 +384,7 @@ namespace Cmdty.Storage
             int numTriggerPriceVolumes = 10; // TODO move to parameters
             var triggerVolumeProfilesArray = new TriggerPriceVolumeProfiles[periodsForResultsTimeSeries.Length - 1];
             var triggerPricesArray = new TriggerPrices[periodsForResultsTimeSeries.Length - 1];
+            var spotPriceTimesVolumeByPath = new double[numSims]; // Not memory efficient way to calculate delta standard error, but simpler code
 
             double forwardStepProgressPcnt = (1.0 - BackwardPcntTime) / periodsForResultsTimeSeries.Length;
             _logger?.LogInformation("Starting calculations of optimal decisions by simulation forward in time.");
@@ -420,8 +420,6 @@ namespace Cmdty.Storage
                 Day cmdtySettlementDate = lsmcParams.SettleDateRule(period);
                 double discountFactorFromCmdtySettlement = DiscountToCurrentDay(cmdtySettlementDate);
                 double discountForDeltas = lsmcParams.DiscountDeltas ? discountFactorFromCmdtySettlement : 1.0;
-                double sumSpotPriceTimesVolume = 0.0;
-                double sumSpotPriceTimesVolumeSquared = 0.0;
 
                 ReadOnlySpan<double> simulatedPrices;
                 if (period.Equals(lsmcParams.CurrentPeriod))
@@ -445,6 +443,8 @@ namespace Cmdty.Storage
 
                 double sumOverSimsInjectWithdrawVolumes, sumOverSimsCmdtyConsumed, sumOverSimsInventoryLoss, sumOverSimsPv;
                 sumOverSimsInjectWithdrawVolumes = sumOverSimsCmdtyConsumed = sumOverSimsInventoryLoss = sumOverSimsPv = 0.0;
+                double forwardPrice = lsmcParams.ForwardCurve[period];
+
                 for (int simIndex = 0; simIndex < numSims; simIndex++)
                 {
                     double simulatedSpotPrice = simulatedPrices[simIndex];
@@ -490,9 +490,7 @@ namespace Cmdty.Storage
 
                     double optimalCmdtyUsedForInjectWithdrawVolume = cmdtyUsedForInjectWithdrawVolumes[indexOfOptimalDecision];
 
-                    double spotPriceTimesVolume = -(optimalDecisionVolume + optimalCmdtyUsedForInjectWithdrawVolume) * simulatedSpotPrice;
-                    sumSpotPriceTimesVolume += spotPriceTimesVolume;
-                    sumSpotPriceTimesVolumeSquared += spotPriceTimesVolume * spotPriceTimesVolume;
+                    spotPriceTimesVolumeByPath[simIndex] = -(optimalDecisionVolume + optimalCmdtyUsedForInjectWithdrawVolume) * simulatedSpotPrice;
 
                     if (returnSimInjectWithdrawVolume)
                         thisPeriodInjectWithdrawVolumes[simIndex] = optimalDecisionVolume;
@@ -515,18 +513,12 @@ namespace Cmdty.Storage
                 double expectedInventory = Average(thisPeriodInventories);
                 storageProfiles[periodIndex] = new StorageProfile(expectedInventory, sumOverSimsInjectWithdrawVolumes/numSims,
                     sumOverSimsCmdtyConsumed/numSims, sumOverSimsInventoryLoss/numSims, sumOverSimsPv/numSims);
-                double forwardPrice = lsmcParams.ForwardCurve[period];
                 // Pathwise differentiation calculation makes assumption that simulated spot price is calculated as forward prices times some stochastic term.
-                // This is fine for the multifactor model in Cmdty.Core, but will not be the case for all models, e.g. a shifted lognormal model to account for 
-                // negative prices. TODO figure out best way to handle this, and/or document, or just abandon pathwise differentiation as delta calculation method
-                double sumPayoffDerivativeWrtForwardPrice = sumSpotPriceTimesVolume / forwardPrice * discountForDeltas;
-                double periodDelta = sumPayoffDerivativeWrtForwardPrice/numSims;
-                deltas[periodIndex] = periodDelta;
+                // This is fine for the multi-factor model in Cmdty.Core, but will not be the case for all models.
+                // TODO figure out best way to handle this, and/or document, or just abandon pathwise differentiation as delta calculation method
+                deltas[periodIndex] = spotPriceTimesVolumeByPath.Average() / forwardPrice * discountForDeltas;
 
-                double deltaStandardDeviation = Math.Sqrt((sumSpotPriceTimesVolumeSquared - 
-                                                sumPayoffDerivativeWrtForwardPrice * sumPayoffDerivativeWrtForwardPrice / numSims)/(numSims-1));
-
-                deltasStandardErrors[periodIndex] = deltaStandardDeviation/numSimsSqrt;
+                deltasStandardErrors[periodIndex] = StorageHelper.StandardError(spotPriceTimesVolumeByPath, lsmcParams.SimulationUsesAntithetic) / forwardPrice * discountForDeltas;
                 progress += forwardStepProgressPcnt;
                 lsmcParams.OnProgressUpdate?.Invoke(progress);
                 lsmcParams.CancellationToken.ThrowIfCancellationRequested();
@@ -626,8 +618,7 @@ namespace Cmdty.Storage
             _logger?.LogInformation("Starting calculations of optimal decisions by simulation forward in time.");
 
             double forwardNpv = pvBySim.Average();
-            //double standardError = pvBySim.StandardDeviation() / Math.Sqrt(numSims);
-            double standardError = StandardErrorWithAntithetic(pvBySim);
+            double standardError = StorageHelper.StandardError(pvBySim, lsmcParams.SimulationUsesAntithetic);
             _logger?.LogInformation("Forward Pv: " + forwardNpv.ToString("N", CultureInfo.InvariantCulture));
 
             // Calculate NPVs for first active period using current inventory
@@ -668,21 +659,6 @@ namespace Cmdty.Storage
                 storageProfileSeries, regressionSpotPricePanel,
                 valuationSpotPricePanel, inventoryBySim, injectWithdrawVolumeBySim, cmdtyConsumedBySim, inventoryLossBySim, netVolumeBySim, 
                 triggerPrices, triggerPriceVolumeProfiles, pvByPeriodAndSim, pvBySim, regressionMarkovFactors, valuationMarkovFactors);
-        }
-
-        private double StandardErrorWithAntithetic(double[] pvBySim)
-        {
-            int numSims = pvBySim.Length;
-            int numPairs = numSims / 2; // TODO does this round down properly?
-            var pairAverages = new double[numPairs];
-
-            for (int i = 0; i < numPairs; i++)
-            {
-                int startIindex = i * 2;
-                pairAverages[i] = (pvBySim[startIindex] + pvBySim[startIindex + 1]) / 2.0;
-            }
-
-            return pairAverages.StandardDeviation() / Math.Sqrt(numPairs);
         }
 
         private static (bool ReturnSimSpotPriceForRegress, bool ReturnSimSpotPriceForValuation, bool ReturnSimFactorsForRegression, bool

@@ -1296,6 +1296,18 @@ namespace Cmdty.Storage.Test
 
         [Fact]
         [Trait("Category", "Lsmc.StandardError")]
+        public void Calculate_SimpleStorage1Factor_StandardErrorUnChanged()
+        {
+            // Regression test. Proper test that this is correct is too slow to be unit test
+            var paramsBuilder = _1FactorParamsBuilder.Clone();
+            paramsBuilder.Storage = _simpleDailyStorage;
+            LsmcValuationParameters<Day> lsmcParams = paramsBuilder.Build();
+            LsmcStorageValuationResults<Day> results = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
+            TestHelper.AssertWithinPercentTol(6135.66450019358, results.ValuationSimStandardError, 1E-12);
+        }
+
+        [Fact(Skip = "Used for ad hoc investigations")]
+        [Trait("Category", "Lsmc.StandardError")]
         public void Calculate_SimpleStorage1Factor_StandardErrorsCloseToStandardDeviationOfResults()
         {
             var seeds = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -1309,22 +1321,21 @@ namespace Cmdty.Storage.Test
             var paramsBuilder = _1FactorParamsBuilder.Clone();
             paramsBuilder.Storage = _simpleDailyStorage;
 
+
             for (int i = 0; i < seeds.Length; i++)
             {
                 int seed = seeds[i];
-                paramsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(_oneFactorDailyMultiFactorParams, NumSims, null, null);
+                paramsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(_oneFactorDailyMultiFactorParams, 10_000, seed, null);
 
                 LsmcValuationParameters<Day> lsmcParams = paramsBuilder.Build();
 
                 lsmcResultsArray[i] = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
-
+                _testOutputHelper.WriteLine(i.ToString());
             }
 
             double npvStandardDeviation = lsmcResultsArray.Select(x => x.Npv).StandardDeviation();
             _testOutputHelper.WriteLine(npvStandardDeviation.ToString("N2") + " sample standard deviation.");
 
-            double npvPopulationStandardDeviation = lsmcResultsArray.Select(x => x.Npv).PopulationStandardDeviation();
-            _testOutputHelper.WriteLine(npvPopulationStandardDeviation.ToString("N2") + " population standard deviation.");
 
             _testOutputHelper.WriteLine("");
             _testOutputHelper.WriteLine("Calculated Standard Errors");

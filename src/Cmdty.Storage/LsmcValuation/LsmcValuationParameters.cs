@@ -55,11 +55,13 @@ namespace Cmdty.Storage
         public bool DiscountDeltas { get; }
         public int ExtraDecisions { get; }
         public SimulationDataReturned SimulationDataReturned { get; }
+        public bool SimulationUsesAntithetic { get; }
 
         private LsmcValuationParameters(T currentPeriod, double inventory, TimeSeries<T, double> forwardCurve, 
             ICmdtyStorage<T> storage, Func<T, Day> settleDateRule, Func<Day, Day, double> discountFactors, IDoubleStateSpaceGridCalc gridCalc, 
             double numericalTolerance, SimulateSpotPrice regressionSpotSims, SimulateSpotPrice valuationSpotSims, IEnumerable<BasisFunction> basisFunctions, 
-            CancellationToken cancellationToken, bool discountDeltas, int extraDecisions, SimulationDataReturned simulationDataReturned, Action<double> onProgressUpdate = null)
+            CancellationToken cancellationToken, bool discountDeltas, int extraDecisions, SimulationDataReturned simulationDataReturned, bool simulationUsesAntithetic, 
+            Action<double> onProgressUpdate = null)
         {
             CurrentPeriod = currentPeriod;
             Inventory = inventory;
@@ -77,6 +79,7 @@ namespace Cmdty.Storage
             ExtraDecisions = extraDecisions;
             OnProgressUpdate = onProgressUpdate;
             SimulationDataReturned = simulationDataReturned;
+            SimulationUsesAntithetic = simulationUsesAntithetic;
         }
 
         public delegate ISpotSimResults<T> SimulateSpotPrice(T currentPeriod, T storageStart, T storageEnd, 
@@ -102,6 +105,7 @@ namespace Cmdty.Storage
             public SimulationDataReturned SimulationDataReturned { get; set; }
 
             public bool DiscountDeltas { get; set; }
+            public bool? SimulationUsesAntithetic { get; set; }
             private T _currentPeriod;
             private bool _currentPeriodSet;
 
@@ -134,13 +138,16 @@ namespace Cmdty.Storage
                 ThrowIfNotSet(RegressionSpotSimsGenerator, nameof(RegressionSpotSimsGenerator));
                 ThrowIfNotSet(ValuationSpotSimsGenerator, nameof(ValuationSpotSimsGenerator));
                 ThrowIfNotSet(BasisFunctions, nameof(BasisFunctions));
+                ThrowIfNotSet(SimulationUsesAntithetic, nameof(SimulationUsesAntithetic));
                 if (ExtraDecisions < 0)
                     throw new InvalidOperationException(nameof(ExtraDecisions) + " must be non-negative.");
 
                 // ReSharper disable once PossibleInvalidOperationException
                 return new LsmcValuationParameters<T>(CurrentPeriod, Inventory.Value, ForwardCurve, Storage, SettleDateRule, 
                     DiscountFactors, GridCalc, NumericalTolerance, RegressionSpotSimsGenerator, ValuationSpotSimsGenerator, 
-                    BasisFunctions, CancellationToken, DiscountDeltas, ExtraDecisions, SimulationDataReturned, OnProgressUpdate);
+                    BasisFunctions, CancellationToken, DiscountDeltas, ExtraDecisions, SimulationDataReturned,
+                    // ReSharper disable once PossibleInvalidOperationException
+                    SimulationUsesAntithetic.Value, OnProgressUpdate);
             }
 
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
@@ -156,6 +163,7 @@ namespace Cmdty.Storage
             {
                 if (modelParameters == null) throw new ArgumentNullException(nameof(modelParameters));
                 if (numSims <= 0) throw new ArgumentOutOfRangeException(nameof(numSims), "Number of simulations must be positive.");
+                SimulationUsesAntithetic = valuationSimNormalGenerator.Antithetic;
                 RegressionSpotSimsGenerator = CreateSimulationSpotPrice(regressionSimNormalGenerator, modelParameters, numSims);
                 ValuationSpotSimsGenerator = CreateSimulationSpotPrice(valuationSimNormalGenerator, modelParameters, numSims);
                 return this;
@@ -195,7 +203,7 @@ namespace Cmdty.Storage
                 return SimulateWithMultiFactorModel(regressionSimNormalGenerator, valuationSimNormalGenerator, modelParameters, numSims);
             }
 
-            public Builder UseSpotSimResults(ISpotSimResults<T> regressionSpotSim, ISpotSimResults<T> valuationSpotSim)
+            public Builder UseSpotSimResults(ISpotSimResults<T> regressionSpotSim, ISpotSimResults<T> valuationSpotSim, bool simulationUsesAntithetic)
             {
                 if (regressionSpotSim is null)
                     throw new ArgumentNullException(nameof(regressionSpotSim));
@@ -212,6 +220,7 @@ namespace Cmdty.Storage
                     CheckSpotSim(valuationSpotSim, currentPeriod, storageStart, storageEnd, nameof(valuationSpotSim));
                     return valuationSpotSim;
                 };
+                SimulationUsesAntithetic = simulationUsesAntithetic;
                 return this;
             }
 
@@ -248,7 +257,8 @@ namespace Cmdty.Storage
                     RegressionSpotSimsGenerator = this.RegressionSpotSimsGenerator,
                     ValuationSpotSimsGenerator = this.ValuationSpotSimsGenerator,
                     Storage = this.Storage,
-                    ExtraDecisions = this.ExtraDecisions
+                    ExtraDecisions = this.ExtraDecisions,
+                    SimulationUsesAntithetic = this.SimulationUsesAntithetic
                 };
             }
 
