@@ -591,12 +591,12 @@ namespace Cmdty.Storage.Test
             const double percentageTol = 0.0001; // 0.01%
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
 
-            TestHelper.AssertWithinTol(0.0, lsmcResults.ValuationSimStandardError/ lsmcResults.Npv, 1E-4);
+            TestHelper.AssertWithinTol(0.0, lsmcResults.ValuationSimStandardError/ lsmcResults.Npv, 1E-8);
         }
 
         [Fact]
         [Trait("Category", "Lsmc.LikeIntrinsic")]
-        public void Calculate_OneFactorVeryLowVolsStorageWithRatchets_NpvApproximatelyEqualsIntrinsicNpv()
+        public void Calculate_OneFactorVeryLowVolsStorageWithRatchets_NpvApproximatelyEqualsIntrinsicNpvStandardErrorZero()
         {
             var builder = _1FactorParamsBuilder.Clone();
             builder.Storage = _dailyStorageWithRatchets;
@@ -613,7 +613,7 @@ namespace Cmdty.Storage.Test
             const double percentageTol = 0.0004; // 0.04%
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
 
-            TestHelper.AssertWithinTol(0.0, lsmcResults.ValuationSimStandardError / lsmcResults.Npv, 1E-4);
+            TestHelper.AssertWithinTol(0.0, lsmcResults.ValuationSimStandardError / lsmcResults.Npv, 1E-7);
         }
 
         [Fact]
