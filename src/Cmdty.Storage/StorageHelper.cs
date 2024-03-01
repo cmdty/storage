@@ -337,15 +337,14 @@ namespace Cmdty.Storage
                 values.StandardDeviation() / Math.Sqrt(values.Length);
         }
 
-        private static double AntitheticStandardError(double[] values)
+        internal static double AntitheticStandardError(double[] values)
         {
             int divNumSimsBy2 = Math.DivRem(values.Length, 2, out int remainder);
             int numIndependent = divNumSimsBy2 + remainder;
             return BatchPairs(values, divNumSimsBy2, remainder).StandardDeviation() / Math.Sqrt(numIndependent);
         }
 
-        // TODO: unit test
-        private static IEnumerable<double> BatchPairs(double[] values, int numPairs, int remainder)
+        internal static IEnumerable<double> BatchPairs(double[] values, int numPairs, int remainder)
         {
             for (int i = 0; i < numPairs; i++)
             {
