@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using System.Linq;
 using Cmdty.TimePeriodValueTypes;
 using Cmdty.TimeSeries;
 using Xunit;
@@ -604,6 +605,39 @@ namespace Cmdty.Storage.Test
 
             Assert.Equal(maxIndex, lowerIndex);
             Assert.Equal(maxIndex, upperIndex);
+        }
+
+        [Fact]
+        [Trait("Category", "Helper.BatchPairs")]
+        public void BatchPairs_FourElements_ReturnsTwoItemsWithCorrectAverages()
+        {
+            // Arrange
+            var values = new [] { 1.0, 2.0, 3.0, 4.5 };
+            
+            // Act
+            double[] batched = StorageHelper.BatchPairs(values, 2, 0).ToArray();
+
+            // Assert
+            Assert.Equal(2, batched.Length);
+            Assert.Equal((values[0] + values[1])/2.0, batched[0]);
+            Assert.Equal((values[2] + values[3])/2.0, batched[1]);
+        }
+
+        [Fact]
+        [Trait("Category", "Helper.BatchPairs")]
+        public void BatchPairs_FiveElements_ReturnsThreeItemsWithCorrectAverages()
+        {
+            // Arrange
+            var values = new[] { 1.0, 2.0, 3.0, 4.5, 7.7 };
+
+            // Act
+            double[] batched = StorageHelper.BatchPairs(values, 2, 1).ToArray();
+
+            // Assert
+            Assert.Equal(3, batched.Length);
+            Assert.Equal((values[0] + values[1]) / 2.0, batched[0]);
+            Assert.Equal((values[2] + values[3]) / 2.0, batched[1]);
+            Assert.Equal(values[4], batched[2]);
         }
 
     }

@@ -27,6 +27,10 @@ data is returned.
 * Update pythonnet dependency to <3.1.0. This allows reference to the latest version (3.0.3) which is compatible with Python up to version 3.12.
 * Add standard error to results.
 
+### 1.6.0 (Not yet released)
+* Fix bug [#52](https://github.com/cmdty/storage/issues/52) in standard error calculation.
+* Add standard error for delta.
+
 ---
 ## Excel Add-In Releases
 
@@ -48,8 +52,16 @@ associated Terminal_val_param argument.
 * Binaries not packed into the add-in xll file, due to xll getting flagged as malicious.
 * Standard error included in results and sample spreadsheet.
 
+### 0.4.0 (Not yet released)
+* Fix bug [#52](https://github.com/cmdty/storage/issues/52) in standard error calculation.
+* Add standard error for delta.
+
 ---
 ## NuGet Package Releases
 ### 1.1.0
 * SimulationDataReturned enum defined and property of this type added to LsmcValuationParameters to allow the caller to control which simulation-level
 data is populated in the returned LsmcStorageValuationResults instance.
+
+### 1.2.0 (Not yet released)
+* Add standard error for NPV and delta.
+

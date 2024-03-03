@@ -30,6 +30,7 @@ using Cmdty.TimePeriodValueTypes;
 using Cmdty.TimeSeries;
 using JetBrains.Annotations;
 using MathNet.Numerics.Providers.LinearAlgebra;
+using MathNet.Numerics.Statistics;
 
 namespace Cmdty.Storage
 {
@@ -327,6 +328,31 @@ namespace Cmdty.Storage
             // Find x for known y
             double x = (y - constant) / gradient;
             return x;
+        }
+
+        public static double StandardError(double[] values, bool antithetic)
+        {
+            return antithetic ? 
+                AntitheticStandardError(values) :
+                values.StandardDeviation() / Math.Sqrt(values.Length);
+        }
+
+        internal static double AntitheticStandardError(double[] values)
+        {
+            int divNumSimsBy2 = Math.DivRem(values.Length, 2, out int remainder);
+            int numIndependent = divNumSimsBy2 + remainder;
+            return BatchPairs(values, divNumSimsBy2, remainder).StandardDeviation() / Math.Sqrt(numIndependent);
+        }
+
+        internal static IEnumerable<double> BatchPairs(double[] values, int numPairs, int remainder)
+        {
+            for (int i = 0; i < numPairs; i++)
+            {
+                int startIndex = i * 2;
+                yield return (values[startIndex] + values[startIndex + 1]) / 2.0;
+            }
+            if (remainder > 0)
+                yield return values[values.Length - 1];
         }
     }
 }

@@ -32,6 +32,7 @@ using Cmdty.Core.Common;
 using Cmdty.Core.Simulation.MultiFactor;
 using Cmdty.TimePeriodValueTypes;
 using Cmdty.TimeSeries;
+using MathNet.Numerics.Statistics;
 using Xunit;
 using Xunit.Abstractions;
 using TimeSeriesFactory = Cmdty.TimeSeries.TimeSeries;
@@ -64,6 +65,7 @@ namespace Cmdty.Storage.Test
         private readonly LsmcValuationParameters<Day>.Builder _1FactorParamsBuilder;
         private readonly LsmcValuationParameters<Day>.Builder _2FactorParamsBuilder;
         private readonly LsmcValuationParameters<Day>.Builder _triggerPriceTestParamsBuilder;
+        private MultiFactorParameters<Day> _oneFactorDailyMultiFactorParams;
 
         public LsmcStorageValuationTest(ITestOutputHelper testOutputHelper)
         {
@@ -141,7 +143,7 @@ namespace Cmdty.Storage.Test
             var valDate = new Day(2019, 8, 29);
             const double oneFactorSpotVol = 0.95;
             _oneFactorFlatSpotVols = TimeSeriesFactory.ForConstantData(valDate, storageEnd, oneFactorSpotVol);
-            var oneFactorDailyMultiFactorParams = MultiFactorParameters.For1Factor(OneFactorMeanReversion, _oneFactorFlatSpotVols);
+            _oneFactorDailyMultiFactorParams = MultiFactorParameters.For1Factor(OneFactorMeanReversion, _oneFactorFlatSpotVols);
             var smallFlatSpotVols = TimeSeriesFactory.ForConstantData(valDate, storageEnd, SmallVol);
             _2FVeryLowVolDailyMultiFactorParams = MultiFactorParameters.For2Factors(TwoFactorCorr,
                 new Factor<Day>(0.0, smallFlatSpotVols),
@@ -175,7 +177,7 @@ namespace Cmdty.Storage.Test
                 GridCalc = gridCalc,
                 BasisFunctions = _oneFactorBasisFunctions,
             }
-            .SimulateWithMultiFactorModelAndMersenneTwister(oneFactorDailyMultiFactorParams, NumSims, RandomSeed, RandomSeed * 2);
+            .SimulateWithMultiFactorModelAndMersenneTwister(_oneFactorDailyMultiFactorParams, NumSims, RandomSeed, RandomSeed * 2);
 
             const int triggerPriceTestNumSims = 500;
             _triggerPriceTestParamsBuilder = new LsmcValuationParameters<Day>.Builder
@@ -189,7 +191,7 @@ namespace Cmdty.Storage.Test
                     BasisFunctions = _oneFactorBasisFunctions,
                     Storage = _simpleDailyStorage
                 }
-                .SimulateWithMultiFactorModelAndMersenneTwister(oneFactorDailyMultiFactorParams, triggerPriceTestNumSims, RandomSeed);
+                .SimulateWithMultiFactorModelAndMersenneTwister(_oneFactorDailyMultiFactorParams, triggerPriceTestNumSims, RandomSeed);
 
             _2FactorParamsBuilder = new LsmcValuationParameters<Day>.Builder
                 {
@@ -550,7 +552,7 @@ namespace Cmdty.Storage.Test
 
         [Fact]
         [Trait("Category", "Lsmc.LikeIntrinsic")]
-        public void Calculate_OneFactorZeroMeanReversionStorageWithRatchets_NpvApproximatelyEqualsIntrinsicNpv()
+        public void Calculate_OneFactorZeroMeanReversionStorageWithRatchets_NpvApproximatelyEqualsIntrinsic()
         {
             var builder = _1FactorParamsBuilder.Clone();
             builder.Storage = _dailyStorageWithRatchets;
@@ -572,7 +574,7 @@ namespace Cmdty.Storage.Test
 
         [Fact]
         [Trait("Category", "Lsmc.LikeIntrinsic")]
-        public void Calculate_OneFactorVeryLowVolsSimpleStorage_NpvApproximatelyEqualsIntrinsicNpv()
+        public void Calculate_OneFactorVeryLowVolsSimpleStorage_NpvApproximatelyEqualsIntrinsicNpvStandardErrorZero()
         {
             var builder = _1FactorParamsBuilder.Clone();
             builder.Storage = _simpleDailyStorage;
@@ -588,11 +590,13 @@ namespace Cmdty.Storage.Test
 
             const double percentageTol = 0.0001; // 0.01%
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
+
+            TestHelper.AssertWithinTol(0.0, lsmcResults.ValuationSimStandardError/ lsmcResults.Npv, 1E-8);
         }
 
         [Fact]
         [Trait("Category", "Lsmc.LikeIntrinsic")]
-        public void Calculate_OneFactorVeryLowVolsStorageWithRatchets_NpvApproximatelyEqualsIntrinsicNpv()
+        public void Calculate_OneFactorVeryLowVolsStorageWithRatchets_NpvApproximatelyEqualsIntrinsicNpvStandardErrorZero()
         {
             var builder = _1FactorParamsBuilder.Clone();
             builder.Storage = _dailyStorageWithRatchets;
@@ -608,6 +612,8 @@ namespace Cmdty.Storage.Test
 
             const double percentageTol = 0.0004; // 0.04%
             TestHelper.AssertWithinPercentTol(intrinsicResults.Npv, lsmcResults.Npv, percentageTol);
+
+            TestHelper.AssertWithinTol(0.0, lsmcResults.ValuationSimStandardError / lsmcResults.Npv, 1E-7);
         }
 
         [Fact]
@@ -1286,6 +1292,61 @@ namespace Cmdty.Storage.Test
                 else
                     Assert.Equal(0, triggerPriceProfile.WithdrawTriggerPrices.Count);
             }
+        }
+
+        [Fact]
+        [Trait("Category", "Lsmc.StandardError")]
+        public void Calculate_SimpleStorage1Factor_StandardErrorUnChanged()
+        {
+            // Regression test. Proper test that this is correct is too slow to be unit test
+            var paramsBuilder = _1FactorParamsBuilder.Clone();
+            paramsBuilder.Storage = _simpleDailyStorage;
+            LsmcValuationParameters<Day> lsmcParams = paramsBuilder.Build();
+            LsmcStorageValuationResults<Day> results = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
+            TestHelper.AssertWithinPercentTol(6135.66450019358, results.ValuationSimStandardError, 1E-12);
+        }
+
+        [Fact(Skip = "Used for ad hoc investigations")]
+        [Trait("Category", "Lsmc.StandardError")]
+        public void Calculate_SimpleStorage1Factor_StandardErrorsCloseToStandardDeviationOfResults()
+        {
+            var seeds = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            int numRepeatedValuations = seeds.Length;
+
+            var npvs = new double[numRepeatedValuations];
+            //var deltas = new double[][131];
+
+            var lsmcResultsArray = new LsmcStorageValuationResults<Day>[seeds.Length];
+
+            var paramsBuilder = _1FactorParamsBuilder.Clone();
+            paramsBuilder.Storage = _simpleDailyStorage;
+
+
+            for (int i = 0; i < seeds.Length; i++)
+            {
+                int seed = seeds[i];
+                paramsBuilder.SimulateWithMultiFactorModelAndMersenneTwister(_oneFactorDailyMultiFactorParams, 10_000, seed, null);
+
+                LsmcValuationParameters<Day> lsmcParams = paramsBuilder.Build();
+
+                lsmcResultsArray[i] = LsmcStorageValuation.WithNoLogger.Calculate(lsmcParams);
+                _testOutputHelper.WriteLine(i.ToString());
+            }
+
+            double npvStandardDeviation = lsmcResultsArray.Select(x => x.Npv).StandardDeviation();
+            _testOutputHelper.WriteLine(npvStandardDeviation.ToString("N2") + " sample standard deviation.");
+
+
+            _testOutputHelper.WriteLine("");
+            _testOutputHelper.WriteLine("Calculated Standard Errors");
+
+
+            foreach (LsmcStorageValuationResults<Day> lsmcResults in lsmcResultsArray)
+            {
+                //. TestHelper.AssertWithinPercentTol(npvPopulationStandardDeviation, lsmcResults.ValuationSimStandardError, 0.01);
+                _testOutputHelper.WriteLine(lsmcResults.ValuationSimStandardError.ToString("N2"));
+            }
+
         }
 
     }
